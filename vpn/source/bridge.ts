@@ -283,12 +283,11 @@ export function createEngine(initialConnection?: () => Promise<any>) {
       if (!item.feature.isAvailable() || !item.feature.isControllable())
         throw new Error("This option cannot be changed.");
       // Apply active connection rules before reporting the form as saved.
-      if (connected)
-        await request(
+      await item.feature.getCacheItem().set(config);
+      await request(
           "bypassList",
           getSplitTunnelingConfig(getUserMaxTier(user), config),
         );
-      await item.feature.getCacheItem().set(config);
       item.config = config;
     },
     async readView() {

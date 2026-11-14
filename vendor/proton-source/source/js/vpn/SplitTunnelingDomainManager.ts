@@ -17,6 +17,7 @@ export class SplitTunnelingDomainManager {
 	constructor(list: StoredWebsiteFilterList) {
 		this.list = {
 			...list,
+			blockDirectOnFailure: list.blockDirectOnFailure !== false,
 			value: (list.value || []).map((filter) => ({
 				mode: SplitTunnelingMode.Exclude, // If user has filter with no mode from previous version, it's an exclusion
 				...filter,

@@ -15,6 +15,7 @@ export enum SplitTunnelingMode {
  */
 export interface StoredWebsiteFilterList {
 	enabled?: boolean;
+	blockDirectOnFailure?: boolean;
 	value: WebsiteFilter[];
 	mode?: SplitTunnelingMode;
 }

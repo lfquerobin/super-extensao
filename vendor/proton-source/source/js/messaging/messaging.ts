@@ -135,7 +135,7 @@ export const routeMessage = async <T extends BackgroundMessage>(message: {
 			break;
 
 		case SettingChange.BYPASS_LIST:
-			getCurrentState().setOption?.(type, data);
+			await getCurrentState().setOption?.(type, data);
 			break;
 	}
 

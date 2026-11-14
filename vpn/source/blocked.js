@@ -4,8 +4,8 @@ const words = {
   checking: ["Verificando a proteção…", "Checking protection…"],
   blocked: ["Navegação pausada pela VPN", "Browsing paused by VPN"],
   blockedHelp: [
-    "A conexão protegida ainda não foi confirmada. Novas navegações e pedidos dos sites foram interrompidos pelo bloqueio de segurança, inclusive nos sites excluídos da VPN.",
-    "The protected connection is not confirmed. Safety blocking has stopped new navigations and site requests, including sites excluded from the VPN.",
+    "A conexão protegida ainda não foi confirmada. Sites que usam VPN permanecem bloqueados. Em Recursos, você pode escolher se sites fora da VPN também ficam bloqueados durante falhas.",
+    "The protected connection is not confirmed. VPN sites remain blocked. In Features, you can choose whether sites that bypass the VPN are also blocked during failures.",
   ],
   connected: ["Conexão VPN confirmada", "VPN connection confirmed"],
   connectedHelp: [

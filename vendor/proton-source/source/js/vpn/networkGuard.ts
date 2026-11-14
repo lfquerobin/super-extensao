@@ -1,3 +1,5 @@
+import { storedSplitTunneling } from "./storedSplitTunneling";
+import { directTrafficRules } from "../../../../../vpn/engine/guard-routing";
 import { NetworkGuard } from "../../../../../vpn/engine/network-guard";
 const blockId = 880001,
 	allowId = 880002,
@@ -153,6 +155,16 @@ const samePage = (
 		)
 	);
 };
+const directIds = Array.from({length: 3001}, (_, index) => 881000 + index);
+let directRules: chrome.declarativeNetRequest.Rule[] = [];
+// Browser dictionary serialization can reorder keys and resource type arrays.
+const canonical = (value: unknown): string => {
+	if (Array.isArray(value)) return "[" + value.map(canonical).sort().join(",") + "]";
+	if (value && typeof value === "object") return "{" + Object.entries(value)
+		.sort(([a], [b]) => a.localeCompare(b))
+		.map(([key, item]) => JSON.stringify(key) + ":" + canonical(item)).join(",") + "}";
+	return JSON.stringify(value);
+};
 let lastState = { armed: false, blocked: false };
 export const networkBlocked = () => lastState.blocked;
 const read = async () => {
@@ -161,7 +173,9 @@ const read = async () => {
 			api().getDynamicRules(),
 			api().getSessionRules(),
 		]);
+		const extras = dynamic.filter(item => directIds.includes(item.id));
 		const armed =
+			canonical(extras) === canonical(directRules) &&
 			dynamic.some((item) => same(item, blockId, 10000, "block")) &&
 			dynamic.some((item) => samePage(item)) &&
 			dynamic.some((item) => samePage(item, returnPageRule)) &&
@@ -173,7 +187,7 @@ const read = async () => {
 					Object.keys(item.condition).length === 1 &&
 					item.condition.resourceTypes?.join(",") === "webtransport",
 			);
-		const allowed = session.some((item) => same(item, allowId, 10003, "allow"));
+		const allowed = session.some((item) => same(item, allowId, 10010, "allow"));
 		lastState = { armed, blocked: armed && !allowed };
 		return lastState;
 	} catch {
@@ -183,28 +197,29 @@ const read = async () => {
 export const networkGuard = new NetworkGuard({
 	async installBlock() {
 		try {
+			// Install the full blocker before reading policy; failures stay closed.
+			directRules = [];
 			await api().updateDynamicRules({
-				removeRuleIds: [blockId, transportId, pageId, returnPageId],
-				addRules: [
-					rule(blockId, 10000, "block"),
-					transportRule,
-					pageRule,
-					returnPageRule,
-				],
+				removeRuleIds: [blockId, transportId, pageId, returnPageId, ...directIds],
+				addRules: [rule(blockId, 10000, "block"), transportRule, pageRule, returnPageRule],
 			});
+			const expected = directTrafficRules(await storedSplitTunneling.get(), [rule(blockId, 10000, "block"), pageRule, returnPageRule]);
+			if (expected.length) await api().updateDynamicRules({removeRuleIds: directIds, addRules: expected});
+			directRules = expected;
 		} catch {
 			throw new Error("VpnTrafficGuardFailed");
 		}
 	},
 	async removeBlock() {
+		directRules = [];
 		await api().updateDynamicRules({
-			removeRuleIds: [blockId, transportId, pageId, returnPageId],
+			removeRuleIds: [blockId, transportId, pageId, returnPageId, ...directIds],
 		});
 	},
 	async allow() {
 		await api().updateSessionRules({
 			removeRuleIds: [allowId],
-			addRules: [rule(allowId, 10003, "allow")],
+			addRules: [rule(allowId, 10010, "allow")],
 		});
 	},
 	async revoke() {

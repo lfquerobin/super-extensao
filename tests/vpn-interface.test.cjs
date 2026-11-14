@@ -367,6 +367,31 @@ test("split tunneling preserves modes and saves only after explicit action", asy
     await ui.close();
   }
 });
+test("failure blocking switch defaults on and saves its draft in both split modes", async () => {
+  const ui = await boot();
+  try {
+    await ui.app.navigate("features");
+    const selector = '[data-field="block-direct-on-failure"]';
+    assert.equal(ui.w.document.querySelector(selector).checked, true);
+    const toggle = ui.w.document.querySelector(selector);
+    toggle.checked = false;
+    toggle.dispatchEvent(new ui.w.Event("change", {bubbles: true}));
+    assert.equal(ui.calls.some(call => call[0] === "split"), false);
+    const mode = ui.w.document.querySelector('[data-field="split-mode"]');
+    mode.value = "include";
+    mode.dispatchEvent(new ui.w.Event("change", {bubbles: true}));
+    assert.equal(ui.w.document.querySelector(selector).checked, false);
+    ui.w.document.querySelector("[data-split]").dispatchEvent(new ui.w.Event("submit", {bubbles: true, cancelable: true}));
+    await tick();
+    const saved = ui.calls.find(call => call[0] === "split")[1];
+    assert.equal(saved.blockDirectOnFailure, false);
+    assert.equal(saved.mode, "include");
+    await ui.app.navigate("connection");
+    await ui.app.navigate("features");
+    assert.equal(ui.w.document.querySelector(selector).checked, false);
+  } finally {await ui.close();}
+});
+
 test("sign-out requires confirmation; preferences and remembered page remain integrated", async () => {
   const ui = await boot(snapshot(), { savedView: { page: "settings" } });
   try {
@@ -653,6 +678,13 @@ test("adapter retains Proton sign-in, tier checks, namespaced messages and activ
     ),
   );
   assert.equal(items.get("splitTunneling").value[0].domain, "example.com");
+  emit({channel: "super-vpn", respondTo: "none", type: "changeState", data: {state: "blocked"}});
+  const beforeBlockedSave = calls.filter(call => call[0] === "bypassList").length;
+  await engine.saveSplit({enabled: true, mode: "exclude", blockDirectOnFailure: false, value: []});
+  assert.equal(calls.filter(call => call[0] === "bypassList").length, beforeBlockedSave + 1);
+  assert.equal(items.get("splitTunneling").blockDirectOnFailure, false);
+  emit({channel: "super-vpn", respondTo: "none", type: "changeState", data: {state: "connected"}});
+
   await engine.setToggle("preventWebrtcLeak", true);
   assert.ok(calls.some((call) => call[0] === "webrtc" && call[1] === true));
   await assert.rejects(

@@ -433,6 +433,12 @@ export async function mountVpn(root, engine, preferences, browser = globalThis.c
       model.saved = false;
       render();
     }
+    if (field === "block-direct-on-failure") {
+      model.draft.blockDirectOnFailure = event.target.checked;
+      model.dirty = true;
+      model.saved = false;
+      render();
+    }
     if (field === "split-enabled") {
       model.draft.enabled = event.target.checked;
       model.dirty = true;

@@ -16,7 +16,7 @@ function fixture(hash = ''){
  return {w,app,$,calls,navigations,setReply:fn=>{reply=fn;},locale:value=>locale(value),poll:()=>poll(),dispose:()=>{app.dispose();w.close();},get disposed(){return disposed;},get theme(){return theme;}};
 }
 test('local blocking page reads live state without reconnecting or releasing on load',async()=>{
- const f=fixture();try{await tick();assert.deepEqual(f.calls,['protectionStatus']);assert.equal(f.$('protection').dataset.status,'blocked');assert.equal(f.$('retry').hidden,false);assert.match(f.$('help').textContent,/excluídos/);assert.equal(f.$('confirmation').hidden,true);}finally{f.dispose();}
+ const f=fixture();try{await tick();assert.deepEqual(f.calls,['protectionStatus']);assert.equal(f.$('protection').dataset.status,'blocked');assert.equal(f.$('retry').hidden,false);assert.match(f.$('help').textContent,/Sites que usam VPN permanecem bloqueados/);assert.match(f.$('help').textContent,/escolher se sites fora da VPN/);assert.equal(f.$('confirmation').hidden,true);}finally{f.dispose();}
 });
 
 test('return address stays local and is offered only after a confirmed VPN, without automatic navigation',async()=>{

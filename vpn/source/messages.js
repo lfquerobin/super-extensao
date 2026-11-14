@@ -1,5 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 export const messages = {
+  blockDirectOnFailure: {"pt-BR": "Bloquear também sites que não usam VPN quando ela cair", en: "Also block sites that bypass the VPN when it drops"},
+  blockDirectOnFailureHelp: {"pt-BR": "Desligado: sites fora da VPN continuam pela conexão normal durante uma falha. No modo de exclusão, são os sites da lista; no modo de inclusão, são os sites fora dela. Sites que usam VPN continuam bloqueados até a conexão ser confirmada. Clique em Salvar para aplicar.", en: "When off, sites that bypass the VPN keep using your regular connection during a failure: listed sites in exclusion mode, unlisted sites in inclusion mode. VPN sites stay blocked until the connection is verified. Click Save to apply."},
   connectFastest: {"pt-BR": "Conectar ao mais rápido", en: "Connect to fastest"},
   domainsLabel: {"pt-BR": "domínios", en: "domains"},
   featuresLoading: {"pt-BR": "Aguardando carregar os recursos e os dados da conta…", en: "Waiting for features and account details to load…"},
@@ -80,8 +82,8 @@ export const messages = {
   },
   blockedHelp: {
     "pt-BR":
-      "Por segurança, durante falhas a pausa abrange todos os sites, inclusive os excluídos da VPN. A página de conta Proton e chamadas da extensão são exceções de recuperação.",
-    en: "During failures the safety pause covers all websites, including VPN exclusions. The Proton account page and extension requests remain available for recovery.",
+      "Sites que usam VPN ficam bloqueados até a reconexão. O switch em Recursos define se os sites fora da VPN também serão bloqueados durante falhas. A página de conta Proton e chamadas da extensão são exceções de recuperação.",
+    en: "VPN sites stay blocked until reconnection. The switch in Features determines whether sites that bypass the VPN are also blocked during failures. The Proton account page and extension requests remain available for recovery.",
   },
   releaseNetwork: {
     "pt-BR": "Liberar rede sem VPN",

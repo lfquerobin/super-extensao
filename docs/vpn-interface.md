@@ -1,4 +1,10 @@
-# Interface própria da VPN — referência 1.7.33
+# Interface própria da VPN — referência 1.7.34
+
+## Bloqueio durante falhas da VPN
+
+Em Recursos → Tunelamento dividido, o switch **Bloquear também sites que não usam VPN quando ela cair** começa ligado. Desligado, libera pela conexão normal os sites da lista de exclusão ou os sites fora da lista de inclusão, conforme o modo ativo. Hosts exatos e subdomínios respeitam cada regra. Sites que devem usar a VPN permanecem bloqueados até a confirmação do túnel; rotas de serviço Proton e a proteção existente de WebTransport são preservadas. Com o tunelamento dividido desativado, o bloqueio continua geral.
+
+Clique em Salvar para persistir e aplicar, inclusive durante uma falha. As regras de emergência são duráveis e são reconstruídas no início; erros de armazenamento ou de instalação das exceções mantêm o bloqueio geral. Desconectar explicitamente remove as regras do bloqueio de emergência.
 
 ## Componentização 1.6.8
 
