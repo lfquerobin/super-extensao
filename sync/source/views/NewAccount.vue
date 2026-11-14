@@ -1,36 +1,11 @@
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 <template>
 <SyncContainer class="sync-wizard">
-  <SyncStepper v-model="currentStep" class="options mt-3 mb-9">
-    <ol class="sync-steps" :aria-label="t('UiNew')">
-      <li
-        v-for="(name, index) in [
-          'UiProvider',
-          'UiName',
-          'UiAccess',
-          'UiFolder',
-          'UiDone',
-        ]"
-        :key="name"
-        :class="{
-          current: currentStep === index,
-          complete: currentStep > index,
-        }"
-        :aria-current="currentStep === index ? 'step' : null"
-      >
-        <span>{{ index + 1 }}</span
-        >{{ t(name) }}
-      </li>
-    </ol>
-    <SyncStepperItems>
-      <UiNotice
-        v-if="createError"
-        class="ui-notice sync-notice sync-error ui-notice-error"
-        role="alert"
-      >
-        {{ createError }}
-      </UiNotice>
-      <SyncStepperContent step="0">
+  <UiCard as="section" class="options ui-wizard mt-3 mb-9">
+    <UiSteps :steps="['UiProvider','UiName','UiAccess','UiFolder','UiDone'].map(name => t(name))" :current="currentStep" :label="t('UiNew')" />
+    <div class="ui-wizard-body">
+      <UiAsyncState v-if="createError" kind="error" :text="createError" />
+      <UiWizardStep :active="currentStep === 0">
         <div class="headline" role="heading" aria-level="2">
           {{ t("LabelChooseadapter") }}
         </div>
@@ -75,9 +50,9 @@
             </template>
           </SyncButton>
         </UiActions>
-      </SyncStepperContent>
+      </UiWizardStep>
 
-      <SyncStepperContent step="1">
+      <UiWizardStep :active="currentStep === 1">
         <div class="headline" role="heading" aria-level="2">
           {{ t("LabelAccountlabel") }}
         </div>
@@ -102,9 +77,9 @@
             {{ t("LabelContinue") }}
           </SyncButton>
         </UiActions>
-      </SyncStepperContent>
+      </UiWizardStep>
 
-      <SyncStepperContent step="2">
+      <UiWizardStep :active="currentStep === 2">
         <template v-if="adapter === 'nextcloud-bookmarks'">
           <div class="headline" role="heading" aria-level="2">
             {{ t("LabelServersetup") }}
@@ -561,9 +536,9 @@
             </SyncButton>
           </UiActions>
         </template>
-      </SyncStepperContent>
+      </UiWizardStep>
 
-      <SyncStepperContent step="3">
+      <UiWizardStep :active="currentStep === 3">
         <div class="headline" role="heading" aria-level="2">
           {{ t("LabelSyncfoldersetup") }}
         </div>
@@ -776,9 +751,9 @@
             {{ t("LabelContinue") }}
           </SyncButton>
         </UiActions>
-      </SyncStepperContent>
+      </UiWizardStep>
 
-      <SyncStepperContent step="4">
+      <UiWizardStep :active="currentStep === 4">
         <div class="headline" role="heading" aria-level="2">
           {{ t("LabelSyncbehaviorsetup") }}
         </div>
@@ -822,9 +797,9 @@
             {{ t("LabelContinue") }}
           </SyncButton>
         </UiActions>
-      </SyncStepperContent>
+      </UiWizardStep>
 
-      <SyncStepperContent step="5">
+      <UiWizardStep :active="currentStep === 5">
         <div class="headline" role="heading" aria-level="2">
           {{ t("LabelAccountcreated") }}
           <SyncIcon aria-hidden="true"> mdi-check </SyncIcon>
@@ -839,9 +814,9 @@
             >
           </div>
         </SyncForm>
-      </SyncStepperContent>
-    </SyncStepperItems>
-  </SyncStepper>
+      </UiWizardStep>
+    </div>
+  </UiCard>
 </SyncContainer>
 </template>
 

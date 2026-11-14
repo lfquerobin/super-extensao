@@ -268,5 +268,14 @@
   "How to get an API key": "Como obter uma chave de API",
   "Try again": "Tentar novamente",
   "Unsplash Access Key": "Chave de acesso do Unsplash",
-  "GIPHY API key": "Chave de API do GIPHY"
+  "GIPHY API key": "Chave de API do GIPHY",
+  "Top Left": "Superior esquerda",
+  "Top Centre": "Superior centro",
+  "Top Right": "Superior direita",
+  "Middle Left": "Centro esquerda",
+  "Middle Centre": "Centro",
+  "Middle Right": "Centro direita",
+  "Bottom Left": "Inferior esquerda",
+  "Bottom Centre": "Inferior centro",
+  "Bottom Right": "Inferior direita"
 }

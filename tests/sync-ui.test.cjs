@@ -123,7 +123,7 @@ async function boot(initial = {}) {
         ]);
       },
     },
-    tabs: {},
+    tabs: {query(_options, callback) {callback([]);}},
     i18n: { getUILanguage: () => "pt-BR" },
     permissions: {
       request(_p, cb) {
@@ -331,6 +331,27 @@ test("locked engine keeps profile and credential views hidden", async () => {
   } finally {
     ui.close();
   }
+});
+
+test("shared folder dialog preserves the current scope on cancel and saves only the selected folder", async () => {
+  const ui = await boot({local:{"superSync:accounts":JSON.stringify({saved:profile})}});
+  try {
+    await ui.route("/options/saved");
+    const folder = ui.component("OptionSyncFolder");
+    assert.ok(folder);
+    await folder.onTriggerFinder();await tick();
+    const dialog = ui.w.document.querySelector('dialog[open]');
+    assert.ok(dialog);assert.ok(dialog.querySelector('.ui-folder-tree'));
+    assert.equal(dialog.querySelectorAll('input[type=radio]').length,2);
+    folder.selectedLocalRoot='0';
+    dialog.dispatchEvent(new ui.w.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));await tick();
+    assert.equal(folder.value,'1');assert.equal(dialog.open,false);
+    await folder.onTriggerFinder();await tick();
+    assert.equal(folder.selectedLocalRoot,'1');
+    folder.selectedLocalRoot='0';folder.onSave();await tick();
+    assert.equal(folder.finder,false);assert.equal(folder.value,'0');
+    assert.deepEqual(ui.warnings,[]);
+  } finally {ui.close();}
 });
 
 test("Google Drive options keep normal synchronization controls without the comparison panel", async () => {

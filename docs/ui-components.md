@@ -1,4 +1,4 @@
-# Componentes da interface — referência 1.7.31
+# Componentes da interface — referência 1.7.35
 
 
 ## Fluxos compartilhados — 1.7.31
@@ -22,13 +22,17 @@ Na compilação da sincronização, os módulos UMD compartilhados não passam p
 
 Validação da entrega: **483 testes aprovados**, interfaces de VPN/sincronização/nova guia compiladas, TypeScript do worker e da interface VPN aprovado e `check:ui` aprovado. O cenário adicional de autenticação do proxy passou no teste nativo local descrito em `vpn-validacao-pc.md`.
 
-### O que ainda não foi unificado
+### Conclusão da unificação — 1.7.35
 
-- A árvore hierárquica de pastas e os assistentes/formulários validados dos provedores de sincronização ainda usam componentes `Sync*`/Vuetify. O importador comum copia domínios de favoritos; a seleção de escopo de sincronização tem outro contrato e não foi trocada por um seletor simples.
-- Editores de widgets, fundos e opções específicas da nova guia continuam como composições React próprias, sobre as primitivas compartilhadas.
-- A página de bloqueio da VPN conserva a confirmação local de liberação e seus estados de recuperação, com o fluxo de segurança e testes existentes. Não foi convertida para o diálogo comum nesta alteração.
-- Outros feedbacks específicos (progresso de operações, relatórios da limpeza e erros de importação da nova guia) ainda não usam todos o componente genérico de estado.
-- Falta a conferência visual manual dos novos fluxos no navegador pessoal, em temas claro/escuro, com teclado e textos longos. Testes DOM e compilações não substituem essa conferência.
+- `ui/vue-structures.js` fornece `UiFolderTree`, `UiModal`, `UiSteps` e `UiWizardStep`. A seleção hierárquica conserva IDs exatos, expansão nativa, rascunho e cancelamento. O assistente monta etapas sob demanda, preserva controles visitados e leva o foco ao título da etapa ativa.
+- `ui/vue-validated.js` centraliza os adaptadores dos campos/formulários validados e composições Vuetify. `sync/source/components/ui/engine.js` é somente um reexport de compatibilidade. Modelos, regras de validação, slots e injeção permanecem preservados.
+- O adaptador React fornece `UiEditorCard`, `UiDisclosure`, `UiModal` e `UiAsyncState`. Fundos e widgets usam o mesmo cartão de edição; seções de exibição/fonte usam disclosure nativo operável por teclado. Erros de importação aparecem no painel, sem alerta bloqueante e sem apagar configurações inválidas.
+- `ui/modal.js` concentra abertura, Escape, circulação de foco e restauração do disparador para diálogos Vue/React. A página de recuperação da VPN usa `ui/confirmation.js`, com foco inicial em Cancelar e invalidação ao recuperar a conexão ou descartar a página.
+- `ui/async-state.js` centraliza apresentação de carregamento, erro, aviso, sucesso e vazio; progresso determinado é limitado a 0–100, e progresso sem medição usa a barra nativa indeterminada. Perfis/pastas da sincronização, importação/provedores/erros da Nova guia e status/relatórios da limpeza usam essa base. Textos externos continuam escapados ou renderizados como nós de texto.
+
+O escopo de componentes compartilhados desta etapa está concluído. Configurações e regras de cada provedor/widget permanecem em seus módulos: são composições específicas sobre a biblioteca comum, não cópias de controles. Vue, Vuetify e React continuam sendo dependências de interface. A migração dos motores e provedores é um trabalho separado.
+
+Validação nativa usa perfis/dados fictícios; não comprova autenticação de todos os provedores nem todos os estados do perfil pessoal. Roteiros: `scripts/check-interface-native.cjs` e `scripts/check-newtab-native.cjs`, com Playwright e `CHROMIUM_PATH`. Capturas ficam em `work/ui-review`, fora do Git. A conferência no perfil pessoal continua sendo uma validação de uso, não uma migração de componentes pendente.
 
 Ajuste visual 1.6.11: a barra da esquerda e o botão Super Extensão compartilham `--newtab-controls-inset` (12 px) e `--newtab-controls-height` (46 px). A barra esquerda usa 50% de opacidade em repouso e 100% em hover ou foco interno de teclado. A transição é desativada quando o sistema solicita movimento reduzido.
 
@@ -46,7 +50,7 @@ Revisado em 11 de novembro de 2026. As telas usam um catálogo comum de componen
 | `ui/render.cjs` | Expansão dos componentes declarativos em HTML nativo, na compilação e na VPN |
 | `ui/dom.cjs` → `ui.js` | Criação dos controles dinâmicos do popup com nós DOM |
 | `ui/vue.js` | Componentes funcionais `Ui*` para Vue, sem elemento adicional |
-| `sync/source/components/ui/engine.js` | Adaptadores `Sync*` dos controles validados, diálogos, árvore e assistente Vuetify |
+| `ui/vue-validated.js` | Adaptadores `Sync*` dos controles validados, diálogos, árvore e assistente Vuetify |
 | `ui/vue.css` | Aparência dos controles validados, separada do layout das telas |
 | `vendor/tabliss-source/src/ui/index.tsx` | Componentes React do editor, fundos, widgets e controles auxiliares |
 | `ui/templates/` | Fontes das páginas estáticas; popup separado em seções e rodapé |

@@ -16,6 +16,7 @@ export function useKeyPress(
 ) {
   const handler = (event: KeyboardEvent) => {
     if (
+      !event.defaultPrevented && !document.querySelector("dialog[open]") &&
       detectKeys.includes(event.key) &&
       !(ignoreInputEvents && isInputEvent(event)) &&
       !(event.ctrlKey || event.metaKey || event.altKey)

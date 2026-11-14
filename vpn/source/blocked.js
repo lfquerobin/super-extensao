@@ -1,3 +1,4 @@
+import {confirmAction, cancelConfirmation} from "../../ui/confirmation.js";
 import { messages } from "./messages";
 const words = {
   brand: ["Super Extensão · VPN", "Super Extensão · VPN"],
@@ -97,7 +98,7 @@ export function mountProtection(
   const t = (key) => words[key]?.[locale === "en" ? 1 : 0] || key;
   const find = (id) => root.querySelector("#" + id);
   root.innerHTML =
-    '<p class="brand" id="brand"></p><h1 id="title"></h1><p id="help"></p><p id="reason" class="muted"></p><p id="notice" role="status"></p><p id="error" class="error" role="alert"></p><p id="destination" class="muted" hidden></p><div class="actions"><button type="button" class="ui-button ui-button-primary" id="return" hidden></button><button type="button" class="ui-button ui-button-primary" id="retry"></button><button type="button" class="ui-button" id="refresh"></button><a class="ui-button" id="open" target="_blank" rel="noopener"></a></div><div class="actions"><button type="button" class="ui-button ui-button-danger" id="release"></button></div><section class="confirmation" id="confirmation" hidden><h2 id="confirmTitle"></h2><p id="confirmHelp"></p><div class="actions"><button type="button" class="ui-button ui-button-danger" id="confirm"></button><button type="button" class="ui-button" id="cancel"></button></div></section><p class="muted" id="note"></p>';
+    '<p class="brand" id="brand"></p><h1 id="title"></h1><p id="help"></p><p id="reason" class="muted"></p><p id="notice" role="status"></p><p id="error" class="error" role="alert"></p><p id="destination" class="muted" hidden></p><div class="actions"><button type="button" class="ui-button ui-button-primary" id="return" hidden></button><button type="button" class="ui-button ui-button-primary" id="retry"></button><button type="button" class="ui-button" id="refresh"></button><a class="ui-button" id="open" target="_blank" rel="noopener"></a></div><div class="actions"><button type="button" class="ui-button ui-button-danger" id="release"></button></div><p class="muted" id="note"></p>';
   find("open").href = chrome.runtime.getURL("popup.html") + "#vpn";
   function render() {
     if (disposed) return;
@@ -110,10 +111,6 @@ export function mountProtection(
       "return",
       "open",
       "release",
-      "confirmTitle",
-      "confirmHelp",
-      "confirm",
-      "cancel",
       "note",
     ])
       find(id).textContent = t(id);
@@ -141,9 +138,7 @@ export function mountProtection(
     find("refresh").disabled = busy || checking;
     find("release").hidden = status === "connected" || status === "released";
     find("release").disabled = busy || checking;
-    find("confirmation").hidden = !confirm;
-    find("confirm").disabled = busy;
-    find("cancel").disabled = busy;
+
     root.setAttribute("aria-busy", String(busy || checking));
     root.ownerDocument.documentElement.lang = locale;
     root.ownerDocument.title = t("brand") + " — " + t(status);
@@ -159,8 +154,10 @@ export function mountProtection(
       throw Error("VpnWorkerUnavailable");
     snapshot = value;
     if (value.status !== "blocked") notice = "";
-    if (value.status === "connected" || value.status === "released")
+    if (value.status === "connected" || value.status === "released") {
       confirm = false;
+      cancelConfirmation(root.ownerDocument);
+    }
   }
   async function refresh() {
     if (disposed || busy || checking) return;
@@ -250,18 +247,16 @@ export function mountProtection(
   find("retry").addEventListener("click", () => void act("retryProtection"));
   find("return").addEventListener("click", () => void returnToPage());
   find("refresh").addEventListener("click", () => void refresh());
-  find("release").addEventListener("click", () => {
+  find("release").addEventListener("click", async () => {
+    if (disposed || busy || checking || confirm) return;
     confirm = true;
-    render();
-    find("confirm").focus();
-  });
-  find("cancel").addEventListener("click", () => {
+    const status = snapshot?.status;
+    const accepted = await confirmAction(root.ownerDocument, t("confirmHelp"), {
+      locale, title: t("confirmTitle"), confirmLabel: t("confirm"), cancelLabel: t("cancel"),
+    });
+    const current = confirm && !disposed && !busy && snapshot?.status === status;
     confirm = false;
-    render();
-    find("release").focus();
-  });
-  find("confirm").addEventListener("click", () => {
-    if (confirm) void act("disconnect");
+    if (accepted && current) void act("disconnect");
   });
   const untheme =
     preferences?.bindTheme(root.ownerDocument.documentElement) || (() => {});
@@ -276,6 +271,7 @@ export function mountProtection(
   const dispose = () => {
     if (disposed) return;
     disposed = true;
+    cancelConfirmation(root.ownerDocument);
     revision++;
     timing.clearInterval(interval);
     untheme();

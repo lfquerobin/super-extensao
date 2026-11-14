@@ -4,7 +4,7 @@
 
 Extensão pessoal para Helium e navegadores Chromium, com Nova guia, sincronização de favoritos, VPN no navegador, limpeza ao sair, controle de autoplay e proteção da última aba.
 
-**Versão instalada: 1.7.33.** Documentação revisada em 13 de novembro de 2026. Temas escuro, claro e sistema; idiomas PT-BR e inglês compartilhados entre os módulos. Requer Chromium 116 ou superior, conforme o manifest.
+**Versão instalada: 1.7.35.** Documentação revisada em 14 de novembro de 2026. Temas escuro, claro e sistema; idiomas PT-BR e inglês compartilhados entre os módulos. Requer Chromium 116 ou superior, conforme o manifest.
 
 Para investigar uma falha da VPN, abra `chrome://extensions`, localize a Super Extensão e inspecione o **service worker**. Na aba Console, reproduza a tentativa e execute `getVpnDiagnostics()`. Os últimos 50 eventos registram somente horário, etapa, resultado e código conhecido, sem credenciais ou dados da conta; falhas novas também aparecem como avisos `[Super VPN]`. Esse histórico é temporário e reinicia com o worker. `getLogs()` é o registro legado, dependente de debug, e pode estar vazio.
 
@@ -12,7 +12,7 @@ Para investigar uma falha da VPN, abra `chrome://extensions`, localize a Super E
 
 | Área | Implementado | O que ainda depende de trabalho |
 | --- | --- | --- |
-| Interface | Catálogo comum com adaptadores HTML/DOM, Vue e React; páginas estáticas separadas em seções; preferências e foco compartilhados | Ampliar a conferência visual para todos os diálogos e estados com contas reais |
+| Interface | Componentes comuns HTML/DOM, Vue e React; árvore de pastas, assistente, editores, diálogos, progresso e erros unificados | Ampliar a conferência visual para todos os diálogos e estados com contas reais |
 | Sincronização | Google Drive/favoritos pelo núcleo próprio; demais provedores e abas pelo motor legado | Dois navegadores reais, restauração de backups por interface e migração dos demais conectores |
 | Núcleo Google Drive | Reconciliação, escrita condicional, criptografia, backup e retomada pelo diário | Ampliar a validação real relatada pelo usuário, medir grandes importações e suportar pastas sobrepostas |
 | VPN | Interface, regras, controlador de proxy, estado/recuperação, credenciais temporárias, transporte HTTP, catálogo/seleção, WebRTC e coordenação de login próprios | Revisão minuciosa e validação real; contratos do serviço e adaptadores Chromium/Proton permanecem |
@@ -56,6 +56,8 @@ Os perfis existentes são aproveitados, incluindo cache e mapeamentos quando con
 Veja [a interface e a compatibilidade](docs/sync-interface.md) e [o escopo do novo motor](docs/sync-engine.md). Perfis exportados podem conter credenciais; guarde esses arquivos como configurações privadas. Backup de perfis não equivale a backup dos favoritos.
 
 ### VPN
+
+Na **1.7.34**, o switch **Bloquear também sites que não usam VPN quando ela cair**, em Recursos, permite manter os sites fora da VPN acessíveis durante falhas. Começa ligado; desligado, respeita o modo de inclusão/exclusão e subdomínios. Clique em Salvar. Sites que exigem VPN continuam bloqueados até a confirmação da conexão.
 
 A **1.7.31** compartilha os fluxos completos de importação e edição de domínios, a lista de regras do autoplay e as confirmações dos módulos. Também cancela desafios do próprio proxy durante a restauração inicial quando o endpoint ainda não pode receber credenciais. A correção desse caso passou em navegador nativo com proxy fictício local; ainda falta confirmar o cenário no perfil pessoal.
 

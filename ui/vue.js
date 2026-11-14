@@ -1,11 +1,13 @@
 import {asyncStateMarkup} from "./async-state.js";
 import catalog from './catalog.json';
+import {installStructures} from './vue-structures.js';
 
 // Native Vue 2 adapter. The rendered node is the control itself: no extra wrapper.
 export function installUi(Vue) {
+  installStructures(Vue);
   Vue.component('UiAsyncState', {
     functional: true,
-    props: {kind: String, text: String, detail: String, retry: String, disabled: Boolean},
+    props: {kind: String, text: String, detail: String, retry: String, disabled: Boolean, progress: {default: undefined}},
     render(h, context) {
       return h('div', {
         ...context.data,

@@ -42,49 +42,19 @@
         </div>
       </SyncRadioGroup>
     </div>
-    <SyncDialog v-model="finder" max-width="600" :style="{ height: '500px' }">
-      <SyncCard>
-        <SyncRow no-gutters>
-          <SyncCol class="flex-grow-1">
-            <SyncCardTitle class="headline">
-              {{ t("LabelLocalfolder") }}
-            </SyncCardTitle>
-          </SyncCol>
-          <SyncCol class="flex-grow-0">
-            <SyncButton class="primary ma-2" @click="onSave">
-              {{ t("LabelSave") }}
-            </SyncButton>
-          </SyncCol>
-        </SyncRow>
-        <SyncTree
-          v-if="folders.length"
-          class="pa-4"
-          activatable
-          :item-text="'title'"
-          :item-key="'id'"
-          :active="[value]"
-          :open="folders.length ? [folders[0].id] : []"
-          :items="folders"
-          dense
-          @update:active="onUpdateSelection"
-        >
-          <template #prepend="{ open }">
-            <SyncIcon aria-hidden="true">
-              {{ open ? "mdi-folder-open" : "mdi-folder" }}
-            </SyncIcon>
-          </template>
-          <template #label="{ item }">
-            {{ item.title || t("LabelUntitledfolder") }}
-          </template>
-        </SyncTree>
-        <SyncSpinner
-          v-else
-          color="primary"
-          indeterminate
-          class="ma-8"
-        />
-      </SyncCard>
-    </SyncDialog>
+    <UiModal v-model="finder" :title="t('LabelLocalfolder')">
+      <UiStack>
+        <UiTitle>{{ t('LabelLocalfolder') }}</UiTitle>
+        <UiAsyncState v-if="folderLoading" kind="loading" :text="t('UiFoldersLoading')" :progress="null" />
+        <UiAsyncState v-else-if="folderError" kind="error" :text="t('UiFoldersFailed')" :retry="t('UiRetry')" @retry="onTriggerFinder" />
+        <UiAsyncState v-else-if="!folders.length" kind="empty" :text="t('UiFoldersEmpty')" />
+        <UiFolderTree v-else v-model="selectedLocalRoot" :items="folders" :label="t('LabelLocalfolder')" :empty-label="t('LabelUntitledfolder')" />
+        <UiActions class="ui-actions-end">
+          <UiButton @click="finder = false">{{ t('LabelCancel') }}</UiButton>
+          <UiButton class="ui-button-primary" :disabled="folderLoading || Boolean(folderError) || !selectedLocalRoot || !folders.length" @click="onSave">{{ t('LabelSave') }}</UiButton>
+        </UiActions>
+      </UiStack>
+    </UiModal>
   </div>
 </template>
 
@@ -101,6 +71,9 @@ export default {
       mode: "folder",
       finder: false,
       folders: [],
+      folderLoading: false,
+      folderError: false,
+      folderRevision: 0,
     };
   },
   watch: {
@@ -117,6 +90,7 @@ export default {
       }
     },
   },
+  beforeDestroy() {this.folderRevision++;},
   created() {
     this.updatePath();
   },
@@ -137,14 +111,20 @@ export default {
       }
     },
     async onTriggerFinder() {
-      const browser = (await import("@sync-engine/browser-api")).default;
-      this.selectedLocalRoot = this.value;
+      this.selectedLocalRoot = this.value === "tabs" ? "" : this.value;
       this.finder = true;
-      this.folders = this.filterOutBookmarks(
-        (await isVivaldi())
-          ? await browser.bookmarks.getSubTree("1")
-          : await browser.bookmarks.getTree()
-      );
+      const revision = ++this.folderRevision;
+      this.folderLoading = true;
+      this.folderError = false;
+      try {
+        const browser = (await import("@sync-engine/browser-api")).default;
+        const folders = this.filterOutBookmarks((await isVivaldi()) ? await browser.bookmarks.getSubTree("1") : await browser.bookmarks.getTree());
+        if (revision === this.folderRevision && this.finder) this.folders = folders;
+      } catch {
+        if (revision === this.folderRevision && this.finder) this.folderError = true;
+      } finally {
+        if (revision === this.folderRevision) this.folderLoading = false;
+      }
     },
     filterOutBookmarks(children) {
       return children.filter((item) => {
@@ -158,6 +138,7 @@ export default {
       this.selectedLocalRoot = active[0];
     },
     onSave() {
+      if (this.folderLoading || this.folderError || !this.selectedLocalRoot) return;
       this.finder = false;
       this.$emit("input", this.selectedLocalRoot);
     },

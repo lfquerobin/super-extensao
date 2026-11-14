@@ -1,4 +1,4 @@
-import { UiField } from "../../ui";
+import { UiNote } from "../../ui";
 import { t } from "../../locales/ui";
 import React from "react";
 import { WidgetPosition } from "../../db/state";
@@ -51,14 +51,16 @@ type Props = {
 
 const PositionInput: React.FC<Props> = ({ value, onChange }) => (
   <div className="PositionInput">
-    <UiField>{t("Position")}</UiField>
+    <UiNote>{t("Position")}</UiNote>
 
-    <div className="grid">
+    <div className="grid" role="group" aria-label={t("Position")}>
       {positions.map((position) => (
         <IconButton
           key={position.value}
           onClick={() => onChange(position.value)}
           primary={value === position.value}
+          title={t(position.value.replace(/([A-Z])/g, " $1").replace(/^./, letter => letter.toUpperCase()))}
+          aria-pressed={value === position.value}
         >
           <Icon name={position.icon} />
         </IconButton>

@@ -24,30 +24,14 @@
     >{{ rootPath || folderName }}
   </p>
   <p class="sync-destination">{{ uri }}</p>
-  <SyncProgress
-    v-if="account.data.syncing"
-    :value="Number(account.data.syncing) * 100"
-    :indeterminate="typeof account.data.syncing !== 'number'"
-  />
-  <p
-    class="sync-profile-detail"
-    :class="{ 'sync-error ui-notice ui-notice-error': account.data.error }"
-  >
-    {{ statusDetail }}
-  </p>
+  <UiAsyncState :kind="account.data.error ? 'error' : account.data.syncing ? 'loading' : 'info'" :text="statusDetail" :progress="account.data.syncing ? (typeof account.data.syncing === 'number' ? Number(account.data.syncing) * 100 : null) : undefined" />
   <UiNotice v-if="legacyWarning" class="ui-notice sync-notice">
     {{ legacyWarning }}
   </UiNotice>
   <UiNotice v-if="!account.data.failsafe" class="ui-notice sync-notice">
     {{ t("StatusFailsafeoff") }}
   </UiNotice>
-  <UiNotice
-    v-if="actionError"
-    class="sync-error ui-notice-error ui-notice"
-    role="alert"
-  >
-    {{ actionError }}
-  </UiNotice>
+  <UiAsyncState v-if="actionError" kind="error" :text="actionError" />
   <UiActions class="sync-profile-actions">
     <router-link
       class="sync-button ui-button"
@@ -85,7 +69,7 @@
       >{{ t("LabelSyncnow") }}
     </UiButton>
   </UiActions>
-  <details class="sync-advanced">
+  <details class="ui-disclosure sync-advanced">
     <summary>{{ t("UiAdvanced") }}</summary>
     <div>
       <UiButton
@@ -123,9 +107,9 @@
       </UiButton>
     </div>
   </details>
-  <SyncDialog
+  <UiModal
     :value="Boolean(confirmDirection)"
-    max-width="460"
+    :title="t(confirmDirection === 'up' ? 'LabelSyncUpOnce' : 'LabelSyncDownOnce')"
     @input="!$event && (confirmDirection = '')"
     ><SyncCard class="sync-confirm"
       ><SyncCardTitle>{{
@@ -150,7 +134,7 @@
           t("LabelContinue")
         }}</SyncButton></SyncCardActions
       ></SyncCard
-    ></SyncDialog
+    ></UiModal
   >
 </UiCard>
 </template>

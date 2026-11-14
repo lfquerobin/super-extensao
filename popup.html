@@ -123,13 +123,13 @@
       <div id="syncPanel" data-embedded="true"><div id="syncApp"></div></div>
     </section>
 
-    <p id="popupStatus" class="ui-notice ui-notice-success" role="status" aria-live="polite"></p>
+    <div id="popupStatus" aria-live="polite"></div>
     <footer id="cleanupFooter">
       <div class="automation"><label class="ui-toggle toggle-line" for="enabled"><span data-i18n="uiClearwhenthelastwindow0250c">Limpar ao fechar a última janela</span><input id="enabled" type="checkbox" role="switch" class="ui-switch"></label><button id="pauseToggle" class="ui-button quiet ui-button-secondary ui-button-compact" aria-expanded="false" aria-controls="pauseMenu" data-i18n="uiPause8e0f5" type="submit">Pausar</button></div>
       <div id="pauseMenu" class="ui-actions pause-menu" hidden=""><button data-duration="30" data-i18n="ui30minutes75eae" class="ui-button ui-button-compact" type="submit">30 minutos</button><button data-duration="60" data-i18n="ui1houreed75" class="ui-button ui-button-compact" type="submit">1 hora</button><button data-duration="today" data-i18n="uiUntiltomorrow7286d" class="ui-button ui-button-compact" type="submit">Até amanhã</button><button data-duration="0" data-i18n="uiUntilresumedd56d7" class="ui-button ui-button-compact" type="submit">Até retomar</button></div>
       <div id="pauseRow" class="ui-notice message pause ui-notice-warning" hidden="" role="status"><span id="pauseStatus"></span><button id="resume" data-i18n="uiResumedaaa7" class="ui-button ui-button-compact" type="submit">Retomar</button></div>
       <div id="cleanupActions">
-      <section class="ui-card report" aria-labelledby="reportTitle"><div class="eyebrow" data-i18n="uiLASTCLEANUP21453">ÚLTIMA LIMPEZA</div><h2 id="reportTitle" data-i18n="uiLoadingbca48">Carregando…</h2><p id="reportDetail"></p></section>
+      <section class="ui-card report" aria-labelledby="reportTitle"><div class="eyebrow" data-i18n="uiLASTCLEANUP21453">ÚLTIMA LIMPEZA</div><div id="reportState" class="ui-async-state ui-notice" role="status"><h2 id="reportTitle" data-i18n="uiLoadingbca48">Carregando…</h2><p id="reportDetail"></p></div></section>
       <button id="clearNow" class="ui-button full danger ui-button-primary" data-i18n="uiClearnow139b3" type="submit">Limpar agora</button>
       </div>
       <p class="footer-note ui-footer-note" data-i18n="uiLocalcleanupandcontrolsOptional7d8a0">Limpeza e controles locais · Nova guia e sincronização opcionais</p>

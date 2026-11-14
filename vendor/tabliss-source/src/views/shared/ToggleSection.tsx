@@ -1,26 +1,7 @@
-import { t } from "../../locales/ui";
 import React from "react";
-import { useToggle } from "../../hooks";
-
-type Props = {
-  children: React.ReactNode;
-  name: string;
-};
-
-const ToggleSection: React.FC<Props> = ({ name, children }) => {
-  const [isOpen, toggleOpen] = useToggle();
-
-  return (
-    <>
-      <p>
-        <a onClick={toggleOpen}>
-          {isOpen ? t("Close") : t("Open")} {name}
-        </a>
-      </p>
-
-      {isOpen && children}
-    </>
-  );
-};
-
+import {UiDisclosure} from "../../ui";
+import {t} from "../../locales/ui";
+const ToggleSection: React.FC<{name: string; children: React.ReactNode}> = ({name, children}) => (
+  <UiDisclosure title={name} openText={t("Open")} closeText={t("Close")}>{children}</UiDisclosure>
+);
 export default ToggleSection;

@@ -1,4 +1,4 @@
-import { UiCard, UiField, UiInput, UiSelect } from "../../ui";
+import { UiEditorCard, UiField, UiInput, UiSelect } from "../../ui";
 import { t } from "../../locales/ui";
 import React from "react";
 import { FormattedMessage } from "react-intl";
@@ -43,8 +43,7 @@ const Background: React.FC = () => {
       </UiField>
 
       {plugin && (
-        <UiCard className="Widget">
-          <h4>{plugin.name}</h4>
+        <UiEditorCard as="div" title={plugin.name}>
 
           {plugin.settingsComponent && (
             <div className="settings">
@@ -100,7 +99,7 @@ const Background: React.FC = () => {
               </>
             </ToggleSection>
           )}
-        </UiCard>
+        </UiEditorCard>
       )}
     </div>
   );

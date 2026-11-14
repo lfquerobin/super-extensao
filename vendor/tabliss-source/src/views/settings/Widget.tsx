@@ -1,4 +1,4 @@
-import { UiCard, UiField, UiInput, UiSelect } from "../../ui";
+import { UiEditorCard, UiField, UiInput, UiSelect } from "../../ui";
 import { t } from "../../locales/ui";
 import React from "react";
 import { setWidgetDisplay } from "../../db/action";
@@ -31,8 +31,7 @@ const Widget: React.FC<Props> = ({
   const setDisplay = setWidgetDisplay.bind(null, plugin.id);
 
   return (
-    <UiCard as="fieldset" className="Widget">
-      <div className="title--buttons">
+    <UiEditorCard title={name} description={!isOpen ? description : undefined} actions={<>
         <IconButton onClick={onRemove} title={t("Remove widget")}>
           <RemoveIcon />
         </IconButton>
@@ -56,9 +55,7 @@ const Widget: React.FC<Props> = ({
           </IconButton>
         )}
 
-        <h4 onClick={toggleIsOpen}>{name}</h4>
-        {!isOpen && <p>{description}</p>}
-      </div>
+      </>}>
 
       {isOpen && (
         <div>
@@ -118,7 +115,7 @@ const Widget: React.FC<Props> = ({
           </ToggleSection>
         </div>
       )}
-    </UiCard>
+    </UiEditorCard>
   );
 };
 

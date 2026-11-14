@@ -1,3 +1,4 @@
+import {UiActions, UiButton, UiAsyncState} from "../../ui";
 import {confirmAction} from "../../../../../ui/confirmation";
 import { t } from "../../locales/ui";
 import React from "react";
@@ -12,6 +13,10 @@ import Widgets from "./Widgets";
 
 const Settings: React.FC = () => {
   const { toggleSettings } = React.useContext(UiContext);
+  const [importError, setImportError] = React.useState("");
+  const [importing, setImporting] = React.useState(false);
+  const importRevision = React.useRef(0), fileInput = React.useRef<HTMLInputElement>();
+  React.useEffect(() => () => {importRevision.current++; fileInput.current?.remove();}, []);
 
   const handleReset = async () => {
     if (
@@ -39,31 +44,26 @@ const Settings: React.FC = () => {
   };
 
   const handleImport = () => {
+    if (importing) return;
+    const revision = ++importRevision.current;
+    fileInput.current?.remove();
     const input = document.createElement("input");
-    document.body.appendChild(input);
-    input.style.display = "none";
-    input.type = "file";
-    input.addEventListener("change", function () {
-      if (this.files) {
-        const file = this.files[0];
-        const reader = new FileReader();
-        reader.addEventListener("load", (event) => {
-          if (event.target && event.target.result) {
-            try {
-              const state = JSON.parse(event.target.result as string);
-              importStore(state);
-            } catch (error) {
-              alert(
-                (t("Invalid import file: ") + String(error instanceof Error ? error.message : "Uknown error") + ""),
-              );
-            }
-          }
-        });
-        reader.readAsText(file);
-      }
-      document.body.removeChild(input);
-    });
-    input.click();
+    fileInput.current = input;
+    input.type = "file"; input.accept = ".json,application/json"; input.style.display = "none";
+    input.addEventListener("cancel", () => input.remove(), {once: true});
+    input.addEventListener("change", async () => {
+      const file = input.files?.[0]; input.remove();
+      if (!file || revision !== importRevision.current) return;
+      setImporting(true); setImportError("");
+      try {
+        const contents = await file.text();
+        if (revision !== importRevision.current) return;
+        importStore(JSON.parse(contents));
+      } catch (error) {
+        if (revision === importRevision.current) setImportError(t("Invalid import file: ") + String(error instanceof Error ? error.message : error));
+      } finally {if (revision === importRevision.current) setImporting(false);}
+    }, {once: true});
+    document.body.appendChild(input); input.click();
   };
 
   useKeyPress(toggleSettings, ["Escape"]);
@@ -81,10 +81,12 @@ const Settings: React.FC = () => {
 
         <System />
 
-        <p style={{ marginBottom: "2rem" }}>
-          <a onClick={handleImport}>{t("Import")}</a>,{" "}
-          <a onClick={handleExport}>{t("export")}</a> {t(" or")}{" "}
-          <a onClick={handleReset}>{t("reset")}</a> {t(" your settings")}</p>
+        <UiActions className="settings-data-actions">
+          <UiButton disabled={importing} onClick={handleImport}>{t("Import")}</UiButton>
+          <UiButton onClick={handleExport}>{t("export")}</UiButton>
+          <UiButton className="ui-button-danger" disabled={importing} onClick={handleReset}>{t("reset")}</UiButton>
+        </UiActions>
+        <UiAsyncState kind={importError ? "error" : importing ? "loading" : ""} text={importError || t("Loading...")} retry={importError ? t("Try again") : ""} onRetry={handleImport} />
 
       </div>
     </div>

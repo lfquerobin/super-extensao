@@ -1,3 +1,4 @@
+import {UiAsyncState} from "../../ui";
 import { t } from "../../locales/ui";
 import React from "react";
 import Modal from "./modal/Modal";
@@ -8,11 +9,10 @@ type Props = {
 
 const StoreError: React.FC<Props> = ({ onClose }) => {
   return (
-    <Modal onClose={onClose}>
+    <Modal title={t("Storage Error")} onClose={onClose}>
       <div className="Settings">
         <h2 style={{ margin: 0 }}>{t("Storage Error")}</h2>
-        <p style={{ fontSize: "1.25em" }}>
-          {t("Tabliss is unable to load or save settings. This is most commonly caused by running in private browsing mode; but low disk space or a corrupt browser profile can also be the problem.")}</p>
+        <UiAsyncState kind="error" text={t("Tabliss is unable to load or save settings. This is most commonly caused by running in private browsing mode; but low disk space or a corrupt browser profile can also be the problem.")} />
         <p>
           {t("If you have settings saved with Tabliss, it might be a temporary issue. Try restarting your browser and checking if your settings return.")}</p>
         <p>

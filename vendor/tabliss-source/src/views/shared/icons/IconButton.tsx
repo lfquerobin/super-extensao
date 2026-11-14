@@ -1,7 +1,7 @@
 import { UiButton } from "../../../ui";
 import React, { FC } from "react";
 
-interface Props {
+interface Props extends React.AriaAttributes {
   children: React.ReactNode;
   onClick: () => void;
   primary?: boolean;
@@ -11,6 +11,7 @@ interface Props {
 const IconButton: FC<Props> = ({ children, primary, ...props }) => (
   <UiButton
     className={`ui-button-icon button--icon ${primary ? "button--primary" : ""}`}
+    aria-label={props.title}
     {...props}
   >
     {children}

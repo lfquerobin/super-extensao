@@ -58,3 +58,13 @@ html,body {background:#172039;}
 .Settings .ui-stack > :is(label,p) {margin:0;}
 .Settings .ui-button-icon {min-height:28px;width:28px;padding:6px;}
 .Settings .system-field {align-items:center;grid-template-columns:minmax(0,1fr) minmax(0,2fr);column-gap:var(--space-3);}
+
+/* Editor compositions use the shared layout, disclosure and state components. */
+.Settings .ui-editor .ui-editor-heading .ui-actions {gap: var(--space-1);}
+.Settings .ui-editor .ui-disclosure .ui-field {margin: 0;}
+.Settings .ui-editor .settings {margin: 0;}
+.Settings .ui-editor {border: 1px solid var(--line); border-radius: var(--card-radius); background: var(--surface);}
+.Settings .settings-data-actions {margin: var(--space-5) 0;}
+.Settings .ui-async-state {font: var(--font-control)/1.5 var(--ui-font);}
+.ui-modal .Settings {color: var(--text);}
+.ui-modal .Settings :is(h2,h3,h4) {color: var(--text);}

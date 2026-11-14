@@ -33,6 +33,7 @@ function fixture(options = {}) {
       if (name.startsWith('.')) {
         let target = path.resolve(path.dirname(filename), name);
         if (fs.existsSync(target) && fs.statSync(target).isDirectory()) target = path.join(target, 'index.tsx');
+        if (!path.extname(target) && fs.existsSync(target + '.js')) return require(target + '.js');
         if (!path.extname(target)) target += fs.existsSync(target + '.ts') ? '.ts' : '.tsx';
         return load(target);
       }
@@ -69,6 +70,23 @@ test('missing provider keys stop before network requests instead of sending unde
   await assert.rejects(() => api.fetchImages(photoConfig), error => error.code === 'key');
   await assert.rejects(() => gif.getGif({ tag: '', nsfw: false }, { push() {}, pop() {} }), error => error.code === 'key');
   assert.equal(f.calls.length, 0);
+});
+
+test('React shared modal cancels with Escape and restores focus to its opener', async () => {
+  const ui = dom(), f = fixture(), {UiModal} = f.load('ui/index.tsx');
+  const opener = ui.d.window.document.createElement('button');opener.textContent='Open';ui.d.window.document.body.append(opener);opener.focus();
+  function Dialog() {
+    const [open,setOpen]=React.useState(true);
+    return open ? React.createElement(UiModal,{title:'Settings error',closeLabel:'Close',onClose:()=>setOpen(false)},React.createElement('p',null,'Details')) : null;
+  }
+  try {
+    await act(async()=>ui.root.render(React.createElement(Dialog)));
+    const dialog=ui.d.window.document.querySelector('dialog');
+    assert.equal(dialog.open,true);assert.equal(dialog.getAttribute('aria-label'),'Settings error');
+    assert.equal(ui.d.window.document.activeElement.textContent,'Close');
+    await act(async()=>dialog.dispatchEvent(new ui.d.window.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true})));
+    assert.equal(ui.d.window.document.querySelector('dialog'),null);assert.equal(ui.d.window.document.activeElement,opener);
+  } finally {await ui.close();}
 });
 test('image keys persist only locally, preserve the other provider and notify subscribed views', async () => {
   const f = fixture({ keys: { giphy: 'giphy-local' } }), provider = f.load('plugins/backgrounds/shared/provider.ts');
@@ -209,7 +227,7 @@ test('GIPHY handles a rejected image result in the component without losing the 
       loader: { push() { pending++; }, pop() { pending--; } },
     })); await tick(); });
     assert.equal(f.calls.length, 1); assert.equal(pending, 0); assert.equal(saved, false);
-    assert.match(ui.d.window.document.querySelector('[role="status"]').textContent, /No images found/);
+    assert.match(ui.d.window.document.querySelector('[role="alert"]').textContent, /No images found/);
     assert.match(ui.d.window.document.querySelector('[data-background]').dataset.background, /blob:cached/);
   } finally { await ui.close(); }
 });

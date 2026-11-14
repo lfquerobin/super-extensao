@@ -8,15 +8,15 @@ function fixture(hash = ''){
  const dom=new JSDOM(fs.readFileSync(path.join(root,'vpn-blocked.html'),'utf8'),{url:'https://extension.test/vpn-blocked.html'+hash}),w=dom.window;
  const exports={};const file=path.join(root,'vpn/source/blocked.js');
  const messages={VpnTrafficBlocked:{'pt-BR':'Rede pausada',en:'Network paused'}};
- vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports,URL,chrome:{runtime:{getURL:p=>'chrome-extension://test/'+p}},require:id=>({messages})});
+ vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports,URL,chrome:{runtime:{getURL:p=>'chrome-extension://test/'+p}},require:id=>id.includes('confirmation')?require('../ui/confirmation.js'):({messages})});
  let reply=async()=>blocked,locale,theme,disposed=0,poll;const calls=[],navigations=[];
  const request=async type=>{calls.push(type);return reply(type);};
  const app=exports.mountProtection(w.document.querySelector('main'),request,{locale:{watch(fn){locale=fn;fn('pt-BR');return ()=>disposed++;}},bindTheme(node){theme=node;return ()=>disposed++;}},{setInterval(fn){poll=fn;return 1;},clearInterval(){disposed++;}},url=>navigations.push(url));
- const $=id=>w.document.getElementById(id);
+ const $=id=>id==='confirm'?w.document.querySelector('[data-confirm=accept]'):id==='cancel'?w.document.querySelector('[data-confirm=cancel]'):w.document.getElementById(id);
  return {w,app,$,calls,navigations,setReply:fn=>{reply=fn;},locale:value=>locale(value),poll:()=>poll(),dispose:()=>{app.dispose();w.close();},get disposed(){return disposed;},get theme(){return theme;}};
 }
 test('local blocking page reads live state without reconnecting or releasing on load',async()=>{
- const f=fixture();try{await tick();assert.deepEqual(f.calls,['protectionStatus']);assert.equal(f.$('protection').dataset.status,'blocked');assert.equal(f.$('retry').hidden,false);assert.match(f.$('help').textContent,/Sites que usam VPN permanecem bloqueados/);assert.match(f.$('help').textContent,/escolher se sites fora da VPN/);assert.equal(f.$('confirmation').hidden,true);}finally{f.dispose();}
+ const f=fixture();try{await tick();assert.deepEqual(f.calls,['protectionStatus']);assert.equal(f.$('protection').dataset.status,'blocked');assert.equal(f.$('retry').hidden,false);assert.match(f.$('help').textContent,/Sites que usam VPN permanecem bloqueados/);assert.match(f.$('help').textContent,/escolher se sites fora da VPN/);assert.equal(f.w.document.querySelector('dialog'),null);}finally{f.dispose();}
 });
 
 test('return address stays local and is offered only after a confirmed VPN, without automatic navigation',async()=>{
@@ -81,11 +81,20 @@ test('reconnect keeps blocking when recovery is still waiting and only a confirm
  f.setReply(async()=>({...blocked,status:'connected',retryAvailable:false}));f.poll();await tick();assert.equal(f.$('protection').dataset.status,'connected');assert.equal(f.$('release').hidden,true);assert.equal(f.calls.includes('disconnect'),false);}finally{f.dispose();}
 });
 test('releasing requires a separate confirmation and waits for guard readback',async()=>{
- const f=fixture();try{await tick();f.$('release').click();assert.equal(f.$('confirmation').hidden,false);assert.equal(f.calls.includes('disconnect'),false);f.$('cancel').click();assert.equal(f.calls.includes('disconnect'),false);
- const gate=deferred();f.setReply(type=>type==='disconnect'?gate.promise:Promise.resolve({...blocked,status:'released',retryAvailable:false}));f.$('release').click();f.$('confirm').click();await tick();assert.equal(f.calls.filter(x=>x==='disconnect').length,1);assert.notEqual(f.$('protection').dataset.status,'released');assert.equal(f.$('confirm').disabled,true);gate.resolve();await tick();assert.equal(f.$('protection').dataset.status,'released');}finally{f.dispose();}
+ const f=fixture();try{await tick();f.$('release').click();assert.ok(f.w.document.querySelector('dialog[open]'));assert.equal(f.calls.includes('disconnect'),false);f.$('cancel').click();await tick();assert.equal(f.calls.includes('disconnect'),false);
+ const gate=deferred();f.setReply(type=>type==='disconnect'?gate.promise:Promise.resolve({...blocked,status:'released',retryAvailable:false}));f.$('release').click();f.$('confirm').click();await tick();assert.equal(f.calls.filter(x=>x==='disconnect').length,1);assert.notEqual(f.$('protection').dataset.status,'released');assert.equal(f.w.document.querySelector('dialog'),null);assert.equal(f.$('retry').disabled,true);gate.resolve();await tick();assert.equal(f.$('protection').dataset.status,'released');}finally{f.dispose();}
 });
 test('worker failure never announces a release, never auto-retries a mutation and remains queryable',async()=>{
  const f=fixture();try{await tick();f.setReply(async()=>{throw Error('VpnOperationPending');});f.$('retry').click();await tick();assert.equal(f.$('protection').dataset.status,'unconfirmed');assert.equal(f.calls.filter(x=>x==='retryProtection').length,1);f.poll();await tick();assert.equal(f.calls.filter(x=>x==='retryProtection').length,1);assert.equal(f.$('refresh').disabled,false);}finally{f.dispose();}
+});
+test('shared release confirmation cancels when VPN recovers or the page is disposed',async()=>{
+ const f=fixture();try{
+  await tick();f.$('release').click();assert.equal(f.w.document.activeElement.dataset.confirm,'cancel');
+  f.setReply(async()=>({...blocked,status:'connected',retryAvailable:false}));await f.app.refresh();await tick();
+  assert.equal(f.w.document.querySelector('dialog'),null);assert.equal(f.calls.includes('disconnect'),false);
+  f.setReply(async()=>blocked);await f.app.refresh();f.$('release').click();f.app.dispose();await tick();
+  assert.equal(f.w.document.querySelector('dialog'),null);assert.equal(f.calls.includes('disconnect'),false);
+ }finally{f.dispose();}
 });
 test('a delayed state read cannot overwrite a newer explicit release',async()=>{
  const f=fixture();try{await tick();const old=deferred();f.$('release').click();f.setReply(()=>old.promise);const query=f.app.refresh();

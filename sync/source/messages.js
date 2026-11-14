@@ -1,5 +1,8 @@
 /* SPDX-License-Identifier: MPL-2.0 */
 export const uiMessages = {
+  UiFoldersLoading: {"pt-BR": "Carregando pastas…", en: "Loading folders…"},
+  UiFoldersFailed: {"pt-BR": "Não foi possível carregar as pastas. Tente novamente.", en: "Could not load folders. Try again."},
+  UiFoldersEmpty: {"pt-BR": "Nenhuma pasta disponível.", en: "No folders available."},
   SyncInvalidUrl: {
     "pt-BR":
       "Um favorito contém um endereço inválido. Confira os endereços antes de sincronizar.",

@@ -1,3 +1,4 @@
+import {UiAsyncState} from "../../ui";
 import { t } from "../../locales/ui";
 import React from "react";
 import { ErrorContext } from "../../contexts/error";
@@ -22,9 +23,7 @@ const Errors: React.FC<Props> = ({ onClose }) => {
           {t("Visit support")}</a>
         <h2 style={{ margin: 0 }}>{t("Errors")}</h2>
         {errors.map((error, index) => (
-          <div key={index} className="Widget">
-            {error.message}
-          </div>
+          <UiAsyncState key={index} kind="error" text={error.message} />
         ))}
       </div>
     </Modal>

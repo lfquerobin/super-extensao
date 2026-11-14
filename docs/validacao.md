@@ -1,5 +1,16 @@
 # Validação da Super Extensão
 
+## Interface compartilhada — 1.7.35
+
+**496 testes automatizados aprovados**, compilação de todas as interfaces, TypeScript da Nova guia, `check:ui` e `git diff --check` aprovados.
+
+Componentes estruturais da sincronização (pastas, diálogo e assistente), cartões/seções dos editores React, estados de progresso/erro e confirmação da página de recuperação passam pela biblioteca comum. Testes cobrem foco/Escape/restauração, montagem sob demanda, preservação de rascunho/escopo, seleção de IDs exatos, expansão das pastas, texto seguro e progresso determinado/indeterminado. A confirmação da VPN é cancelada ao recuperar a conexão ou descartar a página.
+
+A Nova guia foi exercitada no Edge 157.0.4341.46 em perfil temporário: editar/adicionar/ordenar/remover widgets, imagem local, duas abas/idioma, exportação, rejeição de importação futura sem perda, importação válida e reinício do navegador. Nenhum erro de página foi observado. O roteiro passa a conferir o aviso inline de importação, substituindo o alerta nativo. TypeScript da Nova guia e conferência dos templates estáticos foram verificados. Contas reais, dados pessoais e a matriz completa de provedores não são cobertos por esse teste.
+
+O roteiro `check-interface-native.cjs` também passou no Edge 157.0.4341.46: carregou o bundle de sincronização com APIs simuladas, conferiu hierarquia/seleção de pastas, cancelamento sem alterar o escopo, Escape/restauração de foco, avanço do assistente, uma etapa ativa e foco no título. O diálogo também coube em 520 × 360, sem rolagem horizontal interna. Capturas dos temas claro/escuro e textos longos são geradas para inspeção em `work/ui-review` e foram inspecionadas. Nenhum erro de página foi observado.
+
+
 Revisado em 13 de novembro de 2026, referência **1.7.26**. Esta página separa evidência automatizada de verificações ainda pendentes.
 
 ## Retorno à página após recuperação da VPN — 1.7.26

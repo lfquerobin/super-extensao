@@ -15,10 +15,13 @@ let mutationQueue = Promise.resolve();
 function showError(error) {
   $("error").textContent = SuperI18n.text(error?.message || String(error));
   $("error").hidden = false;
+  SuperAsyncState.applyStatePresentation($("error"), "error");
+  lastNotice = undefined;
+  $("popupStatus").textContent = "";
 }
 let lastNotice;
-function renderNotice(){if(lastNotice)$("popupStatus").textContent=lastNotice.key?SuperI18n.t(lastNotice.key,lastNotice.values):SuperI18n.text(lastNotice.literal);}
-function notify(message) {lastNotice={literal:message};renderNotice();$("error").hidden=true;}
+function renderNotice(){if(lastNotice)SuperAsyncState.renderAsyncState($("popupStatus"), {kind:lastNotice.kind || "success", text:lastNotice.key?SuperI18n.t(lastNotice.key,lastNotice.values):SuperI18n.text(lastNotice.literal), ...(lastNotice.kind === "loading" ? {progress:null} : {})});}
+function notify(message, kind = "success") {lastNotice={literal:message, kind};renderNotice();$("error").hidden=true;}
 function notifyMessage(key,values){lastNotice={key,values};renderNotice();$("error").hidden=true;}
 function handle(action) { return (...args) => Promise.resolve().then(() => action(...args)).catch(showError); }
 function serializeMutation(action) {
@@ -66,14 +69,17 @@ function refreshPresets() {
 async function refreshReport() {
   const data = await chrome.storage.local.get(["lastClearTime", "lastClearReason", "lastClearTypeKeys", "lastClearTypes", "lastClearErrorAt"]);
   if (data.lastClearErrorAt && (!data.lastClearTime || Date.parse(data.lastClearErrorAt) > Date.parse(data.lastClearTime))) {
+    SuperAsyncState.applyStatePresentation($("reportState"), "error");
     $("reportTitle").textContent = SuperI18n.text("A última tentativa não foi concluída");
     $("reportDetail").textContent = SuperI18n.text("Confira as configurações. Uma limpeza automática pendente será tentada na próxima abertura.");
   } else if (data.lastClearTime) {
+    SuperAsyncState.applyStatePresentation($("reportState"), "success");
     const reason = {manual:SuperI18n.text("Manual"), exit:SuperI18n.text("Ao fechar"), startup:SuperI18n.text("Recuperação na abertura")}[data.lastClearReason] || SuperI18n.text("Automática");
     $("reportTitle").textContent = new Date(data.lastClearTime).toLocaleString(SuperI18n.locale);
     const labels = data.lastClearTypeKeys?.map(key => SuperI18n.text(LABELS[key])).filter(Boolean) || data.lastClearTypes?.map(value=>SuperI18n.text(value)) || [];
     $("reportDetail").textContent = `${reason} · ${labels.join(", ")}`;
   } else {
+    SuperAsyncState.applyStatePresentation($("reportState"), "empty");
     $("reportTitle").textContent = SuperI18n.text("Nenhuma limpeza registrada");
     $("reportDetail").textContent = SuperI18n.text("Por padrão, somente o histórico será apagado.");
   }
@@ -217,7 +223,7 @@ async function init() {
     }
     if (snapshot.clearCookies && !await SuperConfirmation.confirmAction(document, SuperI18n.text("Limpar os dados selecionados agora? Cookies fora das exceções serão apagados e isso pode desconectar contas."))) return;
     $("clearNow").disabled = true;
-    notify(SuperI18n.text("Limpando…"));
+    notify(SuperI18n.text("Limpando…"), "loading");
     try {
       const response = await message({action:"clearNow", settings:snapshot});
       if (!response.cleared) throw new Error(SuperI18n.text("A limpeza não foi executada."));

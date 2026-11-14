@@ -1,4 +1,4 @@
-import { UiButton, UiCard } from "../../ui";
+import { UiButton, UiCard, UiAsyncState } from "../../ui";
 import { t } from "../../locales/ui";
 import React from "react";
 
@@ -26,7 +26,7 @@ const Persist: React.FC = () => {
       <p>
         {t("Would you like Tabliss to ask your browser to save your setting permanently?")}</p>
       {error ? (
-        <p>{t("Could not persist settings at this time.")}</p>
+        <UiAsyncState kind="error" text={t("Could not persist settings at this time.")} retry={t("Try again")} onRetry={handleClick} />
       ) : (
         <UiButton className="button button--primary" onClick={handleClick}>
           {t("Persist Settings")}</UiButton>

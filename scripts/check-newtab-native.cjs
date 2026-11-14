@@ -10,7 +10,7 @@ const root = path.resolve(__dirname, ".."),
   extension = path.join(base, "extension"),
   profile = path.join(base, "profile");
 fs.mkdirSync(extension, { recursive: true });
-for (const entry of ["newtab", "icons", "preferences.js"])
+for (const entry of ["newtab", "icons", "preferences.js", "ui-theme.css", "ui-components.css"])
   fs.cpSync(path.join(root, entry), path.join(extension, entry), {
     recursive: true,
   });
@@ -80,6 +80,11 @@ async function main() {
   console.log("PASS existing configuration and notes");
   await page.keyboard.press("s");
   await page.locator(".Settings").waitFor();
+  fs.mkdirSync(path.join(root,"work/ui-review"), {recursive:true});
+  await page.screenshot({animations:"disabled",path:path.join(root,"work/ui-review/newtab-editor.png")});
+  await page.evaluate(() => {document.documentElement.dataset.theme = "light";});
+  await page.screenshot({animations:"disabled",path:path.join(root,"work/ui-review/newtab-editor-light.png")});
+  await page.evaluate(() => {document.documentElement.dataset.theme = "dark";});
   const snapshot = () => page.evaluate(() => chrome.storage.sync.get(null));
   await page
     .locator("select")
@@ -186,7 +191,6 @@ async function main() {
   assert.equal(exported.version, 3);
   assert.equal(exported["data/note"].notes[0].contents, "Audit note preserved");
   const before = await snapshot();
-  const alertEvent = page.waitForEvent("dialog");
   const chooserEvent = page.waitForEvent("filechooser");
   await page.getByText("Import", { exact: true }).click();
   await (
@@ -196,9 +200,7 @@ async function main() {
     mimeType: "application/json",
     buffer: Buffer.from(JSON.stringify({ version: 999 })),
   });
-  const alert = await alertEvent;
-  assert.match(alert.message(), /Invalid import/);
-  await alert.dismiss();
+  await page.locator(".Settings .ui-async-state[role=alert]").filter({hasText:"Invalid import"}).waitFor();
   assert.deepEqual(await snapshot(), before);
   assert.equal(
     await page
@@ -268,5 +270,6 @@ main()
   })
   .finally(async () => {
     await browser?.close();
+    assert.ok(path.resolve(base).startsWith(path.resolve(os.tmpdir()) + path.sep + "super-newtab-audit-"));
     fs.rmSync(base, { recursive: true, force: true });
   });

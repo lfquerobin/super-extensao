@@ -1,6 +1,6 @@
 # Próximos passos da Super Extensão
 
-Revisado em **13 de novembro de 2026**, referência **1.7.33**. A página de bloqueio permite voltar ao endereço interceptado após confirmação da VPN e novo clique, com revalidação de estado e sem repetir POST. Consulta/cache de conta, política Free/pago e resolução das configurações de recursos usam núcleos próprios desde a 1.7.25. Endpoints, formatos e fachadas de compatibilidade permanecem. A conexão Proton pessoal ainda precisa ser repetida após a correção da previsão de rede da 1.7.24. Evidências, limites, confirmações do usuário e validações ainda pendentes estão separados em [docs/validacao.md](docs/validacao.md).
+Revisado em **14 de novembro de 2026**, referência **1.7.35**. A página de bloqueio permite voltar ao endereço interceptado após confirmação da VPN e novo clique, com revalidação de estado e sem repetir POST. Consulta/cache de conta, política Free/pago e resolução das configurações de recursos usam núcleos próprios desde a 1.7.25. Endpoints, formatos e fachadas de compatibilidade permanecem. A conexão Proton pessoal ainda precisa ser repetida após a correção da previsão de rede da 1.7.24. Evidências, limites, confirmações do usuário e validações ainda pendentes estão separados em [docs/validacao.md](docs/validacao.md).
 
 ## Estado e prioridade
 
@@ -10,7 +10,7 @@ Revisado em **13 de novembro de 2026**, referência **1.7.33**. A página de blo
 | 2 | Validação em navegador | Testes de execução, recuperação, transporte e interface; interface conferida parcialmente no Helium isolado | Conferir Google Drive com dois perfis de teste e tráfego real da VPN |
 | 3 | Demais sincronizações | Outros provedores e perfis de abas continuam no legado | Migrar um conector por vez e definir propriedade de pastas sobrepostas |
 | 4 | Motor próprio da VPN | 1.7.19: runner nativo aprovado; conta, troca EUA/Canadá, recuperação pela página local e inclusão/exclusão com medições externas no Helium; regras originais restauradas | Medir queda e transições com captura autorizada pelo Windows, ampliar IPv6/DNS, testar suspensão/reinício completo, liberação/cancelamento e recursos de terceiros; ver docs/vpn-validacao-pc.md |
-| Contínua | Interface e manutenção | 1.7.31: importador/editor de domínios, lista do autoplay, estados e confirmações compartilhados; telas da VPN separadas | Conferência visual dos fluxos; avaliar árvores/assistentes Sync, composições React e estados específicos restantes em docs/ui-components.md |
+| Contínua | Interface e manutenção | 1.7.35: biblioteca comum inclui árvore/assistente Sync, cartões/disclosures React, diálogos e progresso/erros | Unificação de componentes concluída nesta etapa; ampliar a conferência de estados específicos com contas reais. Ver docs/ui-components.md |
 
 ## 1. Motor próprio de sincronização
 
@@ -115,7 +115,8 @@ A extração dos módulos funcionais está implementada: regras/PAC, controlador
 - [ ] Revisar visualmente todas as telas, assistentes e diálogos em PT-BR/inglês e nos três temas.
 - [ ] Conferir teclado, foco, contraste, textos longos e alturas mínima/máxima no navegador.
 - [x] Avaliar Configurações gerais: nenhuma tela adicional é necessária nesta etapa; manter tema/idioma no cabeçalho e preferências funcionais no módulo correspondente.
-- [ ] Fazer os próximos controles adotarem `ui-components.css` e seus tokens.
+- [x] Concluir a unificação da árvore de pastas, assistente, cartões/seções de edição, diálogos e estados de progresso/erro na biblioteca compartilhada (1.7.35).
+- [ ] Manter novos controles sobre a biblioteca e ampliar os cenários de uso conferidos no perfil pessoal.
 
 ## 4. Limpeza, abas e Nova guia
 

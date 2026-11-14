@@ -305,55 +305,6 @@ body {
   max-width: none;
   padding: 0;
 }
-.sync-steps {
-  display: flex;
-  justify-content: space-between;
-  list-style: none;
-  padding: 16px 12px !important;
-  margin: 0 !important;
-  border-bottom: 1px solid var(--line);
-  gap: 4px;
-}
-.sync-steps li {
-  flex: 1;
-  display: grid;
-  justify-items: center;
-  gap: 5px;
-  text-align: center;
-  font-size: 10px;
-  color: var(--muted);
-}
-.sync-steps li span {
-  display: grid;
-  place-items: center;
-  width: 23px;
-  height: 23px;
-  border: 1px solid var(--line);
-  border-radius: 50%;
-  font-size: 11px;
-}
-.sync-steps li.current {
-  color: var(--accent);
-  font-weight: 700;
-}
-.sync-steps li.current span,
-.sync-steps li.complete span {
-  background: var(--accent-bg);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-.sync-workspace .v-stepper__content {
-  padding: 16px !important;
-}
-.sync-workspace .v-stepper__content .headline,
-.sync-workspace .v-stepper__content .v-form,
-.sync-workspace .v-stepper__content .form-buttons {
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-}
-.sync-workspace .v-stepper__wrapper {
-  overflow: visible;
-}
 .sync-wizard-help {
   color: var(--muted);
   font-size: 12px;
@@ -445,7 +396,7 @@ body {
   padding: 12px 0;
   flex-wrap: wrap;
 }
-.sync-workspace .v-stepper__content .headline {
+.sync-workspace .ui-wizard-step .headline {
   margin-bottom: 16px;
 }
 
@@ -489,3 +440,8 @@ body {
 }
 
 /* Match native switches without replacing Vuetify's accessible input and label. */
+
+.sync-workspace .ui-wizard .ui-steps {padding: var(--space-4) var(--space-3) !important;}
+.sync-workspace .ui-modal .ui-card {background: var(--surface); color: var(--text);}
+.sync-workspace .ui-folder-tree ul {padding-inline-start: 0;}
+.sync-workspace .ui-folder-tree ul ul {padding-inline-start: var(--space-2);}
