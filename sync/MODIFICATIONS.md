@@ -55,3 +55,7 @@ A 1.7.36 também desativa a contagem de visitas herdada dos serviços removidos,
 ## Parser XML — 1.7.37
 
 `fast-xml-parser` passa a 5.12.1 no lockfile do legado e na raiz do projeto, corrigindo o alerta identificado na auditoria sem mudar a versão principal. Interface e worker foram recompilados; os testes de leitura/limites/XBEL e sincronização passaram. [Relatório de integridade](../docs/auditoria-integridade.md).
+
+## Vue 3 e controles nativos — 1.7.38
+
+A interface usa Vue 3/Router 4 e controles HTML do catálogo compartilhado, sem Vue 2, Vuetify ou Vuex. O estado mantém a fachada de comandos existente; rotas por hash, perfis, chaves de armazenamento, credenciais e formatos de backup permanecem compatíveis. Foram removidos os formulários locais de serviços desativados; suas fontes históricas permanecem no vendor. A compilação própria usa `scripts/sync-webpack.cjs` e `sync/package.json`; as dependências antigas de interface foram removidas do pacote do motor. Licenças das dependências atuais ficam em `THIRD-PARTY-NOTICES.txt`, geradas a cada build. Cancelar criptografia descarta o segredo digitado; falhas da autorização Google aparecem no formulário e permitem nova tentativa.

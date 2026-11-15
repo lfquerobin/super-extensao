@@ -16,6 +16,7 @@
 <script>
 import {confirmAction} from "../../../ui/confirmation.js";
 export default {
+  emits: ["click"],
   name: "OptionDeleteAccount",
   methods: {
     async onClick() {

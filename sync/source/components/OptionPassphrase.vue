@@ -9,7 +9,7 @@
     </div>
     <template v-if="!editing">
       <template v-if="value">
-        <SyncButton @click="editing = true">
+        <SyncButton @click="beginEdit">
           <SyncIcon>mdi-pencil-lock</SyncIcon>{{ t("LabelChange") }}
         </SyncButton>
         <SyncButton @click="$emit('input', '')">
@@ -17,7 +17,7 @@
         </SyncButton>
       </template>
       <template v-else>
-        <SyncButton @click="editing = true">
+        <SyncButton @click="beginEdit">
           <SyncIcon>mdi-lock-plus</SyncIcon>{{ t("LabelAdd") }}
         </SyncButton>
       </template>
@@ -27,6 +27,7 @@
         outlined
         dense
         class="mt-2"
+        :value="passphrase"
         :label="t('LabelPassphrase')"
         :type="showPassphrase ? 'text' : 'password'"
         @input="passphrase = $event"
@@ -50,13 +51,14 @@
         color="primary"
         @click="
           $emit('input', passphrase);
+          passphrase = '';
           editing = false;
         "
       >
         <SyncIcon>mdi-check</SyncIcon>
         {{ t("LabelSave") }}
       </SyncButton>
-      <SyncButton @click="editing = false">
+      <SyncButton @click="passphrase = ''; editing = false">
         <SyncIcon>mdi-close</SyncIcon>
         {{ t("LabelCancel") }}
       </SyncButton>
@@ -66,6 +68,7 @@
 
 <script>
 export default {
+  emits: ["input"],
   name: "OptionPassphrase",
   props: {
     value: {
@@ -79,6 +82,9 @@ export default {
       editing: false,
       passphrase: "",
     };
+  },
+  methods: {
+    beginEdit() { this.passphrase = ""; this.showPassphrase = false; this.editing = true; },
   },
 };
 </script>

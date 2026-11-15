@@ -1,4 +1,4 @@
-# Componentes da interface — referência 1.7.35
+# Componentes da interface — referência 1.7.38
 
 
 ## Fluxos compartilhados — 1.7.31
@@ -18,19 +18,19 @@ Além das primitivas visuais, os seguintes fluxos têm uma fonte comum:
 
 O editor da limpeza continua gravando automaticamente. Importar na VPN altera apenas o rascunho do modo selecionado; Salvar aplica as regras. A interface não concede controles bloqueados por política nem altera o estado de proteção por conta própria. Uma confirmação de liberação da VPN fica inválida se o estado da conexão mudar enquanto o diálogo estiver aberto.
 
-Na compilação da sincronização, os módulos UMD compartilhados não passam pelo injetor de polyfills do Babel: a injeção de imports ESM nesses arquivos descartava os exports CommonJS. Os demais arquivos continuam usando o pipeline existente. O requisito mínimo da extensão é Chromium 116.
+Na 1.7.38, a sincronização usa o compilador próprio `scripts/sync-webpack.cjs`, sem Babel nem ferramentas Vue 2. Os módulos UMD compartilhados mantêm seus exports CommonJS. O requisito mínimo da extensão é Chromium 116.
 
 Validação da entrega: **483 testes aprovados**, interfaces de VPN/sincronização/nova guia compiladas, TypeScript do worker e da interface VPN aprovado e `check:ui` aprovado. O cenário adicional de autenticação do proxy passou no teste nativo local descrito em `vpn-validacao-pc.md`.
 
 ### Conclusão da unificação — 1.7.35
 
 - `ui/vue-structures.js` fornece `UiFolderTree`, `UiModal`, `UiSteps` e `UiWizardStep`. A seleção hierárquica conserva IDs exatos, expansão nativa, rascunho e cancelamento. O assistente monta etapas sob demanda, preserva controles visitados e leva o foco ao título da etapa ativa.
-- `ui/vue-validated.js` centraliza os adaptadores dos campos/formulários validados e composições Vuetify. `sync/source/components/ui/engine.js` é somente um reexport de compatibilidade. Modelos, regras de validação, slots e injeção permanecem preservados.
+- `ui/vue-validated.js` centraliza os controles HTML nativos para Vue 3 e as regras de validade dos campos/formulários. `sync/source/components/ui/engine.js` é somente um reexport de compatibilidade. Modelos, regras de validação, slots e injeção permanecem preservados.
 - O adaptador React fornece `UiEditorCard`, `UiDisclosure`, `UiModal` e `UiAsyncState`. Fundos e widgets usam o mesmo cartão de edição; seções de exibição/fonte usam disclosure nativo operável por teclado. Erros de importação aparecem no painel, sem alerta bloqueante e sem apagar configurações inválidas.
 - `ui/modal.js` concentra abertura, Escape, circulação de foco e restauração do disparador para diálogos Vue/React. A página de recuperação da VPN usa `ui/confirmation.js`, com foco inicial em Cancelar e invalidação ao recuperar a conexão ou descartar a página.
 - `ui/async-state.js` centraliza apresentação de carregamento, erro, aviso, sucesso e vazio; progresso determinado é limitado a 0–100, e progresso sem medição usa a barra nativa indeterminada. Perfis/pastas da sincronização, importação/provedores/erros da Nova guia e status/relatórios da limpeza usam essa base. Textos externos continuam escapados ou renderizados como nós de texto.
 
-O escopo de componentes compartilhados desta etapa está concluído. Configurações e regras de cada provedor/widget permanecem em seus módulos: são composições específicas sobre a biblioteca comum, não cópias de controles. Vue, Vuetify e React continuam sendo dependências de interface. A migração dos motores e provedores é um trabalho separado.
+O escopo de componentes compartilhados desta etapa está concluído. Configurações e regras de cada provedor/widget permanecem em seus módulos: são composições específicas sobre a biblioteca comum, não cópias de controles. Vue 3 e React são as dependências de interface; Vuetify e Vuex foram removidos na 1.7.38. A migração dos motores e provedores é um trabalho separado.
 
 Validação nativa usa perfis/dados fictícios; não comprova autenticação de todos os provedores nem todos os estados do perfil pessoal. Roteiros: `scripts/check-interface-native.cjs` e `scripts/check-newtab-native.cjs`, com Playwright e `CHROMIUM_PATH`. Capturas ficam em `work/ui-review`, fora do Git. A conferência no perfil pessoal continua sendo uma validação de uso, não uma migração de componentes pendente.
 
@@ -50,14 +50,14 @@ Revisado em 11 de novembro de 2026. As telas usam um catálogo comum de componen
 | `ui/render.cjs` | Expansão dos componentes declarativos em HTML nativo, na compilação e na VPN |
 | `ui/dom.cjs` → `ui.js` | Criação dos controles dinâmicos do popup com nós DOM |
 | `ui/vue.js` | Componentes funcionais `Ui*` para Vue, sem elemento adicional |
-| `ui/vue-validated.js` | Adaptadores `Sync*` dos controles validados, diálogos, árvore e assistente Vuetify |
+| `ui/vue-validated.js` | Controles `Sync*` HTML nativos; estruturas de diálogo, árvore e assistente são reexportadas de `ui/vue-structures.js` |
 | `ui/vue.css` | Aparência dos controles validados, separada do layout das telas |
 | `vendor/tabliss-source/src/ui/index.tsx` | Componentes React do editor, fundos, widgets e controles auxiliares |
 | `ui/templates/` | Fontes das páginas estáticas; popup separado em seções e rodapé |
 | `ui-components.css` | Aparência e espaçamento dos componentes comuns |
 | CSS de cada módulo | Composição específica, como grupos de países e editor de widgets |
 
-React, Vue e Vuetify permanecem como dependências. Os adaptadores `Sync*` estendem os controles existentes para preservar validação, modelos, slots, referências, injeção e protocolos entre pais e filhos. Esta refatoração componentiza a interface; não substitui os frameworks, motores, autenticação ou conectores legados por implementações independentes.
+React e Vue 3 permanecem como dependências. Os controles `Sync*` usam elementos HTML e não herdam componentes Vuetify. Os contratos de valores, eventos, slots e referências são explícitos. O estado da sincronização usa `reactive` e uma fachada `state`/`commit`/`dispatch`, sem Vuex. Motores, autenticação e conectores continuam pelas fronteiras existentes.
 
 ## Catálogo
 
@@ -104,7 +104,7 @@ const remove = SuperUi.create("button", {
 
 ### Vue e React
 
-Vue registra `Ui*` globalmente. Campos nativos simples podem continuar com o `v-model` do compilador e a classe `ui-control`; `UiControl` também suporta modelo textual e seleção simples. Os formulários de provedores usam `SyncTextField`, `SyncSelect`, `SyncSwitch`, `SyncForm`, `SyncDialog`, `SyncTree` e os demais adaptadores validados. Não substitua esses controles por inputs nativos sem cobrir suas regras e eventos.
+Vue registra `Ui*` globalmente. Campos nativos simples podem continuar com o `v-model` do compilador e a classe `ui-control`; `UiControl` recebe `value` e eventos nativos explícitos para texto e seleção simples. Os formulários de provedores usam `SyncTextField`, `SyncSelect`, `SyncSwitch`, `SyncForm`, `SyncDialog`, `SyncTree` e os demais adaptadores validados. Não substitua esses controles por inputs nativos sem cobrir suas regras e eventos.
 
 React importa `UiField`, `UiInput`, `UiSelect`, `UiTextarea`, `UiButton`, `UiCard`, `UiStack`, `UiActions`, `UiNote` e `UiNotice` de `src/ui`. Propriedades e eventos permanecem os das tags correspondentes. Os componentes preservam valores controlados e não contêm regras dos provedores de imagens. O painel de chaves é a mesma composição para Unsplash e GIPHY.
 
@@ -143,6 +143,6 @@ Rótulos e campos preservam associações, IDs, atributos ARIA, estados desabili
 
 ## Verificação
 
-Os testes de contrato cobrem semântica HTML, formulários, conteúdo escapado, estados desabilitados, referências e `v-model` no Vue, valores controlados no React e correspondência dos artefatos estáticos. Os testes existentes cobrem navegação, idiomas, perfis, rascunhos, autorização, backup, regras e estados da VPN. O teste de logs aceita LF e CRLF, respeitando a exportação nativa do Windows.
+Os testes de contrato cobrem semântica HTML, formulários, conteúdo escapado, estados desabilitados, referências e valores/eventos controlados no Vue, valores controlados no React e correspondência dos artefatos estáticos. Os testes existentes cobrem navegação, idiomas, perfis, rascunhos, autorização, backup, regras e estados da VPN. O teste de logs aceita LF e CRLF, respeitando a exportação nativa do Windows.
 
 Veja [validacao.md](validacao.md) para resultados e limites da conferência no navegador. Testes DOM não comprovam geometria nem autenticação ou tráfego real.

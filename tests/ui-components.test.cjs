@@ -37,9 +37,9 @@ for (const theme of ["dark", "light"]) {
       <input class="ui-control" id="local-field">
       <article class="ui-card" id="local-card"></article>
       <p class="ui-notice ui-notice-error" id="local-error">Failed</p>
-      <section id="syncPanel"><div class="v-application sync-workspace">
+      <section id="syncPanel"><div class="sync-workspace">
         <button class="sync-button ui-button" id="sync-button">Sync</button>
-        <button class="v-btn" id="engine-button">Save</button>
+        <button class="sync-native-button ui-button" id="engine-button">Save</button>
         <div class="sync-form"><input class="ui-control" id="sync-field"></div>
         <article class="sync-profile ui-card" id="sync-card"></article>
         <p class="ui-notice sync-notice sync-error ui-notice-error" id="sync-error">Failed</p>

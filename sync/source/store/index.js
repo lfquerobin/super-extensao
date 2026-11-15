@@ -1,23 +1,18 @@
 /* SPDX-License-Identifier: MPL-2.0 */
-import Vue from "vue";
-import Vuex, { Store } from "vuex";
+import { reactive } from "vue";
 import { mutationsDefinition } from "./mutations";
 import { actionsDefinition } from "./actions";
-
-Vue.use(Vuex);
-
-export default new Store({
-  mutations: mutationsDefinition,
-  actions: actionsDefinition,
-  state: {
-    locked: false,
-    accounts: {},
-    loginFlow: {
-      isRunning: false,
-    },
-    loading: {
-      accounts: true,
-    },
+const state = reactive({ locked: false, accounts: {}, loginFlow: { isRunning: false }, loading: { accounts: true } });
+const store = {
+  state,
+  commit(type, payload) {
+    if (!mutationsDefinition[type]) throw Error("Unknown sync mutation: " + type);
+    return mutationsDefinition[type](state, payload);
   },
-  getters: {},
-});
+  async dispatch(type, payload) {
+    if (!actionsDefinition[type]) throw Error("Unknown sync action: " + type);
+    return actionsDefinition[type](store, payload);
+  },
+  install(app) { app.config.globalProperties.$store = store; },
+};
+export default store;

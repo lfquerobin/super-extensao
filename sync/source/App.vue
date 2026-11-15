@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 <template>
-<v-app id="app" class="sync-workspace">
+<div id="app" class="sync-workspace">
   <header v-if="!embedded" class="sync-heading">
     <UiField v-if="!embedded" class="sync-language"
       ><span class="sr-only">{{ t("SuperLanguage") }}</span
@@ -42,9 +42,9 @@
       {{ t("UiRetry") }}
     </UiButton>
   </UiNotice>
-  <v-main v-if="initialized && !locked && !loadError"
+  <main class="sync-main" v-if="initialized && !locked && !loadError"
     ><router-view :key="$route.path"
-  /></v-main>
+  /></main>
   <section v-if="initialized && locked" class="sync-unlock">
     <SyncIcon large aria-hidden="true">mdi-lock-outline</SyncIcon>
     <h2>{{ t("LabelUnlock") }}</h2>
@@ -73,7 +73,7 @@
       </UiButton>
     </UiForm>
   </section>
-</v-app>
+</div>
 </template>
 <script>
 import { actions } from "./store/definitions";
@@ -115,27 +115,23 @@ export default {
   },
   mounted() {
     const target = document.getElementById("syncSubmenu");
-    const navigation = this.$refs.navigation;
+    const navigation = this.$refs.navigation?.$el;
     if (target && navigation) {
       target.append(navigation);
-      this.$once("hook:beforeDestroy", () => {
-        if (navigation.parentElement === target) navigation.remove();
-      });
+      this.cleanupNavigation = () => { if (navigation.parentElement === target) navigation.remove(); };
     }
   },
   async created() {
     const preferences = globalThis.SuperPreferences;
     const root = document.getElementById("syncPanel") || document.documentElement;
-    const stopTheme = preferences.bindTheme(root, (_theme, resolved) => {
-      this.$vuetify.theme.dark = resolved === "dark";
-    });
+    const stopTheme = preferences.bindTheme(root);
     const stopLocale = preferences.locale.watch(async (locale) => {
       this.locale = locale;
       if (locale === i18n.getLocale()) return;
       i18n.setLocales([locale]);
       await i18n.load();
       translationState.version++;
-      setupDirection(this.$vuetify);
+      setupDirection();
     });
     let unregister = () => {};
     const cleanup = () => {
@@ -143,7 +139,7 @@ export default {
       stopLocale();
       unregister();
     };
-    this.$once("hook:beforeDestroy", cleanup);
+    this.cleanupPreferences = cleanup;
     window.addEventListener("unload", cleanup, { once: true });
     await this.load();
     try {
@@ -155,6 +151,7 @@ export default {
       this.loadError = error.message;
     }
   },
+  beforeUnmount() { this.cleanupNavigation?.(); this.cleanupPreferences?.(); },
   methods: {
     active(path) {
       return path === "/"

@@ -138,7 +138,7 @@ function setup(html, initialLocale = "en") {
       for (const listener of mediaListeners) listener({ matches: dark });
     },
     close() {
-      w.superSyncApp?.$destroy();
+      w.superSyncUnmount?.();
       w.dispatchEvent(new w.Event("unload"));
       w.close();
     },
@@ -218,7 +218,7 @@ test("global header locale updates all local tabs, dynamic messages and both emb
       await tick();
       for (const target of [doc.documentElement, doc.querySelector("#syncPanel"), doc.querySelector("#vpnPanel")])
         assert.equal(target.dataset.superTheme, resolved);
-      assert.equal(ui.w.superSyncApp.$vuetify.theme.dark, resolved === "dark");
+      assert.equal(ui.w.document.getElementById("syncPanel").dataset.superTheme, resolved);
       assert.equal(doc.querySelector("#theme").value, theme);
       assert.equal(doc.querySelector("#domainInput").value, "unsaved.example");
     }
@@ -228,7 +228,7 @@ test("global header locale updates all local tabs, dynamic messages and both emb
     assert.equal(doc.querySelector("#syncPanel .sync-navigation"), null);
     assert.equal(doc.querySelector("main #syncSubmenu"), null);
     assert.equal(syncMenu.querySelectorAll("a.tab").length, 4);
-    assert.equal(syncMenu.querySelectorAll(".v-icon").length, 0);
+    assert.equal(syncMenu.querySelectorAll(".sync-native-icon").length, 0);
     doc.querySelector("#tab-sync").click();
     assert.equal(doc.querySelector("#syncSubmenu").hidden, false);
     assert.equal(doc.querySelector("#cleanupSubmenu").hidden, true);

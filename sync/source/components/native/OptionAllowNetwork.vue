@@ -19,6 +19,7 @@
 
 <script>
 export default {
+  emits: ["input"],
   name: "OptionAllowNetwork",
   props: {
     value: {

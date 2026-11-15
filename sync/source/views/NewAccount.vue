@@ -60,7 +60,7 @@
           <SyncTextField
             outlined
             dense
-            v-model="label"
+            :value="label" @input="label = $event"
             append-icon="mdi-label"
             class="mt-2 mb-4"
             :label="t('LabelAccountlabel')"
@@ -89,20 +89,20 @@
             <SyncTextField
               outlined
               dense
-              v-model="server"
+              :value="server" @input="server = $event"
               :rules="[validateUrl]"
               :label="t('LabelGiturl')"
             />
             <SyncTextField
               outlined
               dense
-              v-model="username"
+              :value="username" @input="username = $event"
               :label="t('LabelUsername')"
             />
             <SyncTextField
               outlined
               dense
-              v-model="password"
+              :value="password" @input="password = $event"
               :label="t('LabelPassword')"
               :type="showPassword ? 'text' : 'password'"
             >
@@ -171,7 +171,7 @@
             <SyncTextField
               outlined
               dense
-              v-model="bookmark_file"
+              :value="bookmark_file" @input="bookmark_file = $event"
               class="mb-2"
               append-icon="mdi-file-document"
               :rules="[validateBookmarksFile]"
@@ -179,11 +179,11 @@
               :hint="t('DescriptionBookmarksfilegit')"
               :persistent-hint="true"
             />
-            <OptionFileType v-model="bookmark_file_type" />
+            <OptionFileType :value="bookmark_file_type" @input="bookmark_file_type = $event" />
             <SyncTextField
               outlined
               dense
-              v-model="branch"
+              :value="branch" @input="branch = $event"
               class="mb-2"
               :label="t('LabelGitbranch')"
             />
@@ -196,7 +196,7 @@
             <SyncTextField
               outlined
               dense
-              v-model="bookmark_file"
+              :value="bookmark_file" @input="bookmark_file = $event"
               append-icon="mdi-file-document"
               :rules="[validateBookmarksFileGoogle]"
               :label="t('LabelBookmarksfile')"
@@ -206,7 +206,7 @@
             <SyncTextField
               outlined
               dense
-              v-model="passphrase"
+              :value="passphrase" @input="passphrase = $event"
               :type="showPassphrase ? 'text' : 'password'"
               class="mt-2"
               :label="t('LabelPassphrase')"
@@ -232,7 +232,7 @@
             </SyncTextField>
           </template>
 
-          <OptionSyncFolder v-if="isBrowser" v-model="localRoot" />
+          <OptionSyncFolder v-if="isBrowser" :value="localRoot" @input="localRoot = $event" />
         </SyncForm>
 
         <UiActions class="form-buttons pt-4">
@@ -254,21 +254,21 @@
           {{ t("LabelSyncbehaviorsetup") }}
         </div>
         <SyncForm>
-          <OptionAutoSync v-model="enabled" />
-          <OptionSyncOnStartup v-model="syncOnStartupEnabled" />
+          <OptionAutoSync :value="enabled" @input="enabled = $event" />
+          <OptionSyncOnStartup :value="syncOnStartupEnabled" @input="syncOnStartupEnabled = $event" />
           <template v-if="isBrowser">
-            <OptionSyncIntervalEnabled v-model="syncIntervalEnabled" />
+            <OptionSyncIntervalEnabled :value="syncIntervalEnabled" @input="syncIntervalEnabled = $event" />
             <OptionSyncInterval
               v-if="syncIntervalEnabled"
-              v-model="syncInterval"
+              :value="syncInterval" @input="syncInterval = $event"
             />
             <OptionNotifyOnly
-              :notify-only.sync="notifyOnly"
-              :notifications-enabled.sync="notificationsEnabled"
+              v-model:notify-only="notifyOnly"
+              v-model:notifications-enabled="notificationsEnabled"
             />
           </template>
-          <OptionSyncStrategy v-model="strategy" />
-          <OptionNestedSync v-if="isBrowser" v-model="nestedSync" />
+          <OptionSyncStrategy :value="strategy" @input="strategy = $event" />
+          <OptionNestedSync v-if="isBrowser" :value="nestedSync" @input="nestedSync = $event" />
         </SyncForm>
         <UiActions class="form-buttons">
           <SyncButton @click="currentStep--">

@@ -25,7 +25,7 @@
             {{ username }}
             <SyncIcon color="success"> mdi-check </SyncIcon>
           </template>
-          <SyncButton color="primary" @click="authenticate">
+          <SyncButton color="primary" :loading="authenticating" :disabled="authenticating" @click="authenticate">
             {{ t("LabelLogingoogle") }}
           </SyncButton>
           <p class="mt-1">
@@ -36,6 +36,7 @@
             }}
           </p>
         </div>
+        <UiAsyncState :kind="authError ? 'error' : authenticating ? 'loading' : ''" :text="authError || t('UiWorking')" />
         <SyncTextField
           outlined
           dense
@@ -163,6 +164,8 @@ import OptionSyncOnStartup from "./OptionSyncOnStartup.vue";
 import OptionNotifyOnly from "./OptionNotifyOnly.vue";
 
 export default {
+  inheritAttrs: false,
+  emits: ["delete", "reset", "update:allowNetwork", "update:bookmark_file", "update:enabled", "update:failsafe", "update:label", "update:localRoot", "update:nestedSync", "update:notificationsEnabled", "update:notifyOnly", "update:password", "update:refreshToken", "update:strategy", "update:syncInterval", "update:syncIntervalEnabled", "update:syncOnStartupEnabled", "update:username"],
   name: "OptionsGoogleDrive",
   components: {
     OptionSyncOnStartup,
@@ -203,6 +206,8 @@ export default {
     return {
       panels: [0, 1],
       authorized: false,
+      authenticating: false,
+      authError: "",
       showPassphrase: false,
     };
   },
@@ -211,14 +216,21 @@ export default {
       return !path.includes("/");
     },
     async authenticate() {
-      const GoogleDriveAdapter = (
-        await import("@sync-engine/adapters/GoogleDrive")
-      ).default;
-      const { refresh_token, username } = await GoogleDriveAdapter.authorize();
-      if (refresh_token) {
+      if (this.authenticating) return;
+      this.authenticating = true;
+      this.authError = "";
+      try {
+        const GoogleDriveAdapter = (await import("@sync-engine/adapters/GoogleDrive")).default;
+        const credentials = await GoogleDriveAdapter.authorize();
+        if (typeof credentials?.refresh_token !== "string" || !credentials.refresh_token || typeof credentials.username !== "string")
+          throw Error(this.t("LabelLoginFlowError"));
         this.authorized = true;
-        this.$emit("update:refreshToken", refresh_token);
-        this.$emit("update:username", username);
+        this.$emit("update:refreshToken", credentials.refresh_token);
+        this.$emit("update:username", credentials.username);
+      } catch (error) {
+        this.authError = error.message || this.t("LabelLoginFlowError");
+      } finally {
+        this.authenticating = false;
       }
     },
   },

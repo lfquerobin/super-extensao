@@ -15,6 +15,7 @@
 
 <script>
 export default {
+  emits: ["click"],
   name: "OptionResetCache",
 };
 </script>

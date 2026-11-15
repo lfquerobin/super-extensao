@@ -72,3 +72,7 @@ O widget de IP preserva formato/cache, timestamp e intervalo configurado; valida
 O núcleo valida o fuso global e os fusos dos widgets de relógio antes de importar um backup, incluindo v2. Strings inválidas são recusadas sem substituir configurações/cache. O adaptador de horário usa `newtab/engine/time.ts` para manter uma data válida quando o armazenamento antigo contém valores inválidos ou o conversor falha. O horário local é o fallback; o editor continua acessível para corrigir o fuso.
 
 O lockfile atualiza pacotes selecionados dentro das faixas existentes: nanoid 3.3.20, @babel/runtime e @babel/traverse 7.29.14, webpack 5.112.2, form-data 3.0.5, loader-utils 2.0.4, proxy-addr 2.0.8 e websocket-driver 0.7.5. As dependências transitivas correspondentes foram resolvidas pelo npm; não houve migração de versão principal. Builds, licenças extraídas, testes e validação nativa foram refeitos. [Relatório e alertas restantes](../docs/auditoria-integridade.md).
+
+## Remoção de Sentry — 1.7.38
+
+Removido `@sentry/browser`, o inicializador de telemetria e a chamada de captura no limite de erros dos widgets. O componente local `Crashed` continua tratando falhas e permitindo acesso ao editor. O bundle foi recompilado; esta mudança não altera configurações nem formatos de backup.

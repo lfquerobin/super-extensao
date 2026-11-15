@@ -1,5 +1,7 @@
 # Varredura de integridade — 1.7.37
 
+**Atualização 1.7.38:** a migração de interface e a remoção de Sentry estão concluídas. Consulte [o estado atual das dependências e os limites](sync-migration.md). Os números abaixo registram a fotografia histórica da 1.7.37.
+
 Realizada em 15/11/2026, a partir da 1.7.36 (`56af268`). O repositório estava limpo. Esta revisão cobre os módulos próprios e suas integrações por inspeção, testes, reconstrução dos artefatos e execução em perfil temporário; não é uma auditoria linha a linha de todas as dependências.
 
 ## Achados e correções

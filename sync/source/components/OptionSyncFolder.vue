@@ -8,14 +8,14 @@
       <div class="caption">
         {{ t("DescriptionLocaltarget") }}
       </div>
-      <SyncRadioGroup v-model="mode" column>
+      <SyncRadioGroup :value="mode" @input="mode = $event" column>
         <SyncRadio value="folder">
           <template #label>
             {{ t("LabelLocalfolder") }}
             <SyncTextField
               outlined
               dense
-              v-model="path"
+              :value="path" @input="path = $event"
               class="ms-2"
               readonly
               :aria-label="t('LabelLocalfolder')"
@@ -42,13 +42,13 @@
         </div>
       </SyncRadioGroup>
     </div>
-    <UiModal v-model="finder" :title="t('LabelLocalfolder')">
+    <UiModal :value="finder" @input="finder = $event" :title="t('LabelLocalfolder')">
       <UiStack>
         <UiTitle>{{ t('LabelLocalfolder') }}</UiTitle>
         <UiAsyncState v-if="folderLoading" kind="loading" :text="t('UiFoldersLoading')" :progress="null" />
         <UiAsyncState v-else-if="folderError" kind="error" :text="t('UiFoldersFailed')" :retry="t('UiRetry')" @retry="onTriggerFinder" />
         <UiAsyncState v-else-if="!folders.length" kind="empty" :text="t('UiFoldersEmpty')" />
-        <UiFolderTree v-else v-model="selectedLocalRoot" :items="folders" :label="t('LabelLocalfolder')" :empty-label="t('LabelUntitledfolder')" />
+        <UiFolderTree v-else :value="selectedLocalRoot" @input="selectedLocalRoot = $event" :items="folders" :label="t('LabelLocalfolder')" :empty-label="t('LabelUntitledfolder')" />
         <UiActions class="ui-actions-end">
           <UiButton @click="finder = false">{{ t('LabelCancel') }}</UiButton>
           <UiButton class="ui-button-primary" :disabled="folderLoading || Boolean(folderError) || !selectedLocalRoot || !folders.length" @click="onSave">{{ t('LabelSave') }}</UiButton>
@@ -62,6 +62,7 @@
 import { isVivaldi } from "@sync-engine/browser/BrowserDetection";
 
 export default {
+  emits: ["input"],
   name: "OptionSyncFolder",
   props: { value: { type: String, default: undefined } },
   data() {
@@ -90,7 +91,7 @@ export default {
       }
     },
   },
-  beforeDestroy() {this.folderRevision++;},
+  beforeUnmount() {this.folderRevision++;},
   created() {
     this.updatePath();
   },

@@ -218,7 +218,7 @@
 .ui-button:not(:disabled):hover {
   filter: brightness(1.1);
 }
-.ui-button :is(svg, .v-icon) {
+.ui-button :is(svg, .sync-native-icon) {
   width: var(--icon-size);
   height: var(--icon-size);
   flex-shrink: 0;

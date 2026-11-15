@@ -97,7 +97,7 @@ async function boot(initial = {}) {
       sync: area(sync, "sync"),
       onChanged: changed,
     },
-    identity: { getRedirectURL: () => "https://test.chromiumapp.org/" },
+    identity: { getRedirectURL: () => "https://test.chromiumapp.org/", launchWebAuthFlow(request, callback) { callback(initial.oauthFlow?.(request)); } },
     bookmarks: {
       get(ids, cb) {
         cb(
@@ -126,6 +126,7 @@ async function boot(initial = {}) {
     tabs: {query(_options, callback) {callback([]);}},
     i18n: { getUILanguage: () => "pt-BR" },
     permissions: {
+      contains(_options, callback) { callback(initial.permissionsGranted !== false); },
       request(_p, cb) {
         cb(true);
       },
@@ -153,9 +154,15 @@ async function boot(initial = {}) {
     await tick();
   };
   const component = (name) => {
-    const find = (vm) =>
-      vm.$options.name === name ? vm : vm.$children.map(find).find(Boolean);
-    return find(app);
+    function vnode(node) {
+      if (!node) return;
+      if (node.component) {
+        if (node.component.type.name === name) return node.component.proxy;
+        const child = vnode(node.component.subTree); if (child) return child;
+      }
+      if (Array.isArray(node.children)) for (const child of node.children) { const found = vnode(child); if (found) return found; }
+    }
+    return vnode(app.$.subTree);
   };
   return {
     w,
@@ -167,7 +174,7 @@ async function boot(initial = {}) {
     route,
     component,
     close() {
-      app.$destroy();
+      w.superSyncUnmount();
       w.close();
     },
   };
@@ -396,4 +403,103 @@ test("removed providers stay readable for backup but cannot be created, imported
     assert.equal(ui.local["superSync:accounts"], before);
     assert.deepEqual(ui.warnings, []);
   } finally { ui.close(); }
+});
+
+
+test("Vue 3 native fields keep string/boolean values and save Git credentials only after confirmation", async () => {
+  const ui = await boot({ local: { "superSync:accounts": JSON.stringify({ saved: { ...profile, branch: "main", syncIntervalEnabled: true } }) } });
+  try {
+    await ui.route("/options/saved");
+    const options = ui.component("AccountOptions");
+    const secret = ui.w.document.querySelector('input[type="password"]');
+    assert.equal(secret.value, profile.password);
+    secret.value = "updated-private-test";secret.dispatchEvent(new ui.w.Event("input", { bubbles: true }));await tick();
+    assert.equal(options.data.password, "updated-private-test");
+    assert.equal(JSON.parse(ui.local["superSync:accounts"]).saved.password, profile.password);
+    const auto = ui.component("OptionAutoSync").$el.querySelector('input[type="checkbox"]');
+    auto.click();await tick();assert.equal(options.data.enabled, false);
+    const failsafe = ui.component("OptionFailsafe").$el.querySelector('input[value="false"]');
+    failsafe.click();await tick();assert.equal(options.data.failsafe, false);
+    const direction = ui.component("OptionSyncStrategy").$el.querySelector('input[value="slave"]');
+    direction.click();await tick();assert.equal(options.data.strategy, "slave");
+    const interval = ui.component("OptionSyncInterval").$el.querySelector('input[type="range"]');
+    interval.value="1";interval.dispatchEvent(new ui.w.Event("input", { bubbles:true }));await tick();assert.equal(options.data.syncInterval,10);
+    await options.onSave();
+    const saved=JSON.parse(ui.local["superSync:accounts"]).saved;
+    assert.equal(saved.password,"updated-private-test");assert.equal(saved.enabled,false);assert.equal(saved.failsafe,false);assert.equal(saved.strategy,"slave");assert.equal(saved.syncInterval,10);
+    assert.deepEqual(ui.warnings,[]);
+  } finally { ui.close(); }
+});
+
+test("Google Drive encryption edits can be canceled without changing the stored profile or retaining the canceled draft", async () => {
+  const original={...profile,type:"google-drive",password:"original-encryption",refreshToken:"private-refresh"};
+  const ui=await boot({local:{"superSync:accounts":JSON.stringify({saved:original})}});
+  try {
+    await ui.route("/options/saved");const editor=ui.component("OptionPassphrase"),options=ui.component("AccountOptions");
+    const click=text=>[...editor.$el.querySelectorAll("button")].find(button=>button.textContent.includes(editor.t(text))).click();
+    click("LabelChange");await tick();let input=editor.$el.querySelector("input");input.value="discard-secret";input.dispatchEvent(new ui.w.Event("input",{bubbles:true}));await tick();
+    click("LabelCancel");await tick();assert.equal(options.data.password,"original-encryption");assert.equal(editor.passphrase,"");
+    click("LabelChange");await tick();input=editor.$el.querySelector("input");assert.equal(input.value,"");input.value="new-encryption";input.dispatchEvent(new ui.w.Event("input",{bubbles:true}));await tick();
+    click("LabelSave");await tick();assert.equal(options.data.password,"new-encryption");assert.equal(editor.passphrase,"");
+    assert.equal(JSON.parse(ui.local["superSync:accounts"]).saved.password,"original-encryption");
+    await options.onSave();assert.equal(JSON.parse(ui.local["superSync:accounts"]).saved.password,"new-encryption");assert.deepEqual(ui.warnings,[]);
+  } finally {ui.close();}
+});
+
+
+test("the migrated wizard keeps hash navigation and its backup shortcut", async () => {
+ const ui=await boot();
+ try {
+  await ui.route("/new");
+  const link=ui.w.document.querySelector('.form-buttons a[href="#/importexport"]');
+  assert.ok(link);link.click();await tick();
+  assert.equal(ui.app.$route.path,"/importexport");assert.ok(ui.component("ImportExport"));
+  assert.deepEqual(ui.warnings,[]);
+ } finally {ui.close();}
+});
+
+
+test("the Vue 3 backup view exports compatible profiles and imports Git without modifying existing credentials", async () => {
+ const google={...profile,type:"google-drive",password:"encryption-secret",refreshToken:"private-refresh"};
+ const ui=await boot({local:{"superSync:accounts":JSON.stringify({saved:profile,google})}});
+ try {
+  let blob,download;
+  ui.w.URL.createObjectURL=value=>{blob=value;return "blob:test-backup";};ui.w.URL.revokeObjectURL=()=>{};
+  ui.w.HTMLAnchorElement.prototype.click=function(){download=this.download;};
+  await ui.route("/importexport");const backup=ui.component("ImportExport");
+  await backup.onTriggerExport();
+  const text=await new Promise((resolve,reject)=>{const reader=new ui.w.FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsText(blob);});
+  const exported=JSON.parse(text);
+  assert.equal(download,"super-extensao-sync.json");assert.equal(exported.length,2);
+  assert.equal(exported.find(data=>data.type==="git").password,profile.password);
+  assert.equal(exported.find(data=>data.type==="google-drive").refreshToken,null);
+  assert.equal(JSON.parse(ui.local["superSync:accounts"]).google.refreshToken,"private-refresh");
+  Object.defineProperty(backup.$refs.filePicker,"files",{configurable:true,value:[{text:async()=>JSON.stringify(exported.filter(data=>data.type==="git"))}]});
+  await backup.onFileSelect();await tick();
+  const current=JSON.parse(ui.local["superSync:accounts"]);
+  assert.equal(Object.keys(current).length,3);assert.equal(current.saved.password,profile.password);assert.equal(current.google.refreshToken,"private-refresh");
+  const imported=Object.entries(current).find(([id])=>id!=="saved"&&id!=="google")[1];assert.equal(imported.type,"git");assert.equal(imported.password,profile.password);
+  assert.equal(ui.warnings.filter(message=>!message.startsWith("alert:")).length,0);
+ } finally {ui.close();}
+});
+
+
+test("Google Drive login in the migrated view handles denial and applies synthetic OAuth credentials only to the draft", async () => {
+ const original={...profile,type:"google-drive",password:"encryption-secret",refreshToken:"old-private-refresh"};
+ const config={permissionsGranted:false,local:{"superSync:accounts":JSON.stringify({saved:original}),"superSync:oauthClients":{googleClientId:"test-client",googleClientSecret:"test-secret"}}};
+ const ui=await boot(config);
+ try {
+  await ui.route("/options/saved");const drive=ui.component("OptionsGoogleDrive"),options=ui.component("AccountOptions");
+  await drive.authenticate();await tick();assert.ok(drive.authError);assert.equal(drive.authenticating,false);assert.equal(options.data.refreshToken,"old-private-refresh");
+  config.permissionsGranted=true;
+  Object.defineProperty(ui.w.crypto,"subtle",{value:require("node:crypto").webcrypto.subtle});
+  config.oauthFlow=request=>{const url=new URL(request.url);assert.equal(url.hostname,"accounts.google.com");assert.equal(url.searchParams.get("client_id"),"test-client");return "https://test.chromiumapp.org/?state="+url.searchParams.get("state")+"&code=synthetic-code";};
+  const requests=[];ui.w.fetch=async url=>{requests.push(url);return {status:200,ok:true,json:async()=>url.includes("oauth2.googleapis.com")?{access_token:"synthetic-access",refresh_token:"new-private-refresh"}:{user:{displayName:"Synthetic Account"}}};};
+  await drive.authenticate();await tick();
+  assert.equal(drive.authError,"");assert.equal(drive.authenticating,false);assert.equal(requests.length,2);
+  assert.equal(options.data.refreshToken,"new-private-refresh");assert.equal(options.data.username,"Synthetic Account");assert.equal(options.data.password,"encryption-secret");
+  assert.equal(JSON.parse(ui.local["superSync:accounts"]).saved.refreshToken,"old-private-refresh");
+  await options.onSave();const saved=JSON.parse(ui.local["superSync:accounts"]).saved;assert.equal(saved.refreshToken,"new-private-refresh");assert.equal(saved.password,"encryption-secret");assert.ok(!JSON.stringify(saved).includes("synthetic-access"));
+  assert.deepEqual(ui.warnings,[]);
+ } finally {ui.close();}
 });

@@ -4,7 +4,7 @@
 
 Extensão pessoal para Helium e navegadores Chromium, com Nova guia, sincronização de favoritos, VPN no navegador, limpeza ao sair, controle de autoplay e proteção da última aba.
 
-**Versão instalada: 1.7.37.** Documentação revisada em 15 de novembro de 2026. Temas escuro, claro e sistema; idiomas PT-BR e inglês compartilhados entre os módulos. Requer Chromium 116 ou superior, conforme o manifest.
+**Versão instalada: 1.7.38.** Documentação revisada em 15 de novembro de 2026. Temas escuro, claro e sistema; idiomas PT-BR e inglês compartilhados entre os módulos. Requer Chromium 116 ou superior, conforme o manifest.
 
 Para investigar uma falha da VPN, abra `chrome://extensions`, localize a Super Extensão e inspecione o **service worker**. Na aba Console, reproduza a tentativa e execute `getVpnDiagnostics()`. Os últimos 50 eventos registram somente horário, etapa, resultado e código conhecido, sem credenciais ou dados da conta; falhas novas também aparecem como avisos `[Super VPN]`. Esse histórico é temporário e reinicia com o worker. `getLogs()` é o registro legado, dependente de debug, e pode estar vazio.
 
@@ -41,7 +41,7 @@ Os arquivos compilados já estão no repositório: instalar a extensão não exi
 
 Tema e idioma ficam no cabeçalho e atendem toda a extensão. Limpeza, Sincronização e VPN têm submenus fixos; o conteúdo interno continua rolável sem barras visíveis. Arraste a alça inferior para ajustar a altura do popup. A seção selecionada é preservada; a VPN também guarda sua página e rolagem.
 
-A [biblioteca de componentes](docs/ui-components.md) centraliza estrutura, botões, campos, grupos de ações, cartões, avisos e espaçamento. Popup, sincronização, VPN, editor da nova guia e aba de reserva consomem essa base por seus adaptadores. React, Vue/Vuetify e os motores existentes permanecem; componentizar a interface não substitui esses motores.
+A [biblioteca de componentes](docs/ui-components.md) centraliza estrutura, botões, campos, grupos de ações, cartões, avisos e espaçamento. Popup, sincronização, VPN, editor da nova guia e aba de reserva consomem essa base por seus adaptadores. A sincronização usa Vue 3 e controles HTML nativos; a Nova guia usa React. Os motores existentes permanecem. Detalhes da migração e das dependências em [docs/sync-migration.md](docs/sync-migration.md).
 
 ### Sincronização de favoritos
 

@@ -19,7 +19,7 @@
           <SyncRow>
             <SyncCol class="flex-grow-0">
               <SyncCheckbox
-                v-model="selected[i]"
+                :value="selected[i]" @input="selected[i] = $event"
                 :aria-label="getFolderName(account.fullPath)"
               />
             </SyncCol>
@@ -78,7 +78,6 @@
 
 <script>
 import PathHelper from "@sync-engine/PathHelper";
-import Vue from "vue";
 import { needsAuthorization } from "@sync-engine/AccountAuthorization";
 
 export default {
@@ -96,14 +95,14 @@ export default {
   },
   created() {
     for (const id of Object.keys(this.accounts))
-      Vue.set(this.selected, id, true);
+      this.selected[id] = true;
   },
   watch: {
     accounts(newValue, old) {
       if (!old || !Object.keys(old).length) {
         // first time this is set
         for (const id of Object.keys(this.accounts)) {
-          Vue.set(this.selected, id, true);
+          this.selected[id] = true;
         }
       }
     },

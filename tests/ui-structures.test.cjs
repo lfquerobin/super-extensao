@@ -4,24 +4,8 @@ const {JSDOM} = require('jsdom');
 const {openModal} = require('../ui/modal.js');
 const {asyncStateMarkup} = require('../ui/async-state.js');
 const root = path.resolve(__dirname, '..');
-function fixture() {
-  const dom = new JSDOM('<button id="opener">Open</button><div id="app"></div>', {runScripts:'outside-only',pretendToBeVisual:true});
-  const w = dom.window;
-  w.eval(fs.readFileSync(require.resolve('vue/dist/vue.js', {paths:[path.join(root,'vendor/floccus-source')]}),'utf8'));
-  const cache = new Map();
-  function load(file) {
-    file = path.resolve(file);
-    if (cache.has(file)) return cache.get(file);
-    if (file.endsWith('.json')) return require(file);
-    if (['modal.js','async-state.js'].includes(path.basename(file))) return require(file);
-    const module = {exports:{}};cache.set(file,module.exports);
-    const code = ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
-    new w.Function('require','module','exports',code)(id=>load(path.resolve(path.dirname(file),path.extname(id)?id:id+'.js')),module,module.exports);
-    return module.exports;
-  }
-  load(path.join(root,'ui/vue.js')).installUi(w.Vue);
-  return {dom,w,Vue:w.Vue,close(){dom.window.close();}};
-}
+const fixture = require('./helpers/vue.cjs');
+
 test('native shared modal traps focus, handles Escape and restores the opener',()=>{
  const dom=new JSDOM('<button id="open">Open</button><dialog><button>A</button><button>B</button></dialog>',{pretendToBeVisual:true});
  try {
@@ -37,21 +21,21 @@ test('native shared modal traps focus, handles Escape and restores the opener',(
 test('folder selection keeps exact IDs, hierarchy and expansion when the value changes',async()=>{
  const f=fixture();let vm;
  try {
-  vm=new f.Vue({data:{selected:'0',folders:[{id:'0',title:'Root',children:[{id:'1',title:'<Private>',children:[{id:'2',title:'Nested'}]},{id:'99',url:'https://ignored.test'}]}]},render(h){return h('UiFolderTree',{props:{items:this.folders,value:this.selected,label:'Folders',emptyLabel:'Untitled'},on:{input:value=>this.selected=value}});}}).$mount('#app');
+  vm=f.mount({data:()=>({selected:'0',folders:[{id:'0',title:'Root',children:[{id:'1',title:'<Private>',children:[{id:'2',title:'Nested'}]},{id:'99',url:'https://ignored.test'}]}]}),render(){const {h,resolveComponent}=f.Vue;return h(resolveComponent('UiFolderTree'),{items:this.folders,value:this.selected,label:'Folders',emptyLabel:'Untitled',onInput:value=>this.selected=value});}});
   const d=f.w.document;assert.equal(d.querySelectorAll('input').length,3);assert.equal(d.querySelector('private'),null);
   const branches=d.querySelectorAll('details');branches[1].open=true;
   const last=d.querySelectorAll('input')[2];last.checked=true;last.dispatchEvent(new f.w.Event('change',{bubbles:true}));await f.Vue.nextTick();
   assert.equal(vm.selected,'2');assert.equal(d.querySelectorAll('details')[1].open,true);assert.equal(d.querySelector('input:checked').getAttribute('aria-label'),'Nested');
- } finally {vm?.$destroy();f.close();}
+ } finally {f.close();}
 });
 test('wizard lazily mounts steps, retains draft controls and focuses the next heading',async()=>{
  const f=fixture();let vm;
  try {
-  vm=new f.Vue({data:{step:0},render(h){return h('div',[0,1].map(i=>h('UiWizardStep',{key:i,props:{active:this.step===i}},[h('h2','Step '+i),h('input',{attrs:{id:'draft-'+i}})])));}}).$mount('#app');
+  vm=f.mount({data:()=>({step:0}),render(){const {h,resolveComponent}=f.Vue;return h('div',[0,1].map(i=>h(resolveComponent('UiWizardStep'),{key:i,active:this.step===i},{default:()=>[h('h2','Step '+i),h('input',{id:'draft-'+i})]})));}});
   const d=f.w.document;assert.equal(d.querySelector('#draft-1'),null);d.querySelector('#draft-0').value='Keep draft';
   vm.step=1;await f.Vue.nextTick();await f.Vue.nextTick();assert.equal(d.activeElement.textContent,'Step 1');assert.equal(d.querySelector('#draft-0').closest('section').hidden,true);
   vm.step=0;await f.Vue.nextTick();assert.equal(d.querySelector('#draft-0').value,'Keep draft');
- } finally {vm?.$destroy();f.close();}
+ } finally {f.close();}
 });
 test('all async presentations escape errors, clamp progress and preserve indeterminate progress',()=>{
  const dom=new JSDOM(asyncStateMarkup({kind:'error',text:'<img src=x>',detail:'Private <data>',progress:120,retry:'Retry'}));

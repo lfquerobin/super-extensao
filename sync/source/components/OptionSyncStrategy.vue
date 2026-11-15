@@ -17,6 +17,7 @@
 
 <script>
 export default {
+  emits: ["input"],
   name: "OptionSyncStrategy",
   props: {
     value: {

@@ -1,5 +1,4 @@
 /* SPDX-License-Identifier: MPL-2.0 */
-import Vue from "vue";
 import { mutations } from "./definitions";
 
 export const mutationsDefinition = {
@@ -10,18 +9,18 @@ export const mutationsDefinition = {
     state.accounts = accounts;
   },
   [mutations.STORE_ACCOUNT_DATA](state, { id, data }) {
-    Vue.set(state.accounts[id], "data", data);
+    state.accounts[id].data = data;
   },
   [mutations.REMOVE_ACCOUNT](state, id) {
-    Vue.delete(state.accounts, id);
+    delete state.accounts[id];
   },
   [mutations.SET_LOGIN_FLOW_STATE](state, running) {
-    Vue.set(state.loginFlow, "isRunning", running);
+    state.loginFlow.isRunning = running;
   },
   [mutations.LOADING_START](state, label) {
-    Vue.set(state.loading, label, true);
+    state.loading[label] = true;
   },
   [mutations.LOADING_END](state, label) {
-    Vue.set(state.loading, label, false);
+    state.loading[label] = false;
   },
 };

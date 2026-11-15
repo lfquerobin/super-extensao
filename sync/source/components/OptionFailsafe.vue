@@ -16,6 +16,7 @@
 
 <script>
 export default {
+  emits: ["input"],
   name: "OptionFailsafe",
   props: {
     value: {

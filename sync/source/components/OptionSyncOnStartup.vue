@@ -20,6 +20,7 @@
 
 <script>
 export default {
+  emits: ["input"],
   name: "OptionSyncOnStartup",
   props: {
     value: {

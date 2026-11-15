@@ -1,8 +1,8 @@
-# Interface de sincronização — referência 1.6.8
+# Interface de sincronização — referência 1.7.38
 
-## Componentização 1.6.8
+## Componentização e Vue 3
 
-As telas usam os componentes `Ui*` do catálogo comum para campos nativos, cartões, avisos, ações, formulários e navegação. Os controles validados e compostos passam pelos adaptadores `Sync*` em `sync/source/components/ui/engine.js`. Esses adaptadores estendem os controles Vuetify e preservam eventos, modelos, validações, slots, referências e relações entre componentes. A aparência da biblioteca fica em `ui/vue.css`; o layout das telas permanece em `sync/source/interface.css`.
+As telas usam os componentes `Ui*` do catálogo comum para campos nativos, cartões, avisos, ações, formulários e navegação. Os controles validados e compostos passam pelos adaptadores `Sync*` em `sync/source/components/ui/engine.js`. Na 1.7.38, esses adaptadores usam Vue 3 e elementos HTML nativos, com valores/eventos explícitos, regras de validade nativa, slots e referências. Vue 2, Vuetify e Vuex foram removidos das dependências utilizadas pela extensão. A aparência da biblioteca fica em `ui/vue.css`; o layout das telas permanece em `sync/source/interface.css`.
 
 O registro ocorre em `sync/source/index.js`. Para mudar um controle comum, altere o adaptador ou o catálogo, em vez de replicar a implementação em cada provedor. Os fluxos de perfis, rascunhos, backup, autorização e os motores não foram alterados por essa migração. [Catálogo, fontes e compilação](ui-components.md).
 
@@ -23,7 +23,7 @@ Na 1.7.36, `sync/providers.cjs` define Google Drive e Git como os únicos proved
 
 As chaves `superSync:`, os IDs de perfil, os formatos de importação/exportação, alarmes e mensagens `super-sync` foram mantidos. Atualizar a interface não exige migração nem recriação de perfis. A edição usa um rascunho; sair sem salvar não altera o perfil carregado. As telas de perfis e credenciais só montam após consultar o bloqueio do motor.
 
-A interface usa Vue/Vuetify e inclui formulários e fluxos de autenticação adaptados do Floccus, sob MPL-2.0. Não é uma reimplementação integral de todos os componentes. Os créditos, licença e fonte original continuam disponíveis em `sync/LICENSE.txt`, `sync/MODIFICATIONS.md` e `vendor/floccus-source`.
+A interface usa Vue 3 e inclui formulários e fluxos de autenticação adaptados do Floccus, sob MPL-2.0. Não é uma reimplementação integral de todos os componentes. Os créditos, licença e fonte original continuam disponíveis em `sync/LICENSE.txt`, `sync/MODIFICATIONS.md` e `vendor/floccus-source`.
 
 `sync/source/store/actions.js` é a fronteira dos comandos com o motor existente. A compilação resolve `@sync-engine` para `vendor/floccus-source/src/lib`. Os componentes de pastas, tradução e autorização ainda usam auxiliares dessa API; a futura troca do motor precisará substituir esses contratos também.
 
@@ -43,13 +43,13 @@ npm test
 
 `build:sync` gera `sync/js/options.js`, `sync/js/options.css` e os recursos de fonte, copia `sync/source/interface.css` para `sync/theme.css` e recompila `popup-panels.css`. O worker é recompilado separadamente por `npm run build:sync-engine`, a partir de `sync/engine/background-entry.js`. Os arquivos compilados ficam no repositório; instalar a extensão descompactada não exige Node.js.
 
-Para alterar as telas, edite `sync/source`, e não as telas antigas em `vendor/floccus-source/src/ui`. A configuração antiga `webpack.super.cjs` continua disponível para a origem histórica, mas não deve ser usada para substituir o bundle da interface própria.
+Para alterar as telas, edite `sync/source`, e não as telas antigas em `vendor/floccus-source/src/ui`. A compilação atual usa `scripts/sync-webpack.cjs`, com dependências próprias em `sync/package.json`; `setup:sync` instala essa árvore e a do motor legado. As configurações webpack em `vendor/floccus-source` são históricas e não fazem parte do pipeline suportado da extensão.
 
 ## Validação
 
 A suíte Node inclui testes DOM do bundle de produção com JSDOM e APIs Chromium simuladas: navegação, idioma, Google Drive/Git, configuração OAuth isolada, leitura de perfis existentes, rascunhos antes/depois de salvar, seleção na exportação, confirmação de sincronização direcional, criação Git e recusa de cadastro/importação de serviços removidos, e bloqueio das telas quando o motor está protegido.
 
-Na rodada 1.6.8, o Helium com perfil temporário abriu os bundles e permitiu conferir a visão de perfis vazia, a seleção de serviço no assistente e os campos de Conexões, sem erros de página ou estouro horizontal nos estados medidos. Os testes DOM continuam cobrindo perfis existentes, rascunhos, backup e validações. Diálogos de pastas, autenticação e sincronização com contas reais continuam pendentes nessa rodada. [Evidências e limites](validacao.md).
+Na 1.7.38, o Edge com perfil temporário validou a extensão completa, árvore de pastas, cancelamento/Escape, foco, assistente e temas claro/escuro. Testes DOM do bundle exercitam também senha Git, criptografia, navegação por hash, arquivo de backup/importação e autorização Google com respostas sintéticas de permissão, PKCE, token e identidade. Autenticação e sincronização com contas reais continuam pendentes nesta rodada. [Evidências e limites](validacao.md).
 
 ## Núcleo próprio Google Drive (1.6.0)
 

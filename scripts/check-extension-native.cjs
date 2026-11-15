@@ -9,7 +9,9 @@ fs.mkdirSync(extension);
 for (const name of fs.readdirSync(root)) {
   if (["icons", "_locales", "ui", "newtab", "sync", "vpn"].includes(name) ||
       /\.(?:js|css|html)$/.test(name) || name === "manifest.json")
-    fs.cpSync(path.join(root, name), path.join(extension, name), { recursive: true });
+    fs.cpSync(path.join(root, name), path.join(extension, name), {
+      recursive: true, filter: source => !source.split(path.sep).includes("node_modules"),
+    });
 }
 let context;
 async function main() {

@@ -1,5 +1,13 @@
 # Validação da Super Extensão
 
+## Vue 3 e remoção de Sentry — 1.7.38
+
+Em 15/11/2026, **514 testes passaram**, sem falhas ou testes ignorados. Interface/worker de sincronização e Nova guia foram recompilados; `check:ui` e `check:integrity` passaram (61 arquivos referenciados, versão 1.7.38). Os testes incluem os controles nativos, rascunhos e credenciais Git, criptografia, navegação por hash, exportação/importação de arquivos e autorização Google com permissão, PKCE e respostas de token/identidade sintéticas.
+
+No Edge 157.0.4341.60 com perfil temporário, passaram os runners `check-interface-native.cjs`, `check-extension-native.cjs` e `check-newtab-native.cjs`: árvore/assistente/foco/temas, extensão completa com worker e painéis sem erros de página, recuperação de fuso corrompido, edição e persistência de widgets/notas/imagem local, idioma em duas abas e importação/exportação. Capturas foram inspecionadas. Autenticação e sincronização com contas reais continuam pendentes nesta rodada.
+
+[Arquitetura, auditoria atual, licenças e limites](sync-migration.md).
+
 ## Varredura de integridade — 1.7.37
 
 Em 15/11/2026, **506 testes passaram**, sem falhas ou testes ignorados. Todas as interfaces e workers foram recompilados; `check:ui`, TypeScript da Nova guia/núcleo/interface VPN/worker VPN e `check:integrity` passaram. A verificação estática percorreu 61 arquivos referenciados e conferiu as quatro declarações de versão (manifest, pacote, raiz do lock e pacote raiz do lock).

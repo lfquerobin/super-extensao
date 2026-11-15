@@ -1,52 +1,34 @@
-import {asyncStateMarkup} from "./async-state.js";
-import catalog from './catalog.json';
-import {installStructures} from './vue-structures.js';
+/* SPDX-License-Identifier: MPL-2.0 */
+import { h, mergeProps } from "vue";
+import { asyncStateMarkup } from "./async-state.js";
+import catalog from "./catalog.json";
+import { installStructures } from "./vue-structures.js";
 
-// Native Vue 2 adapter. The rendered node is the control itself: no extra wrapper.
-export function installUi(Vue) {
-  installStructures(Vue);
-  Vue.component('UiAsyncState', {
-    functional: true,
-    props: {kind: String, text: String, detail: String, retry: String, disabled: Boolean, progress: {default: undefined}},
-    render(h, context) {
-      return h('div', {
-        ...context.data,
-        domProps: {innerHTML: asyncStateMarkup(context.props)},
-        on: {click(event) {
-          if (event.target.closest('button') && !context.props.disabled) context.listeners.retry?.();
-        }},
-      });
+export function installUi(app) {
+  installStructures(app);
+  app.component("UiAsyncState", {
+    inheritAttrs: false,
+    props: { kind: String, text: String, detail: String, retry: String, disabled: Boolean, progress: { default: undefined } },
+    emits: ["retry"],
+    setup(props, { attrs, emit }) {
+      return () => h("div", mergeProps(attrs, { innerHTML: asyncStateMarkup(props), onClick(event) {
+        if (event.target.closest("button") && !props.disabled) emit("retry");
+      } }));
     },
   });
   for (const [key, spec] of Object.entries(catalog)) {
-    const name = 'Ui' + key[0].toUpperCase() + key.slice(1);
-    Vue.component(name, {
-      functional: true,
-      render(h, context) {
-        const data = { ...context.data, attrs: { ...spec.attrs, ...context.data.attrs } };
-        const tag = data.attrs.as || spec.tag;
-        if (!(spec.tags || [spec.tag]).includes(tag)) throw new Error(`Invalid tag for ${name}: ${tag}`);
-        delete data.attrs.as;
-        if (tag !== 'button') delete data.attrs.type;
-        data.class = [spec.class, data.class];
-        // Vue has already converted v-model to value/input for these native components.
-        if (data.attrs.value !== undefined && ['input', 'select', 'textarea'].includes(tag)) {
-          data.domProps = { ...data.domProps, value: data.attrs.value };
-          delete data.attrs.value;
-        }
-        if (context.data.model && ['input', 'select', 'textarea'].includes(tag)) {
-          const model = context.data.model;
-          const event = tag === 'select' ? 'change' : 'input';
-          const listeners = { ...data.on };
-          for (const key of Object.keys(listeners)) {
-            const handlers = [].concat(listeners[key]).filter(handler => handler !== model.callback);
-            if (handlers.length) listeners[key] = handlers;
-            else delete listeners[key];
-          }
-          data.domProps = { ...data.domProps, value: model.value };
-          data.on = { ...listeners, [event]: [].concat(listeners[event] || [], e => model.callback(e.target.value)) };
-        }
-        return h(tag, data, context.children);
+    const name = "Ui" + key[0].toUpperCase() + key.slice(1);
+    app.component(name, {
+      inheritAttrs: false,
+      setup(_props, { attrs, slots }) {
+        return () => {
+          const { as: variant, ...input } = attrs;
+          const tag = variant || spec.tag;
+          if (!(spec.tags || [spec.tag]).includes(tag)) throw Error(`Invalid tag for ${name}: ${tag}`);
+          const data = mergeProps(spec.attrs || {}, input, { class: spec.class });
+          if (tag !== "button") delete data.type;
+          return h(tag, data, slots.default?.());
+        };
       },
     });
   }

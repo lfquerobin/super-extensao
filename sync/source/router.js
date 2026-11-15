@@ -1,12 +1,10 @@
 /* SPDX-License-Identifier: MPL-2.0 */
-import Vue from "vue";
-import Router from "vue-router";
+import { createRouter, createWebHashHistory } from "vue-router";
 import Overview from "./views/Overview";
 import NewAccount from "./views/NewAccount";
 import ImportExport from "./views/ImportExport";
 import Connections from "./views/Connections";
 
-Vue.use(Router);
 
 export const routes = {
   OVERVIEW: "OVERVIEW",
@@ -20,7 +18,8 @@ export const routes = {
   DONATE: "DONATE",
 };
 
-export const router = new Router({
+export const router = createRouter({
+  history: createWebHashHistory(),
   linkActiveClass: "active",
   routes: [
     { path: "/connections", name: routes.CONNECTIONS, component: Connections },

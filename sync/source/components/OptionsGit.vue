@@ -38,6 +38,7 @@
         <SyncTextField
           outlined
           dense
+          :value="password"
           :label="t('LabelPassword')"
           :type="showPassword ? 'text' : 'password'"
           @input="$emit('update:password', $event)"
@@ -203,6 +204,8 @@ import OptionSyncOnStartup from "./OptionSyncOnStartup.vue";
 import OptionNotifyOnly from "./OptionNotifyOnly.vue";
 
 export default {
+  inheritAttrs: false,
+  emits: ["delete", "reset", "update:allowNetwork", "update:allowRedirects", "update:bookmark_file", "update:bookmark_file_type", "update:branch", "update:enabled", "update:failsafe", "update:includeCredentials", "update:label", "update:localRoot", "update:nestedSync", "update:notificationsEnabled", "update:notifyOnly", "update:password", "update:strategy", "update:syncInterval", "update:syncIntervalEnabled", "update:syncOnStartupEnabled", "update:url", "update:username"],
   name: "OptionsGit",
   components: {
     OptionSyncOnStartup,

@@ -35,6 +35,7 @@
 import { actions } from "../store/definitions";
 
 export default {
+  emits: ["update:notificationsEnabled", "update:notifyOnly"],
   name: "OptionNotifyOnly",
   props: {
     notifyOnly: {

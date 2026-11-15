@@ -5,7 +5,7 @@
       {{ t("LabelSyncinterval") }}
     </div>
     <SyncSlider
-      v-model="syncIntervalStep"
+      :value="syncIntervalStep" @input="syncIntervalStep = $event"
       class="mt-8 mb-5"
       :aria-label="t('LabelSyncinterval')"
       :hint="t('DescriptionSyncinterval')"
@@ -27,6 +27,7 @@
 import humanizeDuration from "humanize-duration";
 
 export default {
+  emits: ["input"],
   name: "OptionSyncInterval",
   props: {
     value: {

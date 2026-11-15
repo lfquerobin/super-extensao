@@ -63,41 +63,28 @@ test('installed static pages match their templates and contain only native eleme
   }
 });
 
-test('Vue native adapter preserves slots, events, refs and v-model input/select values', async () => {
-  const dom = new JSDOM('<div id="mount"></div>');
-  const original = Object.fromEntries(['window', 'document', 'navigator'].map(key => [key, Object.getOwnPropertyDescriptor(global, key)]));
-  for (const key of Object.keys(original)) Object.defineProperty(global, key, { configurable: true, value: key === 'window' ? dom.window : dom.window[key] });
+test('Vue 3 native adapter preserves slots, events, refs and controlled input/select values', async () => {
+  const f = require('./helpers/vue.cjs')();
   let app;
   try {
-    const Vue = require('../vendor/floccus-source/node_modules/vue');
-    Vue.config.productionTip = false;
-    const exports = {};
-    const filename = path.join(root, 'ui/vue.js');
-    vm.runInNewContext(ts.transpileModule(fs.readFileSync(filename, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, esModuleInterop: true } }).outputText,
-      { exports, require: spec => require(path.resolve(path.dirname(filename), spec)) });
-    Vue.use(exports.installUi);
-    app = new Vue({
+    app = f.mount({
       data: () => ({ value: 'initial', locale: 'en', clicks: 0 }),
-      render(h) {
-        return h('UiForm', { on: { submit: event => event.preventDefault() } }, [
-          h('UiField', { attrs: { for: 'draft' } }, ['Draft']),
-          h('UiControl', { attrs: { id: 'draft', type: 'text' }, model: { value: this.value, callback: value => { this.value = value; } } }),
-          h('UiControl', { attrs: { as: 'select' }, model: { value: this.locale, callback: value => { this.locale = value; } } }, [h('option', { attrs: { value: 'en' } }, ['English']), h('option', { attrs: { value: 'pt-BR' } }, ['Português'])]),
-          h('UiButton', { ref: 'action', on: { click: () => this.clicks++ } }, ['Apply']),
-        ]);
+      render() {
+        const {h,resolveComponent} = f.Vue;
+        return h(resolveComponent('UiForm'), {onSubmit:event=>event.preventDefault()}, {default:()=>[
+          h(resolveComponent('UiField'), {for:'draft'}, {default:()=>['Draft']}),
+          h(resolveComponent('UiControl'), {id:'draft',type:'text',value:this.value,onInput:event=>{this.value=event.target.value;}}),
+          h(resolveComponent('UiControl'), {as:'select',value:this.locale,onChange:event=>{this.locale=event.target.value;}}, {default:()=>[h('option',{value:'en'},'English'),h('option',{value:'pt-BR'},'Português')]}),
+          h(resolveComponent('UiButton'), {ref:'action',onClick:()=>this.clicks++}, {default:()=>['Apply']}),
+        ]});
       },
-    }).$mount('#mount');
-    const d = dom.window.document, input = d.querySelector('input'), select = d.querySelector('select');
-    assert.equal(d.querySelector('label').control, input);
-    assert.equal(input.value, 'initial');
-    input.value = 'changed'; input.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
-    select.value = 'pt-BR'; select.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
-    app.$refs.action.click();
-    await Vue.nextTick();
-    assert.equal(app.value, 'changed'); assert.equal(app.locale, 'pt-BR'); assert.equal(app.clicks, 1);
-    assert.equal(app.$refs.action.type, 'button');
-  } finally {
-    app?.$destroy(); dom.window.close();
-    for (const [key, descriptor] of Object.entries(original)) descriptor ? Object.defineProperty(global, key, descriptor) : delete global[key];
-  }
+    });
+    const d=f.w.document,input=d.querySelector('input'),select=d.querySelector('select');
+    assert.equal(d.querySelector('label').control,input); assert.equal(input.value,'initial');
+    input.value='changed';input.dispatchEvent(new f.w.Event('input',{bubbles:true}));
+    select.value='pt-BR';select.dispatchEvent(new f.w.Event('change',{bubbles:true}));
+    app.$refs.action.$el.click();await f.Vue.nextTick();
+    assert.equal(app.value,'changed');assert.equal(app.locale,'pt-BR');assert.equal(app.clicks,1);
+    assert.equal(app.$refs.action.$el.type,'button');
+  }finally{f.close();}
 });

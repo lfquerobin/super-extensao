@@ -23,13 +23,57 @@
   <SyncForm v-if="!loading && supported" class="mt-3 mb-3">
     <OptionsGit
       v-if="data.type === 'git'"
-      v-bind.sync="data"
+      v-bind="data"
+      @update:url="data.url = $event"
+      @update:username="data.username = $event"
+      @update:password="data.password = $event"
+      @update:branch="data.branch = $event"
+      @update:includeCredentials="data.includeCredentials = $event"
+      @update:serverRoot="data.serverRoot = $event"
+      @update:localRoot="data.localRoot = $event"
+      @update:allowNetwork="data.allowNetwork = $event"
+      @update:syncInterval="data.syncInterval = $event"
+      @update:strategy="data.strategy = $event"
+      @update:bookmark_file="data.bookmark_file = $event"
+      @update:nestedSync="data.nestedSync = $event"
+      @update:failsafe="data.failsafe = $event"
+      @update:allowRedirects="data.allowRedirects = $event"
+      @update:bookmark_file_type="data.bookmark_file_type = $event"
+      @update:enabled="data.enabled = $event"
+      @update:label="data.label = $event"
+      @update:syncIntervalEnabled="data.syncIntervalEnabled = $event"
+      @update:syncOnStartupEnabled="data.syncOnStartupEnabled = $event"
+      @update:notifyOnly="data.notifyOnly = $event"
+      @update:notificationsEnabled="data.notificationsEnabled = $event"
+      @update:refreshToken="data.refreshToken = $event"
       @reset="onReset"
       @delete="onDelete"
     />
     <OptionsGoogleDrive
       v-if="data.type === 'google-drive'"
-      v-bind.sync="data"
+      v-bind="data"
+      @update:url="data.url = $event"
+      @update:username="data.username = $event"
+      @update:password="data.password = $event"
+      @update:branch="data.branch = $event"
+      @update:includeCredentials="data.includeCredentials = $event"
+      @update:serverRoot="data.serverRoot = $event"
+      @update:localRoot="data.localRoot = $event"
+      @update:allowNetwork="data.allowNetwork = $event"
+      @update:syncInterval="data.syncInterval = $event"
+      @update:strategy="data.strategy = $event"
+      @update:bookmark_file="data.bookmark_file = $event"
+      @update:nestedSync="data.nestedSync = $event"
+      @update:failsafe="data.failsafe = $event"
+      @update:allowRedirects="data.allowRedirects = $event"
+      @update:bookmark_file_type="data.bookmark_file_type = $event"
+      @update:enabled="data.enabled = $event"
+      @update:label="data.label = $event"
+      @update:syncIntervalEnabled="data.syncIntervalEnabled = $event"
+      @update:syncOnStartupEnabled="data.syncOnStartupEnabled = $event"
+      @update:notifyOnly="data.notifyOnly = $event"
+      @update:notificationsEnabled="data.notificationsEnabled = $event"
+      @update:refreshToken="data.refreshToken = $event"
       @reset="onReset"
       @delete="onDelete"
     />
@@ -90,9 +134,6 @@ export default {
     },
     saved() {
       return this.savedData === JSON.stringify(this.data);
-    },
-    menuComponent() {
-      return this.$vuetify.breakpoint.mobile ? "v-navigation-drawer" : "div";
     },
   },
   watch: {

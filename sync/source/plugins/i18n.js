@@ -1,13 +1,11 @@
 /* SPDX-License-Identifier: MPL-2.0 */
-import Vue from "vue";
+import { reactive } from "vue";
 import { uiMessages } from "../messages";
-export const translationState = Vue.observable({ version: 0 });
+export const translationState = reactive({ version: 0 });
 import { i18n } from "@sync-engine/native/I18n";
 
-export function setupDirection(vuetify) {
+export function setupDirection() {
   const rtl = i18n.isRTL();
-  const framework = vuetify.framework || vuetify;
-  framework.rtl = rtl;
   if (typeof document !== "undefined") {
     const root =
       document.getElementById("syncPanel") || document.documentElement;
