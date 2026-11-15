@@ -181,3 +181,53 @@ test('trocar o modo durante uma importação pendente não escreve na lista ante
     assert.deepEqual(f.errors,[]);
   }finally{f.close();}
 });
+
+test('limpar exclusões pede confirmação e altera somente a lista do tipo escolhido',async()=>{
+  const f=await fixture({excludedSites:['cookies.example'],excludedCacheSites:['cache.example'],excludedLocalStorageSites:['local.example'],
+    includedSites:['include.example'],includedCacheSites:['include-cache.example'],includedLocalStorageSites:['include-local.example'],clearCookies:true});try{
+    for(const [button,key,modeKey] of [['clearExclusions','excludedSites','cookieCleanupMode'],['cacheClearExclusions','excludedCacheSites','cacheCleanupMode'],['localStorageClearExclusions','excludedLocalStorageSites','localStorageCleanupMode']]){
+      const before=structuredClone(f.local);
+      f.d.getElementById(button).click();await tick();assert.ok(f.d.querySelector('dialog[open]'));
+      assert.match(f.d.querySelector('dialog').textContent,/próximas limpezas/);
+      assert.deepEqual(f.local,before);
+      f.d.querySelector('[data-confirm="accept"]').click();await tick();
+      assert.deepEqual(f.local[key],[]);assert.equal(f.d.getElementById(button).disabled,true);
+      for(const other of Object.keys(before).filter(name=>name!==key))assert.deepEqual(f.local[other],before[other]);
+      assert.equal(f.local[modeKey],before[modeKey]);
+    }
+    assert.equal(f.requests.filter(request=>request.action==='clearNow').length,0);assert.deepEqual(f.errors,[]);
+  }finally{f.close();}
+});
+
+test('cancelar ou trocar para inclusão durante a confirmação preserva a lista de exclusão',async()=>{
+  const f=await fixture({includedSites:['include.example']});try{
+    f.d.getElementById('clearExclusions').click();await tick();
+    f.d.querySelector('[data-confirm="cancel"]').click();await tick();assert.deepEqual(f.local.excludedSites,['cookie.example']);
+    f.d.getElementById('clearExclusions').click();await tick();
+    await f.w.chrome.storage.local.set({cookieCleanupMode:'include'});await tick();
+    f.d.querySelector('[data-confirm="accept"]').click();await tick();
+    assert.deepEqual(f.local.excludedSites,['cookie.example']);assert.deepEqual(f.local.includedSites,['include.example']);
+    assert.equal(f.d.getElementById('clearExclusions').hidden,true);assert.match(f.d.getElementById('popupStatus').textContent,/mudou/);
+  }finally{f.close();}
+});
+
+test('novos sites adicionados durante a confirmação não são apagados sem revisão',async()=>{
+  const f=await fixture();try{
+    f.d.getElementById('clearExclusions').click();await tick();
+    await f.w.chrome.storage.local.set({excludedSites:['cookie.example','new.example']});await tick();
+    f.d.querySelector('[data-confirm="accept"]').click();await tick();
+    assert.deepEqual(f.local.excludedSites,['cookie.example','new.example']);assert.match(f.d.getElementById('popupStatus').textContent,/mudou/);
+    assert.equal(f.d.getElementById('clearExclusions').disabled,false);
+  }finally{f.close();}
+});
+
+test('falha ao limpar exclusões mantém os sites e permite nova tentativa',async()=>{
+  let fail=true;
+  const f=await fixture({}, {set:async values=>{if(fail&&values.excludedSites?.length===0)throw Error('write failed');}});try{
+    f.d.getElementById('clearExclusions').click();await tick();f.d.querySelector('[data-confirm="accept"]').click();await tick();
+    assert.deepEqual(f.local.excludedSites,['cookie.example']);assert.equal(f.d.getElementById('error').hidden,false);
+    assert.equal(f.d.getElementById('clearExclusions').disabled,false);
+    fail=false;f.d.getElementById('clearExclusions').click();await tick();f.d.querySelector('[data-confirm="accept"]').click();await tick();
+    assert.deepEqual(f.local.excludedSites,[]);assert.equal(f.d.getElementById('error').hidden,true);assert.deepEqual(f.errors,[]);
+  }finally{f.close();}
+});

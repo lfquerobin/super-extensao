@@ -1002,5 +1002,17 @@
   },
   "uiCleanupListReady": {
     "message": "List loaded."
+  },
+  "uiCleanupClearList": {
+    "message": "Clear exclusion list"
+  },
+  "uiCleanupClearListConfirm": {
+    "message": "Clear the entire exclusion list for {type}? These sites will no longer be kept during future cleanups. This does not delete website data now."
+  },
+  "uiCleanupListCleared": {
+    "message": "Exclusion list cleared."
+  },
+  "uiCleanupListChanged": {
+    "message": "The list or mode changed during confirmation. Review the list and try again."
   }
 }

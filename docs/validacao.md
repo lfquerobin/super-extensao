@@ -1,5 +1,11 @@
 # Validação da Super Extensão
 
+## Limpar lista de exclusão — 1.7.42
+
+Em 15/11/2026, **560 testes passaram**, sem falhas ou testes ignorados. Templates/catálogos, `check:ui`, `check:integrity` e `git diff --check` foram verificados. Os casos novos cobrem limpar somente o tipo escolhido, confirmação/cancelamento, mudança de modo ou sites durante a confirmação e falha de gravação sem perder a lista.
+
+O Edge 157.0.4341.60, em perfil temporário, confirmou o botão e verificou que inclusão, outras exclusões, cookies/localStorage dos dois sites locais e o registro de limpeza foram preservados. O mesmo runner validou novamente limpeza real de cookies/cache/localStorage por inclusão/exclusão e inclusão vazia. Captura do diálogo inspecionada. Não foram usados dados pessoais. [Funcionamento](limpeza-por-site.md).
+
 ## Inclusão e exclusão na limpeza — 1.7.41
 
 Em 15/11/2026, **556 testes passaram**, sem falhas ou testes ignorados. Templates/catálogos foram gerados e `check:ui`, `check:integrity` e `git diff --check` passaram. Os modos por tipo preservam as listas antigas, não misturam inclusão/exclusão e não ampliam filtros vazios ou inválidos. Foram exercitados snapshots manuais, relatórios sem falso sucesso, falha de gravação, leituras antigas e troca de destino durante importação.

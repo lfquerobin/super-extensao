@@ -38,6 +38,7 @@ const currentModes = Object.fromEntries(Object.keys(EXCEPTION_LISTS).map(type =>
 const listRevisions = {};
 const pendingModes = new Set();
 const unavailableFilters = new Set();
+const clearingLists = new Set();
 function filterTarget(type, mode = currentModes[type]) {
   const filter = ClearRules.SITE_FILTERS[type];
   if (!filter) throw Error('Invalid cleanup filter');
@@ -148,6 +149,8 @@ async function refreshList(type) {
   });
   listElement(type,"listCount").textContent = SuperI18n.t(sites.length===1?"uiDomainsOne":"uiDomainsMany",{count:sites.length});
   listElement(type,"emptyList").hidden = sites.length > 0;
+  listElement(type,'clearExclusions').hidden = mode !== 'exclude';
+  listElement(type,'clearExclusions').disabled = !sites.length || clearingLists.has(type);
   unavailableFilters.delete(type);
   listElement(type,'filterEditor').disabled = false;
   listElement(type,'filterRetry').hidden = true;
@@ -173,6 +176,32 @@ async function addDomains(values, type = "cookies", mode = currentModes[type]) {
     await chrome.storage.local.set({[key]:after});
     return after.length - before.length;
   });
+}
+async function clearExclusions(type) {
+  if (clearingLists.has(type) || pendingModes.has(type) || unavailableFilters.has(type) || currentModes[type] !== 'exclude') return;
+  const filter = ClearRules.SITE_FILTERS[type];
+  clearingLists.add(type);
+  listElement(type,'clearExclusions').disabled = true;
+  try {
+    const before = await chrome.storage.local.get({[filter.excludeKey]:[]});
+    const sites = ClearRules.normalizeList(before[filter.excludeKey]);
+    if (!sites.length) return;
+    const label = type === 'cookies' ? 'Cookies' : SuperI18n.t(type === 'cache' ? 'cache' : 'uiLocalstorage3d640');
+    if (!await SuperConfirmation.confirmAction(document, SuperI18n.t('uiCleanupClearListConfirm',{type:label}),
+      {locale:SuperI18n.locale,confirmLabel:SuperI18n.t('uiCleanupClearList')})) return;
+    const cleared = await serializeMutation(async () => {
+      const latest = await chrome.storage.local.get({[filter.modeKey]:'exclude',[filter.excludeKey]:[]});
+      if (ClearRules.normalizeMode(latest[filter.modeKey]) !== 'exclude' ||
+          JSON.stringify(ClearRules.normalizeList(latest[filter.excludeKey])) !== JSON.stringify(sites)) return false;
+      await chrome.storage.local.set({[filter.excludeKey]:[]});
+      return true;
+    });
+    notifyMessage(cleared ? 'uiCleanupListCleared' : 'uiCleanupListChanged',undefined,cleared ? 'success' : 'warning');
+  } finally {
+    clearingLists.delete(type);
+    await refreshList(type);
+    await refreshPreview();
+  }
 }
 async function changeListMode(type, mode) {
   if (pendingModes.has(type)) return;
@@ -256,6 +285,7 @@ async function init() {
   })));
   $("resume").addEventListener("click", handle(async () => { await message({action:"resume"}); await refreshPause(); }));
   for (const type of Object.keys(EXCEPTION_LISTS)) {
+    listElement(type,'clearExclusions').addEventListener('click',handle(() => clearExclusions(type)));
     listElement(type,'filterRetry').addEventListener('click',handle(async () => {await refreshList(type);await refreshPreview();notifyMessage('uiCleanupListReady');}));
     listElement(type,'listMode').addEventListener('change',handle(event => changeListMode(type,event.target.value)));
     domainEditors.push(SuperDomainEditor.bindDomainEditor(listElement(type,"domainForm"), {

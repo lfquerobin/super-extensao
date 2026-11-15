@@ -1002,5 +1002,17 @@
   },
   "uiCleanupListReady": {
     "message": "Lista carregada."
+  },
+  "uiCleanupClearList": {
+    "message": "Limpar lista de exclusão"
+  },
+  "uiCleanupClearListConfirm": {
+    "message": "Limpar toda a lista de exclusão de {type}? Esses sites deixarão de ser preservados nas próximas limpezas. Isso não apaga os dados dos sites agora."
+  },
+  "uiCleanupListCleared": {
+    "message": "Lista de exclusão limpa."
+  },
+  "uiCleanupListChanged": {
+    "message": "A lista ou o modo mudou durante a confirmação. Revise a lista e tente novamente."
   }
 }

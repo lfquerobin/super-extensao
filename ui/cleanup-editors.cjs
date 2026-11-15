@@ -16,6 +16,7 @@ function cleanupEditor(type) {
       </select>
     </label><p id="${id('listModeHelp')}" class="note" role="status"></p>
     ${editor}
+    <div class="ui-actions"><button type="button" class="ui-button ui-button-danger" id="${id('clearExclusions')}" data-i18n="uiCleanupClearList">Limpar lista de exclusão</button></div>
   </fieldset><button type="button" class="ui-button" id="${id('filterRetry')}" data-i18n="uiCleanupRetry" hidden>Tentar novamente</button>`;
 }
 module.exports = {cleanupEditor};

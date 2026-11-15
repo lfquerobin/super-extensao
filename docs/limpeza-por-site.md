@@ -1,4 +1,4 @@
-# Limpeza por site — 1.7.41
+# Limpeza por site — 1.7.42
 
 Em Cookies, Cache e Arm. Local, **Modo da lista** oferece:
 
@@ -8,6 +8,12 @@ Em Cookies, Cache e Arm. Local, **Modo da lista** oferece:
 | Incluir na limpeza — limpar somente a lista | Limpa apenas os sites listados e preserva os demais. Sem sites, não executa remoção daquele tipo. |
 
 Cada tipo tem duas listas independentes. Trocar o modo não move, copia nem apaga entradas; a escolha é salva automaticamente, sem botão Salvar e sem ativar o tipo em Geral. As listas antigas permanecem como exclusões, com o mesmo comportamento de preservação da versão anterior. Em Favoritos, o seletor de modo reflete a configuração do tipo escolhido; importações e duplicados são calculados apenas para essa lista. A cópia não altera os favoritos.
+
+## Limpar a lista de exclusão — 1.7.42
+
+No modo **Excluir da limpeza**, o botão **Limpar lista de exclusão** remove todas as entradas apenas do tipo escolhido. Ele fica desabilitado quando a lista está vazia e não aparece na inclusão. A confirmação avisa que os sites deixarão de ser preservados nas próximas limpezas; o botão não executa limpeza de cookies, cache ou localStorage naquele momento. A alteração é gravada automaticamente e não afeta os modos, as listas de inclusão ou os outros tipos.
+
+Antes de gravar, a ação confere novamente o modo e a lista apresentada na confirmação. Se eles tiverem mudado, a remoção é recusada e pede revisão. Cancelar mantém os sites; falha de gravação mantém a lista e permite tentar novamente.
 
 ## Escopo dos dados
 
@@ -34,3 +40,7 @@ A interface serializa alterações, preserva a lista correta em adições/remoç
 **556 testes passaram**, sem falhas ou testes ignorados. A suíte cobre combinações de modos nos três tipos, listas antigas, inclusão vazia, dados inválidos, relatório de tipos efetivamente removidos, snapshots manuais, tradução, persistência automática, isolamento de listas, importação/duplicados e respostas atrasadas. `check:ui`, `check:integrity` e `git diff --check` passaram.
 
 O runner `scripts/check-cleanup-filters-native.cjs` validou as APIs reais no Edge 157.0.4341.60 em perfil descartável, com dois sites locais: inclusão apagou cookies, cache HTTP e localStorage somente do site listado; exclusão preservou esse site e limpou o outro. O cache foi conferido por contagem de requisições ao servidor local, e os dados das duas origens foram consultados depois da conclusão. Inclusão vazia preservou ambos os sites, as listas de exclusão e os registros de sucesso anteriores. As capturas em `work/ui-review` foram inspecionadas. Não foram usados dados pessoais, contas reais ou perfil habitual do navegador.
+
+## Validação da 1.7.42
+
+**560 testes passaram**, incluindo confirmação, cancelamento, isolamento entre os três tipos, preservação da inclusão, mudança de modo/lista durante a confirmação e falha de gravação com nova tentativa. No Edge 157.0.4341.60, com perfil descartável e sites locais, o runner confirmou cancelar e executar o botão, mantendo a inclusão, as outras exclusões, os dados dos sites e o registro da última limpeza. A captura do diálogo foi inspecionada; os testes reais de inclusão/exclusão e lista vazia também passaram.
