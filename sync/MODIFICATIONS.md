@@ -45,3 +45,9 @@ A implementação padrão de fetch permanece vinculada ao contexto global do wor
 ## 1.6.3 — Manutenção da interface compartilhada
 
 O adaptador de tema usa `SuperPreferences.bindTheme` e mantém a integração com o Vuetify. A base compartilhada centraliza o foco interno, evita o contorno duplicado em buscas compostas e permite quebra de textos longos nos controles comuns. A matriz DOM de tema/idioma mantém rascunhos e configurações. A documentação distingue o relato de sincronização bem-sucedida na 1.6.2 dos cenários reais ainda não verificados.
+
+## Provedores disponíveis — 1.7.36
+
+A aplicação oferece apenas Google Drive e Git. A política compartilhada `sync/providers.cjs` valida cadastro, importação integral e edição; o worker impede sincronização/verificação/agendamento dos demais provedores e desativa seus gatilhos no carregamento/desbloqueio. Perfis antigos são preservados para backup e remoção confirmada, sem os formulários de configuração dos serviços desativados. As fontes e os adaptadores históricos continuam presentes para leitura/exportação e atribuição. Conexões exibe apenas OAuth Google Drive, preservando campos antigos não exibidos no armazenamento.
+
+A 1.7.36 também desativa a contagem de visitas herdada dos serviços removidos, limpa seus estados transitórios pendentes e remove a permissão opcional `history`, não usada por Google Drive/Git. A limpeza do histórico continua pela API `browsingData`.

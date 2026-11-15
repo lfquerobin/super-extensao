@@ -5,13 +5,18 @@ import { useCachedEffect } from "../../../hooks";
 import { Props, defaultData } from "./types";
 import { getIpInfo } from "./api";
 import { MINUTES } from "../../../utils";
+import { usePushError } from "../../../api";
 
 const IpInfo: FC<Props> = ({ cache, data = defaultData, setCache, loader }) => {
+  const pushError = usePushError();
   const refreshInterval = data.refreshInterval * MINUTES;
 
   useCachedEffect(
     () => {
-      getIpInfo(loader).then(setCache);
+      let active = true;
+      getIpInfo(loader).then((value) => { if (active) setCache(value); })
+        .catch((error) => { if (active) pushError(error); });
+      return () => { active = false; };
     },
     cache ? cache.timestamp + refreshInterval : 0,
     [],

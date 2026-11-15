@@ -1,5 +1,13 @@
 /* SPDX-License-Identifier: MPL-2.0 */
 export const uiMessages = {
+  SuperOAuthHelp: {
+    "pt-BR": "O Google Drive exige credenciais OAuth próprias desta extensão. Cadastre o endereço de redirecionamento abaixo no aplicativo Google. Configure o Git no próprio perfil.",
+    en: "Google Drive requires OAuth credentials for this extension. Register the redirect address below in your Google app. Configure Git in its profile.",
+  },
+  SyncProviderDisabled: {
+    "pt-BR": "Este serviço foi desativado. Use Google Drive ou Git. O perfil foi preservado para exportação ou remoção.",
+    en: "This service was disabled. Use Google Drive or Git. The profile was preserved for export or removal.",
+  },
   UiFoldersLoading: {"pt-BR": "Carregando pastas…", en: "Loading folders…"},
   UiFoldersFailed: {"pt-BR": "Não foi possível carregar as pastas. Tente novamente.", en: "Could not load folders. Try again."},
   UiFoldersEmpty: {"pt-BR": "Nenhuma pasta disponível.", en: "No folders available."},
@@ -214,8 +222,8 @@ export const uiMessages = {
   },
   UiConnectionHelp: {
     "pt-BR":
-      "Configure os aplicativos de acesso ao Google Drive e Dropbox. Os demais serviços são configurados no próprio perfil.",
-    en: "Configure access apps for Google Drive and Dropbox. Other services are configured in each profile.",
+      "Configure o acesso ao Google Drive. O Git é configurado no próprio perfil.",
+    en: "Configure Google Drive access. Git is configured in its profile.",
   },
   UiWorking: {
     "pt-BR": "Aguarde…",

@@ -4,7 +4,7 @@
 
 Extensão pessoal para Helium e navegadores Chromium, com Nova guia, sincronização de favoritos, VPN no navegador, limpeza ao sair, controle de autoplay e proteção da última aba.
 
-**Versão instalada: 1.7.35.** Documentação revisada em 14 de novembro de 2026. Temas escuro, claro e sistema; idiomas PT-BR e inglês compartilhados entre os módulos. Requer Chromium 116 ou superior, conforme o manifest.
+**Versão instalada: 1.7.36.** Documentação revisada em 15 de novembro de 2026. Temas escuro, claro e sistema; idiomas PT-BR e inglês compartilhados entre os módulos. Requer Chromium 116 ou superior, conforme o manifest.
 
 Para investigar uma falha da VPN, abra `chrome://extensions`, localize a Super Extensão e inspecione o **service worker**. Na aba Console, reproduza a tentativa e execute `getVpnDiagnostics()`. Os últimos 50 eventos registram somente horário, etapa, resultado e código conhecido, sem credenciais ou dados da conta; falhas novas também aparecem como avisos `[Super VPN]`. Esse histórico é temporário e reinicia com o worker. `getLogs()` é o registro legado, dependente de debug, e pode estar vazio.
 
@@ -13,7 +13,7 @@ Para investigar uma falha da VPN, abra `chrome://extensions`, localize a Super E
 | Área | Implementado | O que ainda depende de trabalho |
 | --- | --- | --- |
 | Interface | Componentes comuns HTML/DOM, Vue e React; árvore de pastas, assistente, editores, diálogos, progresso e erros unificados | Ampliar a conferência visual para todos os diálogos e estados com contas reais |
-| Sincronização | Google Drive/favoritos pelo núcleo próprio; demais provedores e abas pelo motor legado | Dois navegadores reais, restauração de backups por interface e migração dos demais conectores |
+| Sincronização | Google Drive/favoritos pelo núcleo próprio; Git e perfis de abas pelo motor legado | Dois navegadores reais, restauração de backups por interface e migração do conector Git |
 | Núcleo Google Drive | Reconciliação, escrita condicional, criptografia, backup e retomada pelo diário | Ampliar a validação real relatada pelo usuário, medir grandes importações e suportar pastas sobrepostas |
 | VPN | Interface, regras, controlador de proxy, estado/recuperação, credenciais temporárias, transporte HTTP, catálogo/seleção, WebRTC e coordenação de login próprios | Revisão minuciosa e validação real; contratos do serviço e adaptadores Chromium/Proton permanecem |
 | Limpeza, Autoplay e Abas | Controles locais e testes automatizados | Validar fechamento nativo e recuperação no Helium |
@@ -45,13 +45,15 @@ A [biblioteca de componentes](docs/ui-components.md) centraliza estrutura, botõ
 
 ### Sincronização de favoritos
 
-Em **Sincronização → Novo perfil**, escolha o serviço e a pasta. O motor atual oferece os oito serviços da interface, favoritos ou abas conforme o perfil, agendamento, sincronização manual, backup de perfis e ações direcionais avançadas. Ações que substituem dados exigem atenção ao sentido escolhido.
+Em **Sincronização → Novo perfil**, escolha o serviço e a pasta. A interface oferece somente **Google Drive e Git**, com favoritos ou abas conforme o perfil, agendamento, sincronização manual, backup de perfis e ações direcionais avançadas. Ações que substituem dados exigem atenção ao sentido escolhido.
 
-Para Google Drive e Dropbox, configure credenciais OAuth próprias em **Conexões**, usando o endereço de redirecionamento exibido. O Google usa ID e segredo do cliente; o Dropbox usa a chave do aplicativo. Os outros conectores usam as configurações do perfil.
+Para Google Drive, configure ID e segredo do cliente OAuth próprios em **Conexões**, usando o endereço de redirecionamento exibido. Configure repositório, branch e credenciais do Git no próprio perfil.
+
+Na **1.7.36**, os demais serviços foram desativados no cadastro, na importação e na execução manual/automática. Perfis antigos permanecem disponíveis para exportação ou remoção; suas credenciais e seus dados não são apagados. Um backup que contenha serviços desativados é recusado por inteiro antes de criar perfis.
 
 **Motor próprio Google Drive (1.6.3):** os perfis de favoritos usam `sync/engine` no botão **Sincronizar** e no agendamento existente. O núcleo faz leitura, reconciliação de três versões, escrita condicional, criptografia compatível, backup e aplicação local com checkpoints. Conflitos incompatíveis e exclusões grandes são interrompidos; as ações avançadas permitem escolher o sentido. O painel de comparação foi removido. Perfis com a raiz geral preservam as pastas permanentes e sincronizam seu conteúdo.
 
-Os perfis existentes são aproveitados, incluindo cache e mapeamentos quando consistentes. Outros serviços e perfis de abas continuam no legado; cadastro, OAuth interativo e a estrutura de agendamento ainda usam a camada de compatibilidade. Pastas sobrepostas entre perfis são recusadas por enquanto. Os backups ficam no armazenamento local; ainda não há tela de restauração.
+Os perfis existentes são aproveitados, incluindo cache e mapeamentos quando consistentes. Git e perfis de abas continuam no legado; cadastro, OAuth interativo e a estrutura de agendamento ainda usam a camada de compatibilidade. Pastas sobrepostas entre perfis são recusadas por enquanto. Os backups ficam no armazenamento local; ainda não há tela de restauração.
 
 Veja [a interface e a compatibilidade](docs/sync-interface.md) e [o escopo do novo motor](docs/sync-engine.md). Perfis exportados podem conter credenciais; guarde esses arquivos como configurações privadas. Backup de perfis não equivale a backup dos favoritos.
 
@@ -102,6 +104,8 @@ O sinal fica no canto superior direito, preservando o badge de limpeza pausada. 
 
 ### Nova guia
 
+A **1.7.36** incorpora correções selecionadas do Tabliss: novo serviço HTTPS do widget de IP, com validação/erros e cache existente preservado; alinhamento dos links recolhidos; números do relógio com largura fixa; link do calendário para o perfil GitHub; e localização das fotos Unsplash com compatibilidade para o formato anterior. O widget de IP consulta `ipwho.is` somente quando adicionado ao dashboard, e sua informação pode permanecer em cache pelo intervalo configurado; ele não comprova o roteamento da VPN. [Avaliação das origens](docs/atualizacoes-origens.md).
+
 A **1.7.18** extrai estado, configuração, persistência, ações de fundos/widgets e importação/exportação para `newtab/engine`. O dashboard, editor e componentes dos widgets continuam baseados no Tabliss 2.6.0 adaptado. Mantém PT-BR/inglês, os dados existentes e o fundo inicial local. [Escopo, compatibilidade e limites da extração](docs/newtab-engine.md). A engrenagem abre o editor; o botão **Super Extensão** abre os controles da extensão. A importação substitui a configuração do dashboard; imagens próprias precisam ser selecionadas novamente.
 
 Preferências usam `tabliss/config` em `storage.sync`; imagens e cache usam IndexedDB e não sincronizam pelo JSON. Unsplash/GIPHY permitem configurar a chave nas opções do fundo, salva apenas neste dispositivo; sem chave, exibem a orientação correspondente. [Carregamento de imagens e configuração](docs/newtab-images.md). Provedores online dependem dos serviços e de suas cotas. O envio de erros do Tabliss ao Sentry foi desativado. Veja [as modificações](newtab/MODIFICATIONS.md).
@@ -126,7 +130,6 @@ A proteção da última aba mantém uma reserva criada pela extensão e preserva
 | `unlimitedStorage`, `identity` | Cache e autenticação OAuth |
 | `proxy`, `privacy`, `idle` | VPN, proteção WebRTC e recuperação da conexão |
 | `scripting`, `webRequest`, `webRequestAuthProvider` e acesso HTTP/HTTPS | Integração da VPN, autenticação do proxy e scripts de controle de mídia |
-| `history` — opcional | Contagem de visitas quando habilitada em conectores compatíveis |
 
 Limpeza, autoplay e proteção de abas são locais. Sincronização, VPN e widgets online usam os serviços configurados. Os módulos preservam os espaços de armazenamento `superSync:`, `superVpn:` e `tabliss/config`, separados das preferências locais de limpeza/abas/autoplay. O núcleo Google Drive mantém tokens em memória e não os inclui nos backups, checkpoints ou logs de erro.
 

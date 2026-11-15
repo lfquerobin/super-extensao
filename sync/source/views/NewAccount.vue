@@ -80,367 +80,8 @@
       </UiWizardStep>
 
       <UiWizardStep :active="currentStep === 2">
-        <template v-if="adapter === 'nextcloud-bookmarks'">
-          <div class="headline" role="heading" aria-level="2">
-            {{ t("LabelServersetup") }}
-          </div>
-          <SyncForm>
-            <SyncTextField
-              outlined
-              dense
-              v-model="server"
-              :rules="[validateUrl]"
-              :label="t('LabelNextcloudurl')"
-              :loading="isServerTestRunning || isLoginFlowRunning"
-              :error-messages="
-                serverisNotHttps || serverTestError || loginFlowError
-              "
-              @keydown.enter="testNextcloudServer"
-            >
-              <template slot="append-outer">
-                <SyncIcon
-                  v-if="serverTestSuccessful"
-                  color="green"
-                  role="img"
-                  :aria-label="t('LabelServerconnectionsuccessful')"
-                >
-                  mdi-check
-                </SyncIcon>
-              </template>
-            </SyncTextField>
-          </SyncForm>
-          <UiActions class="form-buttons">
-            <SyncButton @click="currentStep--">
-              {{ t("LabelBack") }}
-            </SyncButton>
-            <SyncButton
-              v-if="!serverTestSuccessful"
-              class="primary"
-              @click="testNextcloudServer"
-            >
-              {{ t("LabelConnect") }}
-            </SyncButton>
-            <template v-if="serverTestSuccessful">
-              <SyncButton
-                v-if="!isLoginFlowRunning"
-                class="primary"
-                @click="onFlowStart"
-              >
-                {{ t("LabelLoginFlowStart") }}
-              </SyncButton>
-              <SyncButton v-if="isLoginFlowRunning" @click="onFlowStop">
-                {{ t("LabelLoginFlowStop") }}
-              </SyncButton>
-            </template>
-          </UiActions>
-        </template>
 
-        <template v-else-if="adapter === 'linkwarden'">
-          <div class="headline" role="heading" aria-level="2">
-            {{ t("LabelServersetup") }}
-          </div>
-          <SyncForm>
-            <SyncTextField
-              outlined
-              dense
-              v-model="server"
-              :rules="[validateUrl]"
-              :label="t('LabelLinkwardenurl')"
-              :loading="isServerTestRunning"
-              :error-messages="serverTestError || serverisNotHttps"
-            />
-            <SyncTextField
-              outlined
-              dense
-              v-model="username"
-              :label="t('LabelUsername')"
-            />
-            <SyncTextField
-              outlined
-              dense
-              v-model="password"
-              :label="t('LabelAccesstoken')"
-              :type="showPassword ? 'text' : 'password'"
-            >
-              <template #append>
-                <SyncIcon
-                  role="button"
-                  tabindex="0"
-                  :aria-label="
-                    showPassword
-                      ? t('LabelHidepassword')
-                      : t('LabelShowpassword')
-                  "
-                  @click="showPassword = !showPassword"
-                  @keydown.enter="showPassword = !showPassword"
-                  @keydown.space.prevent="showPassword = !showPassword"
-                >
-                  {{ showPassword ? "mdi-eye" : "mdi-eye-off" }}
-                </SyncIcon>
-              </template>
-            </SyncTextField>
-          </SyncForm>
-          <UiActions class="form-buttons">
-            <SyncButton @click="currentStep--">
-              {{ t("LabelBack") }}
-            </SyncButton>
-            <SyncButton class="primary" @click="testLinkwardenServer">
-              {{ t("LabelContinue") }}
-            </SyncButton>
-          </UiActions>
-        </template>
-
-        <template v-else-if="adapter === 'karakeep'">
-          <div class="headline" role="heading" aria-level="2">
-            {{ t("LabelServersetup") }}
-          </div>
-          <SyncForm>
-            <SyncTextField
-              outlined
-              dense
-              v-model="server"
-              :rules="[validateUrl]"
-              :label="t('LabelKarakeepurl')"
-              :loading="isServerTestRunning"
-              :error-messages="serverTestError || serverisNotHttps"
-            />
-            <SyncTextField
-              outlined
-              dense
-              v-model="password"
-              :label="t('LabelApiKey')"
-              :type="showPassword ? 'text' : 'password'"
-            >
-              <template #append>
-                <SyncIcon
-                  role="button"
-                  tabindex="0"
-                  :aria-label="
-                    showPassword
-                      ? t('LabelHidepassword')
-                      : t('LabelShowpassword')
-                  "
-                  @click="showPassword = !showPassword"
-                  @keydown.enter="showPassword = !showPassword"
-                  @keydown.space.prevent="showPassword = !showPassword"
-                >
-                  {{ showPassword ? "mdi-eye" : "mdi-eye-off" }}
-                </SyncIcon>
-              </template>
-            </SyncTextField>
-          </SyncForm>
-          <UiActions class="form-buttons">
-            <SyncButton @click="currentStep--">
-              {{ t("LabelBack") }}
-            </SyncButton>
-            <SyncButton class="primary" @click="testKarakeepServer">
-              {{ t("LabelContinue") }}
-            </SyncButton>
-          </UiActions>
-        </template>
-
-        <template v-else-if="adapter === 'webdav'">
-          <div class="headline" role="heading" aria-level="2">
-            {{ t("LabelServersetup") }}
-          </div>
-          <SyncForm>
-            <SyncSelect
-              outlined
-              dense
-              :items="Object.keys(predefinedWebdavUrls)"
-              :label="t('LabelPredefinedwebdavurls')"
-              :placeholder="t('DescriptionPredefinedwebdavurls')"
-              persistent-placeholder
-              @change="server = predefinedWebdavUrls[$event]"
-            />
-            <SyncTextField
-              outlined
-              dense
-              v-model="server"
-              :rules="[validateUrl]"
-              :label="t('LabelWebdavurl')"
-              :loading="isServerTestRunning"
-              :error-messages="serverTestError || serverisNotHttps"
-            />
-            <SyncTextField
-              outlined
-              dense
-              v-model="username"
-              :label="t('LabelUsername')"
-            />
-            <SyncTextField
-              outlined
-              dense
-              v-model="password"
-              :label="t('LabelPassword')"
-              :type="showPassword ? 'text' : 'password'"
-            >
-              <template #append>
-                <SyncIcon
-                  role="button"
-                  tabindex="0"
-                  :aria-label="
-                    showPassword
-                      ? t('LabelHidepassword')
-                      : t('LabelShowpassword')
-                  "
-                  @click="showPassword = !showPassword"
-                  @keydown.enter="showPassword = !showPassword"
-                  @keydown.space.prevent="showPassword = !showPassword"
-                >
-                  {{ showPassword ? "mdi-eye" : "mdi-eye-off" }}
-                </SyncIcon>
-              </template>
-            </SyncTextField>
-            <SyncTextField
-              outlined
-              dense
-              v-model="passphrase"
-              class="mt-2"
-              :label="t('LabelPassphrase')"
-              :hint="t('DescriptionPassphrase')"
-              :persistent-hint="true"
-              :type="showPassphrase ? 'text' : 'password'"
-            >
-              <template #append>
-                <SyncIcon
-                  role="button"
-                  tabindex="0"
-                  :aria-label="
-                    showPassphrase
-                      ? t('LabelHidepassword')
-                      : t('LabelShowpassword')
-                  "
-                  @click="showPassphrase = !showPassphrase"
-                  @keydown.enter="showPassphrase = !showPassphrase"
-                  @keydown.space.prevent="showPassphrase = !showPassphrase"
-                >
-                  {{ showPassphrase ? "mdi-eye" : "mdi-eye-off" }}
-                </SyncIcon>
-              </template>
-            </SyncTextField>
-            <OptionClientCert v-model="includeCredentials" class="mt-2" />
-          </SyncForm>
-          <UiActions class="form-buttons">
-            <SyncButton @click="currentStep--">
-              {{ t("LabelBack") }}
-            </SyncButton>
-            <SyncButton class="primary" @click="testWebdavServer">
-              {{ t("LabelContinue") }}
-            </SyncButton>
-          </UiActions>
-        </template>
-
-        <template v-else-if="adapter === 's3'">
-          <div class="headline" role="heading" aria-level="2">
-            {{ t("LabelServersetup") }}
-          </div>
-          <SyncForm>
-            <SyncTextField
-              outlined
-              dense
-              v-model="server"
-              :rules="[validateUrl]"
-              :label="t('LabelS3endpoint')"
-              :hint="t('DescriptionS3endpoint')"
-              :persistent-hint="true"
-              :loading="isServerTestRunning"
-              :error-messages="serverTestError || serverisNotHttps"
-            />
-            <SyncTextField
-              outlined
-              dense
-              v-model="region"
-              class="mt-2"
-              :label="t('LabelS3region')"
-              :hint="t('DescriptionS3region')"
-              :persistent-hint="true"
-            />
-            <SyncTextField
-              outlined
-              dense
-              v-model="bucket"
-              class="mt-2"
-              :rules="[validateBucket]"
-              :label="t('LabelS3bucket')"
-            />
-            <SyncSwitch
-              v-model="pathStyle"
-              :label="t('LabelS3pathstyle')"
-              :hint="t('DescriptionS3pathstyle')"
-              :persistent-hint="true"
-              dense
-              class="mt-0 pt-0 mb-4"
-            />
-            <SyncTextField
-              outlined
-              dense
-              v-model="username"
-              :label="t('LabelS3accesskey')"
-            />
-            <SyncTextField
-              outlined
-              dense
-              v-model="password"
-              :label="t('LabelS3secretkey')"
-              :type="showPassword ? 'text' : 'password'"
-            >
-              <template #append>
-                <SyncIcon
-                  role="button"
-                  tabindex="0"
-                  :aria-label="
-                    showPassword
-                      ? t('LabelHidepassword')
-                      : t('LabelShowpassword')
-                  "
-                  @click="showPassword = !showPassword"
-                  @keydown.enter="showPassword = !showPassword"
-                  @keydown.space.prevent="showPassword = !showPassword"
-                >
-                  {{ showPassword ? "mdi-eye" : "mdi-eye-off" }}
-                </SyncIcon>
-              </template>
-            </SyncTextField>
-            <SyncTextField
-              outlined
-              dense
-              v-model="passphrase"
-              class="mt-2"
-              :label="t('LabelPassphrase')"
-              :hint="t('DescriptionPassphrase')"
-              :persistent-hint="true"
-              :type="showPassphrase ? 'text' : 'password'"
-            >
-              <template #append>
-                <SyncIcon
-                  role="button"
-                  tabindex="0"
-                  :aria-label="
-                    showPassphrase
-                      ? t('LabelHidepassword')
-                      : t('LabelShowpassword')
-                  "
-                  @click="showPassphrase = !showPassphrase"
-                  @keydown.enter="showPassphrase = !showPassphrase"
-                  @keydown.space.prevent="showPassphrase = !showPassphrase"
-                >
-                  {{ showPassphrase ? "mdi-eye" : "mdi-eye-off" }}
-                </SyncIcon>
-              </template>
-            </SyncTextField>
-          </SyncForm>
-          <UiActions class="form-buttons">
-            <SyncButton @click="currentStep--">
-              {{ t("LabelBack") }}
-            </SyncButton>
-            <SyncButton class="primary" @click="testS3Server">
-              {{ t("LabelContinue") }}
-            </SyncButton>
-          </UiActions>
-        </template>
-
-        <template v-else-if="adapter === 'git'">
+        <template v-if="adapter === 'git'">
           <div class="headline" role="heading" aria-level="2">
             {{ t("LabelServersetup") }}
           </div>
@@ -515,27 +156,6 @@
           </UiActions>
         </template>
 
-        <template v-else-if="adapter === 'dropbox'">
-          <div class="headline" role="heading" aria-level="2">
-            {{ t("LabelDropboxsetup") }}
-          </div>
-          <SyncForm class="mt-2">
-            <SyncAlert v-if="loginFlowError" dense color="error">
-              {{ loginFlowError }}
-            </SyncAlert>
-            <SyncButton color="primary" @click="loginDropbox">
-              {{ t("LabelLogindropbox") }}
-            </SyncButton>
-            <p class="mt-2">
-              {{ t("DescriptionLogindropbox") }}
-            </p>
-          </SyncForm>
-          <UiActions class="form-buttons">
-            <SyncButton @click="currentStep--">
-              {{ t("LabelBack") }}
-            </SyncButton>
-          </UiActions>
-        </template>
       </UiWizardStep>
 
       <UiWizardStep :active="currentStep === 3">
@@ -543,88 +163,6 @@
           {{ t("LabelSyncfoldersetup") }}
         </div>
         <SyncForm>
-          <template v-if="adapter === 'nextcloud-bookmarks'">
-            <div class="text-h6" role="heading" aria-level="3">
-              {{ t("LabelServerfolder") }}
-            </div>
-            <div class="caption">
-              {{ t("DescriptionServerfolder") }}
-            </div>
-            <SyncTextField
-              outlined
-              dense
-              v-model="serverRoot"
-              :placeholder="'/'"
-              :rules="[validateServerRoot]"
-              :label="t('LabelServerfolder')"
-            />
-          </template>
-
-          <template v-if="adapter === 'linkwarden'">
-            <div class="text-h6" role="heading" aria-level="3">
-              {{ t("LabelServerfolder") }}
-            </div>
-            <div class="caption">
-              {{ t("DescriptionServerfolderlinkwarden") }}
-            </div>
-            <SyncTextField
-              outlined
-              dense
-              v-model="serverFolder"
-              :label="t('LabelServerfolder')"
-            />
-          </template>
-
-          <template v-if="adapter === 'karakeep'">
-            <div class="text-h6" role="heading" aria-level="3">
-              {{ t("LabelServerfolder") }}
-            </div>
-            <div class="caption">
-              {{ t("DescriptionServerfolderkarakeep") }}
-            </div>
-            <SyncTextField
-              outlined
-              dense
-              v-model="serverFolder"
-              :label="t('LabelServerfolder')"
-            />
-          </template>
-
-          <template v-if="adapter === 'webdav'">
-            <div class="text-h6" role="heading" aria-level="3">
-              {{ t("LabelBookmarksfile") }}
-            </div>
-            <SyncTextField
-              outlined
-              dense
-              v-model="bookmark_file"
-              class="mb-2"
-              append-icon="mdi-file-document"
-              :rules="[validateBookmarksFile]"
-              :label="t('LabelBookmarksfile')"
-              :hint="t('DescriptionBookmarksfile')"
-              :persistent-hint="true"
-            />
-            <OptionFileType v-model="bookmark_file_type" />
-          </template>
-
-          <template v-if="adapter === 's3'">
-            <div class="text-h6" role="heading" aria-level="3">
-              {{ t("LabelBookmarksfile") }}
-            </div>
-            <SyncTextField
-              outlined
-              dense
-              v-model="bookmark_file"
-              class="mb-2"
-              append-icon="mdi-file-document"
-              :rules="[validateBookmarksFile]"
-              :label="t('LabelBookmarksfile')"
-              :hint="t('DescriptionBookmarksfiles3')"
-              :persistent-hint="true"
-            />
-            <OptionFileType v-model="bookmark_file_type" />
-          </template>
 
           <template v-if="adapter === 'git'">
             <div class="text-h6" role="heading" aria-level="3">
@@ -694,48 +232,6 @@
             </SyncTextField>
           </template>
 
-          <template v-if="adapter === 'dropbox'">
-            <div class="text-h6" role="heading" aria-level="3">
-              {{ t("LabelBookmarksfile") }}
-            </div>
-            <SyncTextField
-              outlined
-              dense
-              v-model="bookmark_file"
-              append-icon="mdi-file-document"
-              :rules="[validateBookmarksFileDropbox]"
-              :label="t('LabelBookmarksfile')"
-              :hint="t('DescriptionBookmarksfiledropbox')"
-              :persistent-hint="true"
-            />
-            <SyncTextField
-              outlined
-              dense
-              v-model="passphrase"
-              :type="showPassphrase ? 'text' : 'password'"
-              class="mt-2"
-              :label="t('LabelPassphrase')"
-              :hint="t('DescriptionPassphrase')"
-              :persistent-hint="true"
-            >
-              <template #append>
-                <SyncIcon
-                  role="button"
-                  tabindex="0"
-                  :aria-label="
-                    showPassphrase
-                      ? t('LabelHidepassword')
-                      : t('LabelShowpassword')
-                  "
-                  @click="showPassphrase = !showPassphrase"
-                  @keydown.enter="showPassphrase = !showPassphrase"
-                  @keydown.space.prevent="showPassphrase = !showPassphrase"
-                >
-                  {{ showPassphrase ? "mdi-eye" : "mdi-eye-off" }}
-                </SyncIcon>
-              </template>
-            </SyncTextField>
-          </template>
           <OptionSyncFolder v-if="isBrowser" v-model="localRoot" />
         </SyncForm>
 
@@ -773,16 +269,6 @@
           </template>
           <OptionSyncStrategy v-model="strategy" />
           <OptionNestedSync v-if="isBrowser" v-model="nestedSync" />
-          <SyncSwitch
-            v-if="adapter === 'nextcloud-bookmarks'"
-            v-model="clickCountEnabled"
-            :aria-label="t('LabelClickcount')"
-            :label="t('LabelClickcount')"
-            :hint="t('DescriptionClickcount')"
-            :persistent-hint="true"
-            dense
-            class="mt-0 pt-0 mb-4"
-          />
         </SyncForm>
         <UiActions class="form-buttons">
           <SyncButton @click="currentStep--">
@@ -830,7 +316,6 @@ import OptionNestedSync from "../components/OptionNestedSync";
 import OptionFileType from "../components/OptionFileType";
 import OptionSyncIntervalEnabled from "../components/OptionSyncIntervalEnabled.vue";
 import OptionAutoSync from "../components/OptionAutoSync.vue";
-import OptionClientCert from "../components/OptionClientCert.vue";
 import OptionSyncOnStartup from "../components/OptionSyncOnStartup.vue";
 import OptionNotifyOnly from "../components/OptionNotifyOnly.vue";
 
@@ -839,7 +324,6 @@ export default {
   components: {
     OptionSyncOnStartup,
     OptionNotifyOnly,
-    OptionClientCert,
     OptionAutoSync,
     OptionSyncIntervalEnabled,
     OptionFileType,
@@ -853,23 +337,15 @@ export default {
       currentStep: 0,
       creating: false,
       createError: "",
-      isServerTestRunning: false,
-      serverTestError: "",
-      serverTestSuccessful: false,
       loginFlowError: "",
       server: "https://",
       branch: "main",
-      region: "us-east-1",
-      bucket: "",
-      pathStyle: true,
       username: "",
       password: "",
       passphrase: "",
       refreshToken: "",
       bookmark_file: "bookmarks.xbel",
       bookmark_file_type: "xbel",
-      serverFolder: "Super Extensão",
-      serverRoot: "",
       localRoot: null,
       syncInterval: 15,
       strategy: "default",
@@ -881,106 +357,20 @@ export default {
       nestedSync: true,
       showPassword: false,
       showPassphrase: false,
-      clickCountEnabled: false,
-      includeCredentials: false,
       label: "",
-      adapter: "nextcloud-bookmarks",
-      predefinedWebdavUrls: {
-        [this.t("SuperCustomUrl")]: "https://",
-        "1&1 Online-Speicher (DSL)": "https://sd2dav.1und1.de/",
-        "1&1 Online-Speicher (Webhosting)": "https://webdav.office.1und1.de/",
-        blaucloud: "https://{username}.blaucloud.de/remote.php/webdav/",
-        Disroot: "https://cloud.disroot.org/remote.php/webdav/",
-        freenetcloud: "https://webmail.freenet.de/webdav/",
-        "GMX MediaCenter": "https://webdav.mc.gmx.net/",
-        "HiDrive IONOS": "https://webdav.hidrive.ionos.com/",
-        "HiDrive Strato": "https://webdav.hidrive.strato.com/",
-        IceDrive: "https://webdav.icedrive.io/",
-        kDrive: "https://connect.drive.infomaniak.com/",
-        Koofr: "https://app.koofr.net/dav/Koofr/",
-        MagentaCLOUD: "https://magentacloud.de/remote.php/webdav/",
-        "Mailbox.org": "https://dav.mailbox.org/servlet/webdav.infostore/",
-        "pCloud (EU)": "https://ewebdav.pcloud.com/",
-        "pCloud (US)": "https://webdav.pcloud.com/",
-        "WEB.DE Online-Speicher": "https://webdav.smartdrive.web.de/",
-      },
+      adapter: "google-drive",
       adapters: [
-        {
-          type: "nextcloud-bookmarks",
-          label: this.t("LabelAdapternextcloudfolders"),
-          description: this.t("DescriptionAdapternextcloudfolders"),
-        },
-        {
-          type: "linkwarden",
-          label: this.t("LabelAdapterlinkwarden"),
-          description: this.t("DescriptionAdapterlinkwarden"),
-        },
-        {
-          type: "karakeep",
-          label: this.t("LabelAdapterKarakeep"),
-          description: this.t("DescriptionAdapterKarakeep"),
-        },
-        {
-          type: "webdav",
-          label: this.t("LabelAdapterwebdav"),
-          description: this.t("DescriptionAdapterwebdav"),
-        },
-        {
-          type: "s3",
-          label: this.t("LabelAdapters3"),
-          description: this.t("DescriptionAdapters3"),
-        },
-        {
-          type: "git",
-          label: this.t("LabelAdaptergit"),
-          description: this.t("DescriptionAdaptergit"),
-        },
-        {
-          type: "google-drive",
-          label: this.t("LabelAdaptergoogledrive"),
-          description: this.t("DescriptionAdaptergoogledrive"),
-        },
-        {
-          type: "dropbox",
-          label: this.t("LabelAdapterdropbox"),
-          description: this.t("DescriptionAdapterdropbox"),
-        },
+        { type: "google-drive", label: this.t("LabelAdaptergoogledrive"), description: this.t("DescriptionAdaptergoogledrive") },
+        { type: "git", label: this.t("LabelAdaptergit"), description: this.t("DescriptionAdaptergit") },
       ],
     };
   },
   computed: {
-    isLoginFlowRunning() {
-      return this.$store.state.loginFlow.isRunning;
-    },
     serverisNotHttps() {
       return !this.server.startsWith("https")
         ? this.t("DescriptionNonhttps")
         : "";
     },
-  },
-  watch: {
-    clickCountEnabled() {
-      if (this.clickCountEnabled) {
-        this.requestHistoryPermissions();
-      }
-    },
-  },
-  async mounted() {
-    if (this.isBrowser) {
-      return;
-    }
-    // The app may have been killed while the user logged in (#2393)
-    const pendingLoginFlow = await this.$store.dispatch(
-      actions.GET_PENDING_LOGIN_FLOW
-    );
-    if (!pendingLoginFlow) {
-      return;
-    }
-    this.adapter = "nextcloud-bookmarks";
-    this.server = pendingLoginFlow.server;
-    this.serverTestSuccessful = true;
-    this.currentStep = 2;
-    await this.runLoginFlow(actions.RESUME_LOGIN_FLOW);
   },
   backButton() {
     if (this.currentStep > 0) {
@@ -993,14 +383,8 @@ export default {
     providerName(type) {
       return (
         {
-          "nextcloud-bookmarks": "Nextcloud Bookmarks",
-          linkwarden: "Linkwarden",
-          karakeep: "Karakeep",
-          webdav: "WebDAV",
-          s3: "S3",
           git: "Git",
           "google-drive": "Google Drive",
-          dropbox: "Dropbox",
         }[type] || type
       );
     },
@@ -1008,13 +392,7 @@ export default {
       return (
         {
           "google-drive": "mdi-google-drive",
-          dropbox: "mdi-dropbox",
           git: "mdi-git",
-          s3: "mdi-database-outline",
-          webdav: "mdi-cloud-outline",
-          "nextcloud-bookmarks": "mdi-cloud-outline",
-          linkwarden: "mdi-link-variant",
-          karakeep: "mdi-bookmark-outline",
         }[type] || "mdi-cloud-outline"
       );
     },
@@ -1034,48 +412,19 @@ export default {
           notifyOnly: this.notifyOnly,
           notificationsEnabled: this.notificationsEnabled,
           label: this.label,
-          ...(this.adapter === "nextcloud-bookmarks" && {
-            serverRoot: this.serverRoot,
-            clickCountEnabled: this.clickCountEnabled,
-          }),
-          ...(this.adapter === "linkwarden" && {
-            serverFolder: this.serverFolder,
-          }),
-          ...(this.adapter === "karakeep" && {
-            serverFolder: this.serverFolder,
-          }),
           ...(this.adapter === "git" && { branch: this.branch }),
-          ...(this.adapter === "s3" && {
-            region: this.region,
-            bucket: this.bucket,
-            pathStyle: this.pathStyle,
-          }),
-          ...((this.adapter === "webdav" ||
-            this.adapter === "s3" ||
-            this.adapter === "google-drive" ||
-            this.adapter === "dropbox" ||
+          ...((this.adapter === "google-drive" ||
             this.adapter === "git") && { bookmark_file: this.bookmark_file }),
-          ...((this.adapter === "webdav" ||
-            this.adapter === "s3" ||
-            this.adapter === "google-drive" ||
-            this.adapter === "dropbox" ||
+          ...((this.adapter === "google-drive" ||
             this.adapter === "git") && {
             bookmark_file_type: this.bookmark_file_type,
           }),
           ...(this.adapter === "google-drive" && {
             refreshToken: this.refreshToken,
           }),
-          ...(this.adapter === "dropbox" && {
-            refreshToken: this.refreshToken,
-          }),
           ...(this.passphrase && { passphrase: this.passphrase }),
           ...(this.adapter === "google-drive" &&
             this.passphrase && { password: this.passphrase }),
-          ...(this.adapter === "dropbox" &&
-            this.passphrase && { password: this.passphrase }),
-          ...(this.adapter === "webdav" && {
-            includeCredentials: this.includeCredentials,
-          }),
           ...(this.isBrowser && { localRoot: this.localRoot }),
           syncInterval: this.syncInterval,
           strategy: this.strategy,
@@ -1089,89 +438,10 @@ export default {
           }, 2000);
         }
       } catch (error) {
-        this.createError = error.message || String(error);
+        this.createError = this.t(error.message) || String(error);
       } finally {
         this.creating = false;
       }
-    },
-    async testNextcloudServer() {
-      this.isServerTestRunning = true;
-      this.serverTestError = "";
-      try {
-        await this.$store.dispatch(actions.TEST_NEXTCLOUD_SERVER, this.server);
-        this.serverTestSuccessful = true;
-      } catch (e) {
-        this.serverTestError = e.message;
-      }
-      this.isServerTestRunning = false;
-    },
-    async testLinkwardenServer() {
-      this.isServerTestRunning = true;
-      this.serverTestError = "";
-      try {
-        await this.$store.dispatch(actions.TEST_LINKWARDEN_SERVER, {
-          rootUrl: this.server,
-          username: this.username,
-          token: this.password,
-        });
-        this.serverTestSuccessful = true;
-        this.currentStep++;
-      } catch (e) {
-        this.serverTestError = e.message;
-      }
-      this.isServerTestRunning = false;
-    },
-    async testKarakeepServer() {
-      this.isServerTestRunning = true;
-      this.serverTestError = "";
-      try {
-        await this.$store.dispatch(actions.TEST_KARAKEEP_SERVER, {
-          rootUrl: this.server,
-          username: this.username,
-          token: this.password,
-        });
-        this.serverTestSuccessful = true;
-        this.currentStep++;
-      } catch (e) {
-        this.serverTestError = e.message;
-      }
-      this.isServerTestRunning = false;
-    },
-    async testWebdavServer() {
-      this.isServerTestRunning = true;
-      this.serverTestError = "";
-      try {
-        await this.$store.dispatch(actions.TEST_WEBDAV_SERVER, {
-          rootUrl: this.server,
-          username: this.username,
-          password: this.password,
-          includeCredentials: this.includeCredentials,
-        });
-        this.serverTestSuccessful = true;
-        this.currentStep++;
-      } catch (e) {
-        this.serverTestError = e.message;
-      }
-      this.isServerTestRunning = false;
-    },
-    async testS3Server() {
-      this.isServerTestRunning = true;
-      this.serverTestError = "";
-      try {
-        await this.$store.dispatch(actions.TEST_S3_SERVER, {
-          url: this.server,
-          region: this.region,
-          bucket: this.bucket,
-          pathStyle: this.pathStyle,
-          username: this.username,
-          password: this.password,
-        });
-        this.serverTestSuccessful = true;
-        this.currentStep++;
-      } catch (e) {
-        this.serverTestError = e.message;
-      }
-      this.isServerTestRunning = false;
     },
     async loginGoogleDrive() {
       if (this.isBrowser) {
@@ -1193,48 +463,6 @@ export default {
         this.loginFlowError = e.message;
       }
     },
-    async loginDropbox() {
-      if (this.isBrowser) {
-        await this.$store.dispatch(actions.REQUEST_NETWORK_PERMISSIONS);
-      }
-      const DropboxAdapter = (await import("@sync-engine/adapters/Dropbox"))
-        .default;
-      try {
-        const { refresh_token, username } = await DropboxAdapter.authorize();
-        if (refresh_token) {
-          this.authorized = true;
-          this.refreshToken = refresh_token;
-          this.username = username;
-          this.currentStep++;
-        }
-      } catch (e) {
-        this.loginFlowError = e.message;
-      }
-    },
-    onFlowStart() {
-      return this.runLoginFlow(actions.START_LOGIN_FLOW);
-    },
-    async runLoginFlow(action) {
-      this.loginFlowError = null;
-      try {
-        const credentials = await this.$store.dispatch(action, this.server);
-        this.username = credentials.username;
-        this.password = credentials.password;
-        this.currentStep++;
-      } catch (e) {
-        this.loginFlowError = e.message;
-      }
-    },
-    async onFlowStop() {
-      await this.$store.dispatch("STOP_LOGIN_FLOW");
-    },
-    validateServerRoot(path) {
-      return (
-        !path ||
-        path === "/" ||
-        (path[0] === "/" && path[path.length - 1] !== "/")
-      );
-    },
     validateUrl(str) {
       try {
         const u = new URL(str);
@@ -1246,17 +474,8 @@ export default {
     validateBookmarksFile(path) {
       return path[0] !== "/" && path[path.length - 1] !== "/";
     },
-    validateBucket(name) {
-      return Boolean(name) && !name.includes("/");
-    },
     validateBookmarksFileGoogle(path) {
       return !path.includes("/");
-    },
-    validateBookmarksFileDropbox(path) {
-      return !path.includes("/");
-    },
-    requestHistoryPermissions() {
-      this.$store.dispatch(actions.REQUEST_HISTORY_PERMISSIONS);
     },
   },
 };

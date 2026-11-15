@@ -18,48 +18,11 @@
     {{ error }}
   </UiNotice>
   <p v-if="loading" role="status">{{ t("UiWorking") }}</p>
-  <SyncForm v-if="!loading" class="mt-3 mb-3">
-    <OptionsNextcloudFolders
-      v-if="
-        data.type === 'nextcloud-folders' ||
-        data.type === 'nextcloud-bookmarks'
-      "
-      v-bind.sync="data"
-      @reset="onReset"
-      @delete="onDelete"
-    />
-    <OptionsLinkwarden
-      v-if="data.type === 'linkwarden'"
-      v-bind.sync="data"
-      @reset="onReset"
-      @delete="onDelete"
-    />
-    <OptionsKarakeep
-      v-if="data.type === 'karakeep'"
-      v-bind.sync="data"
-      @reset="onReset"
-      @delete="onDelete"
-    />
-    <OptionsWebdav
-      v-if="data.type === 'webdav'"
-      v-bind.sync="data"
-      @reset="onReset"
-      @delete="onDelete"
-    />
-    <OptionsS3
-      v-if="data.type === 's3'"
-      v-bind.sync="data"
-      @reset="onReset"
-      @delete="onDelete"
-    />
+  <UiNotice v-if="!loading && !supported" kind="warning">{{ t("SyncProviderDisabled") }}</UiNotice>
+  <UiButton v-if="!loading && !supported" @click="onDeleteUnsupported">{{ t("LabelRemoveaccount") }}</UiButton>
+  <SyncForm v-if="!loading && supported" class="mt-3 mb-3">
     <OptionsGit
       v-if="data.type === 'git'"
-      v-bind.sync="data"
-      @reset="onReset"
-      @delete="onDelete"
-    />
-    <OptionsFake
-      v-if="data.type === 'fake'"
       v-bind.sync="data"
       @reset="onReset"
       @delete="onDelete"
@@ -70,14 +33,8 @@
       @reset="onReset"
       @delete="onDelete"
     />
-    <OptionsDropbox
-      v-if="data.type === 'dropbox'"
-      v-bind.sync="data"
-      @reset="onReset"
-      @delete="onDelete"
-    />
   </SyncForm>
-  <UiActions class="sync-save-row">
+  <UiActions v-if="supported" class="sync-save-row">
     <span role="status" class="ui-inline-status">{{
       saved ? t("UiSaved") : ""
     }}</span
@@ -92,17 +49,12 @@
 </section>
 </template>
 <script>
+import { isSupportedProvider } from "../../providers.cjs";
+import { confirmAction } from "../../../ui/confirmation.js";
 import PathHelper from "@sync-engine/PathHelper";
 import BrowserTree from "@sync-engine/browser/BrowserTree";
 import { actions } from "../store/definitions";
-import OptionsNextcloudFolders from "../components/OptionsNextcloudBookmarks";
-import OptionsLinkwarden from "../components/OptionsLinkwarden";
-import OptionsKarakeep from "../components/OptionsKarakeep";
-import OptionsWebdav from "../components/OptionsWebdav";
-import OptionsS3 from "../components/OptionsS3.vue";
-import OptionsFake from "../components/OptionsFake";
 import OptionsGoogleDrive from "../components/OptionsGoogleDrive";
-import OptionsDropbox from "../components/OptionsDropbox";
 import OptionsGit from "../components/OptionsGit.vue";
 
 export default {
@@ -110,13 +62,6 @@ export default {
   components: {
     OptionsGit,
     OptionsGoogleDrive,
-    OptionsDropbox,
-    OptionsFake,
-    OptionsWebdav,
-    OptionsS3,
-    OptionsNextcloudFolders,
-    OptionsLinkwarden,
-    OptionsKarakeep,
   },
   data() {
     return {
@@ -129,6 +74,7 @@ export default {
     };
   },
   computed: {
+    supported() { return isSupportedProvider(this.data.type); },
     id() {
       return this.$route.params.accountId;
     },
@@ -169,6 +115,9 @@ export default {
     }
   },
   methods: {
+    async onDeleteUnsupported() {
+      if (await confirmAction(document, this.t("SuperRemoveConfirm"))) await this.onDelete();
+    },
     async onSave() {
       this.saving = true;
       this.error = "";

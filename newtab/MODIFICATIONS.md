@@ -60,3 +60,9 @@ O resultado fica em `dist/chromium/`. Para instalar na Super Extensão, copie os
 - `npm run setup:newtab` e `npm run build:newtab` preparam/reconstroem o módulo sem substituir a integração HTML nem o manifesto principal.
 
 As instruções e os limites estão em [docs/newtab-images.md](../docs/newtab-images.md). Nenhuma chave de terceiros foi adicionada ao repositório; Unsplash/GIPHY precisam de credenciais válidas do serviço.
+
+## Correções selecionadas do upstream — 1.7.36
+
+A comparação da tag 2.6.0 com `765a3f0b10968ee6e3a9ddf5c5360960fb4bf0ee` foi avaliada em 15/11/2026. Foram adaptadas a troca do serviço de IP para `https://ipwho.is/`, a centralização dos links recolhidos com múltiplas colunas, os números tabulares do relógio, o link para o perfil GitHub e a seleção dos elementos auxiliares do calendário, e o campo `location.name` do Unsplash (mantendo `title` como fallback).
+
+O widget de IP preserva formato/cache, timestamp e intervalo configurado; valida HTTP/JSON e `success`, limita a espera a 30 segundos, não envia cookies e apresenta erro traduzido sem expor respostas do serviço. Falhas preservam o cache anterior e liberam o indicador de carregamento; respostas após desmontar/trocar configuração são ignoradas. O cache não é uma prova do roteamento VPN atual. Não foram incorporados novos widgets, motores de busca, idiomas ou a atualização geral das dependências. Detalhes e fontes em [atualizacoes-origens.md](../docs/atualizacoes-origens.md).

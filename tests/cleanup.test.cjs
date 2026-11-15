@@ -100,7 +100,7 @@ test('snapshot manual inválido retorna erro ao popup', async () => {
 test('manifest usa identidade nova e permissões da sincronização', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(base, 'manifest.json'), 'utf8'));
   assert.equal(manifest.manifest_version, 3); assert.equal(manifest.key, undefined); assert.equal(manifest.update_url, undefined);
-  assert.deepEqual(manifest.optional_permissions, ['history']);
+  assert.deepEqual(manifest.optional_permissions || [], []);
   for(const permission of ['bookmarks','identity','unlimitedStorage','tabGroups']) assert.ok(manifest.permissions.includes(permission));
   assert.deepEqual(manifest.host_permissions, ['http://*/*','https://*/*']);
   for (const file of ['background.js','popup.html','rules.js','popup.js','popup.css', ...Object.values(manifest.icons)]) assert.ok(fs.existsSync(path.join(base,file)), file);

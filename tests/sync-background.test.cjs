@@ -16,6 +16,8 @@ function boot(config = {}) {
     constructor() { this.enabled = true; }
     async syncAccount(id) { calls.push(['legacy', id]); }
     async checkAccount(id) { calls.push(['legacy-check', id]); }
+    async scheduleSync(id) { calls.push(['schedule', id]); }
+    async scheduleCheck(id) { calls.push(['schedule-check', id]); }
     async cancelSync(id) { calls.push(['legacy-cancel', id]); }
     async getUnlocked() { return !store.accountsLocked; }
     async unlock() { store.accountsLocked = null; }
@@ -34,6 +36,7 @@ function boot(config = {}) {
     '@sync-engine/native/I18n': { i18n: { setLocales() {}, async load() {} } },
     '../source/messages': { uiMessages: { SyncConflict: { 'pt-BR': 'Conflito seguro' }, SyncGoogleNetworkFailed: { 'pt-BR': 'Falha de conexão' } }, requestStageMessages: { oauth: { 'pt-BR': 'autenticação', en: 'authentication' } } },
     './crypto.cjs': { fingerprint },
+    '../providers.cjs': require('../sync/providers.cjs'),
     './runner.cjs': { async synchronize(input) { calls.push(['own', input.id, input.profile.strategy, input.dryRun]); await input.validate(); return config.execute ? config.execute(input) : { local: 0, server: 0 }; } },
   };
   for (const value of Object.values(dependencies)) value.__esModule = true;
@@ -42,13 +45,13 @@ function boot(config = {}) {
   vm.runInNewContext(source, { exports, require: name => { if (!dependencies[name]) throw Error(name); return dependencies[name]; }, chrome, setInterval, clearInterval, setTimeout, clearTimeout, AbortController, console, SuperPreferences: { locale: { get: async () => 'pt-BR', watch() {} } } });
   return { controller: exports.controller, accounts, store, calls };
 }
-test('normal Google Drive synchronization uses the own core while other services and tab profiles keep legacy execution', async () => {
+test('normal Google Drive synchronization uses the own core while Git and tab profiles keep legacy execution', async () => {
   const f = boot();
   await f.controller.syncAccount('a');
   assert.ok(f.calls.some(([type, id]) => type === 'own' && id === 'a'));
   assert.equal(f.accounts.a.data.syncEngine, 'super-drive-v1');
   assert.equal(f.accounts.a.data.syncing, false);
-  f.accounts.b.data.type = 'webdav'; await f.controller.syncAccount('b');
+  f.accounts.b.data.type = 'git'; await f.controller.syncAccount('b');
   f.accounts.b.data.type = 'google-drive'; f.accounts.b.data.localRoot = 'tabs'; await f.controller.syncAccount('b');
   assert.equal(f.calls.filter(([type]) => type === 'legacy').length, 2);
 });
@@ -118,4 +121,42 @@ test('network failures show a localized request stage and sanitized diagnostic c
   const log = f.calls.find(([kind]) => kind === 'log')[1];
   assert.match(log, /SyncGoogleNetworkFailed stage=oauth reason=TypeError/);
   assert.doesNotMatch(log, /private|token/);
+});
+
+
+test('removed providers never reach either engine or scheduler and preserve credentials for backup', async () => {
+  const f = boot();
+  await new Promise(resolve => setImmediate(resolve));
+  for (const type of ['webdav', 'dropbox', 's3', 'nextcloud-bookmarks', 'nextcloud-folders', 'linkwarden', 'karakeep', 'unknown']) {
+    Object.assign(f.accounts.b.data, { type, enabled: true, syncIntervalEnabled: true, syncOnStartupEnabled: true, scheduled: true, checkScheduled: true });
+    const token = f.accounts.b.data.refreshToken;
+    await f.controller.scheduleSync('b', true);
+    await f.controller.scheduleCheck('b', true);
+    await f.controller.syncAccount('b', 'overwrite', true);
+    await f.controller.checkAccount('b');
+    assert.equal(f.accounts.b.data.refreshToken, token);
+    for (const key of ['enabled', 'syncIntervalEnabled', 'syncOnStartupEnabled', 'scheduled', 'checkScheduled', 'syncing']) assert.equal(f.accounts.b.data[key], false, type + ':' + key);
+    await f.controller.scheduleAll();
+    assert.equal(f.accounts.b.data.scheduled, false);
+  }
+  assert.equal(f.calls.filter(([kind, id]) => id === 'b' && ['own', 'legacy', 'legacy-check', 'schedule', 'schedule-check'].includes(kind)).length, 0);
+  assert.equal(f.accounts.a.data.scheduled, true);
+  f.store.accountsLocked = 'locked';
+  f.accounts.b.data.enabled = true;
+  await f.controller.scheduleSync('b');
+  await f.controller.scheduleAll();
+  assert.equal(f.accounts.b.data.enabled, true, 'locked profile must not be rewritten');
+});
+
+
+test('retired profiles clear stale status and cannot report bookmark visits', async () => {
+  const f = boot();
+  await new Promise(resolve => setImmediate(resolve));
+  Object.assign(f.accounts.b.data, { type: 'nextcloud-bookmarks', error: 'old failure', pendingChanges: { local: 1 }, clickCountEnabled: true });
+  await f.controller.syncAccount('b');
+  assert.equal(f.accounts.b.data.error, null);
+  assert.equal(f.accounts.b.data.pendingChanges, null);
+  assert.equal(f.accounts.b.data.clickCountEnabled, false);
+  await f.controller.onVisitUrl({ url: 'https://example.test/' });
+  assert.equal(f.calls.filter(([kind, id]) => id === 'b' && ['own', 'legacy'].includes(kind)).length, 0);
 });

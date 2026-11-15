@@ -50,7 +50,8 @@ export const fetchImages = async ({
       src: httpsUrl(item.urls?.raw),
       credit: {
         imageLink: httpsUrl(item.links?.html),
-        location: typeof item.location?.title === "string" ? item.location.title : undefined,
+        location: typeof item.location?.name === "string" ? item.location.name
+          : typeof item.location?.title === "string" ? item.location.title : undefined,
         userName: item.user.name,
         userLink: httpsUrl(item.user.links?.html),
       },

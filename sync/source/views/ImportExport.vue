@@ -125,7 +125,7 @@ export default {
         }
         await this.$store.dispatch("EXPORT_ACCOUNTS", ids);
       } catch (e) {
-        alert(e.message);
+        alert(this.t(e.message));
       }
     },
     async onTriggerFilePicker() {
@@ -151,7 +151,7 @@ export default {
         }
         alert(this.t("LabelImportsuccessful"));
       } catch (e) {
-        alert(e.message);
+        alert(this.t(e.message));
       } finally {
         this.$refs.filePicker.value = "";
       }

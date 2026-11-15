@@ -8,7 +8,7 @@ Revisado em **14 de novembro de 2026**, referência **1.7.35**. A página de blo
 | --- | --- | --- | --- |
 | 1 | Google Drive/favoritos | Núcleo próprio integrado; sincronização confirmada pelo usuário na 1.6.2 | Dois navegadores reais, falhas/reinícios, grandes volumes e restauração de backups por interface |
 | 2 | Validação em navegador | Testes de execução, recuperação, transporte e interface; interface conferida parcialmente no Helium isolado | Conferir Google Drive com dois perfis de teste e tráfego real da VPN |
-| 3 | Demais sincronizações | Outros provedores e perfis de abas continuam no legado | Migrar um conector por vez e definir propriedade de pastas sobrepostas |
+| 3 | Demais sincronizações | Git e perfis de abas continuam no legado; demais serviços desativados | Migrar o conector Git e definir propriedade de pastas sobrepostas |
 | 4 | Motor próprio da VPN | 1.7.19: runner nativo aprovado; conta, troca EUA/Canadá, recuperação pela página local e inclusão/exclusão com medições externas no Helium; regras originais restauradas | Medir queda e transições com captura autorizada pelo Windows, ampliar IPv6/DNS, testar suspensão/reinício completo, liberação/cancelamento e recursos de terceiros; ver docs/vpn-validacao-pc.md |
 | Contínua | Interface e manutenção | 1.7.35: biblioteca comum inclui árvore/assistente Sync, cartões/disclosures React, diálogos e progresso/erros | Unificação de componentes concluída nesta etapa; ampliar a conferência de estados específicos com contas reais. Ver docs/ui-components.md |
 
@@ -50,7 +50,7 @@ A primeira execução no novo worker aproveita o perfil salvo; não exige recria
 
 - [ ] Substituir APIs de cadastro, armazenamento de perfis e autenticação interativa ainda importadas do Floccus.
 - [ ] Substituir a estrutura legada de alarmes/agendamento por uma própria, preservando as preferências existentes.
-- [ ] Migrar os demais provedores, começando pelos efetivamente utilizados depois do Google Drive.
+- [ ] Migrar o conector Git, único serviço mantido além do Google Drive desde a 1.7.36. Os demais foram desativados, preservando perfis antigos para exportação/remoção.
 - [ ] Implementar perfis de abas no núcleo próprio.
 - [ ] Definir sincronização de subpastas sobrepostas entre perfis com propriedade explícita dos itens.
 - [ ] Manter fontes, licenças e avisos dos componentes ainda utilizados.

@@ -22,7 +22,7 @@ async function main() {
   await page.goto(origin+'/ui-audit');
   await page.evaluate(()=>{
     const listeners=new Set(),event={addListener(fn){listeners.add(fn);},removeListener(fn){listeners.delete(fn);}};
-    const local={theme:'dark','superSync:accounts':JSON.stringify({saved:{type:'webdav',label:'Perfil de teste',url:'https://example.test/dav/',username:'audit',password:'fictitious',localRoot:'1',rootPath:'/Favoritos',bookmark_file:'bookmarks.xbel',enabled:true,failsafe:true,strategy:'default',syncInterval:15}})};
+    const local={theme:'dark','superSync:accounts':JSON.stringify({saved:{type:'git',label:'Perfil de teste',url:'https://example.test/dav/',username:'audit',password:'fictitious',localRoot:'1',rootPath:'/Favoritos',bookmark_file:'bookmarks.xbel',enabled:true,failsafe:true,strategy:'default',syncInterval:15}})};
     const area=(data,name)=>({
       get(keys,callback){let result=typeof keys==='string'?{[keys]:data[keys]}:Array.isArray(keys)?Object.fromEntries(keys.map(key=>[key,data[key]])):{...keys,...data};callback?.(result);return Promise.resolve(result);},
       set(values,callback){const changes={};for(const [key,value]of Object.entries(values)){changes[key]={oldValue:data[key],newValue:value};data[key]=value;}listeners.forEach(fn=>fn(changes,name));callback?.();return Promise.resolve();},
@@ -55,6 +55,10 @@ async function main() {
   await page.keyboard.press('Escape');
   await page.evaluate(async()=>{await window.superSyncApp.$router.push('/new');});
   await page.locator('.ui-steps').waitFor();
+  assert.equal(await page.locator('.sync-service').count(),2);
+  const services=await page.locator('.sync-service').allTextContents();
+  assert.ok(services[0].includes('Google Drive') && services[1].includes('Git'));
+  await page.screenshot({animations:'disabled',path:path.join(output,'sync-providers-light.png')});
   assert.equal(await page.locator('.ui-wizard-step:not([hidden])').count(),1);
   await page.getByRole('button',{name:'Continue',exact:true}).click();
   await page.waitForFunction(()=>document.querySelector('.ui-steps [aria-current=step]')?.textContent.includes('Name'));

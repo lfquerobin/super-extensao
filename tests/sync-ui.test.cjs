@@ -173,7 +173,7 @@ async function boot(initial = {}) {
   };
 }
 const profile = {
-  type: "webdav",
+  type: "git",
   label: "Trabalho",
   url: "https://example.test/dav/",
   username: "test",
@@ -225,14 +225,14 @@ test("sync interface navigates internally, switches language and isolates OAuth 
       /Save connection settings/
     );
     await ui.route("/new");
-    assert.equal(ui.w.document.querySelectorAll(".sync-service").length, 8);
-    const webdav = [...ui.w.document.querySelectorAll(".sync-service")].find(
-      (el) => el.textContent.includes("WebDAV")
+    assert.equal(ui.w.document.querySelectorAll(".sync-service").length, 2);
+    const git = [...ui.w.document.querySelectorAll(".sync-service")].find(
+      (el) => el.textContent.includes("Git")
     );
-    webdav.click();
+    git.click();
     await tick();
-    assert.equal(ui.component("NewAccount").adapter, "webdav");
-    assert.equal(webdav.getAttribute("aria-pressed"), "true");
+    assert.equal(ui.component("NewAccount").adapter, "git");
+    assert.equal(git.getAttribute("aria-pressed"), "true");
     assert.deepEqual(ui.warnings, []);
   } finally {
     ui.close();
@@ -285,13 +285,13 @@ test("existing profiles retain data, edits are drafts, backup selects profiles a
     ui.close();
   }
 });
-test("WebDAV wizard tests connection and creates an engine-compatible profile", async () => {
+test("Git wizard creates an engine-compatible profile", async () => {
   const ui = await boot();
   try {
     await ui.route("/new");
     const wizard = ui.component("NewAccount");
     Object.assign(wizard, {
-      adapter: "webdav",
+      adapter: "git",
       label: "Pessoal",
       server: "https://example.test/dav/",
       username: "test",
@@ -299,15 +299,13 @@ test("WebDAV wizard tests connection and creates an engine-compatible profile", 
       localRoot: "1",
       currentStep: 2,
     });
-    await wizard.testWebdavServer();
-    assert.equal(wizard.currentStep, 3);
     wizard.currentStep = 4;
     await wizard.onCreate();
     await tick();
     assert.equal(wizard.currentStep, 5);
     const profiles = JSON.parse(ui.local["superSync:accounts"]);
     const data = Object.values(profiles)[0];
-    assert.equal(data.type, "webdav");
+    assert.equal(data.type, "git");
     assert.equal(data.localRoot, "1");
     assert.equal(data.label, "Pessoal");
     await ui.route("/");
@@ -366,5 +364,36 @@ test("Google Drive options keep normal synchronization controls without the comp
     await ui.route("/");
     await ui.component("AccountCard").onTriggerSync();
     assert.ok(ui.calls.some(call => call.type === "syncAccount" && call.params[0] === "saved"));
+  } finally { ui.close(); }
+});
+
+
+test("removed providers stay readable for backup but cannot be created, imported, edited or synced", async () => {
+  const old = { ...profile, type: "webdav" };
+  const ui = await boot({ local: { "superSync:accounts": JSON.stringify({ saved: old }), "superSync:oauthClients": { dropboxClientId: "preserve-old-key" } } });
+  try {
+    const card = ui.component("AccountCard");
+    assert.equal(card.supported, false);
+    assert.equal(card.status, "disabled");
+    assert.match(ui.w.document.body.textContent, /serviço foi desativado/);
+    assert.equal(ui.w.document.querySelector(".sync-advanced"), null);
+    assert.equal(ui.w.document.querySelector(".sync-profile button[disabled]").disabled, true);
+    await ui.route("/options/saved");
+    assert.equal(ui.component("OptionsWebdav"), undefined);
+    assert.equal(ui.w.document.querySelector(".sync-save-row"), null);
+    assert.match(ui.w.document.body.textContent, /exportação ou remoção/);
+    const before = ui.local["superSync:accounts"];
+    await assert.rejects(() => ui.app.$store.dispatch("CREATE_ACCOUNT", old), /SyncProviderDisabled/);
+    await assert.rejects(() => ui.app.$store.dispatch("IMPORT_ACCOUNTS", [profile, old]), /SyncProviderDisabled/);
+    await assert.rejects(() => ui.app.$store.dispatch("STORE_ACCOUNT", { id: "saved", data: profile }), /SyncProviderDisabled/);
+    assert.equal(ui.local["superSync:accounts"], before);
+    await ui.route("/importexport");
+    assert.equal(ui.component("ImportExport").selected.saved, true);
+    await ui.route("/connections");
+    assert.ok(!ui.w.document.body.textContent.includes("Dropbox"));
+    await ui.component("Connections").save();
+    assert.equal(ui.local["superSync:oauthClients"].dropboxClientId, "preserve-old-key");
+    assert.equal(ui.local["superSync:accounts"], before);
+    assert.deepEqual(ui.warnings, []);
   } finally { ui.close(); }
 });

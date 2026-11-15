@@ -6,8 +6,24 @@ import Controller from "@sync-engine/Controller";
 import Logger from "@sync-engine/Logger";
 import { downloadSyncLogs } from "../logs.cjs";
 import { actions, mutations } from "./definitions";
+import { assertSupportedProvider } from "../../providers.cjs";
 export const actionsDefinition = {
   ...engineActions,
+  async [actions.CREATE_ACCOUNT](context, data) {
+    assertSupportedProvider(data?.type);
+    return engineActions[actions.CREATE_ACCOUNT](context, data);
+  },
+  async [actions.IMPORT_ACCOUNTS](context, accounts) {
+    // Validate the entire backup before the engine creates any profiles.
+    if (!Array.isArray(accounts)) throw new Error("SyncProviderDisabled");
+    accounts.forEach((data) => assertSupportedProvider(data?.type));
+    return engineActions[actions.IMPORT_ACCOUNTS](context, accounts);
+  },
+  async [actions.STORE_ACCOUNT](context, payload) {
+    assertSupportedProvider(context.state.accounts[payload.id]?.data?.type);
+    assertSupportedProvider(payload.data?.type);
+    return engineActions[actions.STORE_ACCOUNT](context, payload);
+  },
   async [actions.DOWNLOAD_LOGS](_context, anonymous) {
     return downloadSyncLogs({ logger: Logger, version: chrome.runtime.getManifest().version, anonymous });
   },

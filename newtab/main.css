@@ -563,7 +563,7 @@ text.ContributionCalendar-label {
   --color-calendar-graph-day-L4-bg: #216e39;
 }
 
-.js-calendar-graph-svg + div {
+.js-calendar-graph-svg ~ div {
   display: none;
 }
 
@@ -586,7 +586,7 @@ text.ContributionCalendar-label {
 .Suggestions{display:grid;position:absolute;margin-top:-1rem;width:100%;background:rgba(0,0,0,.5);border-radius:0 0 1rem 1rem}.Suggestions input{color:inherit;cursor:pointer}.Suggestions .active{text-decoration:underline}.light .Suggestions{background:rgba(255,255,255,.5)}
 .Search{display:block;position:relative}.Search input{background-color:rgba(0,0,0,0);border:0;font-family:inherit;font-size:1.1em;outline:none;padding:.15em 0;text-align:center;text-shadow:inherit}.Search>input{margin:1rem 0;width:100%;border-bottom-style:solid;border-bottom-width:2px}
 .Time.Analogue{text-align:center}.Time.Analogue svg{max-width:10em;width:100%;height:auto}.Time.Analogue svg circle.bezel{fill:rgba(0,0,0,0);stroke-width:2}.Time.Analogue svg line{stroke-linecap:round;stroke-width:2;transform-origin:50px 50px;transition:transform .15s cubic-bezier(0.175, 0.885, 0.32, 1.275)}.Time.Analogue svg line.hours{stroke-width:3}.Time.Analogue svg line.minutes{stroke-width:2}.Time.Analogue svg line.seconds{stroke-width:1.5}
-.Time hr{border:0;border-top:2px solid #ecf0f1;margin:1rem 0}
+.Time{font-variant-numeric:tabular-nums}.Time hr{border:0;border-top:2px solid #ecf0f1;margin:1rem 0}
 .TodoItem{white-space:nowrap;direction:rtl}.TodoItem a{display:inline-block;font-size:.75em;margin:.25em .5em}.TodoItem span{direction:initial;display:inline-block}.TodoItem a.delete{display:none}.TodoItem span:focus~a.delete{display:inline-block}.TodoItem span:focus~a.complete{display:none}
 .TodoList{display:inline-block;margin:.25em 0;max-height:35vh;overflow:hidden}.TodoList:hover{overflow-y:auto}
 .Weather .summary{cursor:pointer}.Weather .summary i{margin:0 .5em}.Weather .low{opacity:.7}.Weather .details{font-size:1rem;line-height:1.5}.Weather .details dt{font-weight:700}.Weather .details dd{margin:0}

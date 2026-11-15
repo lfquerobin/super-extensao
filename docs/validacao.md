@@ -1,5 +1,15 @@
 # Validação da Super Extensão
 
+## 1.7.36 — dois provedores e correções selecionadas do Tabliss
+
+Em 15/11/2026, **502 testes automatizados passaram**, sem falhas ou testes ignorados. As compilações da interface de sincronização, worker e Nova guia, o TypeScript da Nova guia e `check:ui` passaram. Os testes também confirmam que perfis bloqueados não são regravados, que o estado transitório dos serviços desativados é limpo e que eles não registram visitas a favoritos.
+
+A conferência nativa passou no Microsoft Edge 157.0.4341.60, com perfil temporário e dados fictícios. A interface confirmou apenas Google Drive/Git, o assistente, a árvore de pastas, cancelamento/Escape, restauração de foco e temas claro/escuro. A Nova guia preservou notas, configuração e imagem local depois de recarregar/reiniciar o navegador; criação/ordenação/remoção de widgets, idioma em duas abas e importação/exportação também passaram. A inicialização dentro do sandbox falhou; os mesmos runners passaram na execução autorizada fora dele, sem usar perfil pessoal.
+
+A política de provedores é exercitada no bundle da interface com JSDOM e no worker com APIs simuladas: somente Google Drive/Git, cadastro Git, perfis existentes/rascunhos, bloqueio de cadastro/importação/edição de serviços removidos sem criação parcial, ausência do OAuth Dropbox na interface com preservação de sua chave armazenada, e bloqueio de execução/verificação/agendamento dos serviços desativados, inclusive sincronizar todos. O teste do serviço de IP usa respostas fictícias HTTPS/HTTP/JSON e cobre cache no formato existente, timestamp, falhas sem detalhes brutos e liberação de carregamento; os créditos Unsplash aceitam `name` e `title`.
+
+Esta rodada não autentica contas Google/Git nem certifica o roteamento VPN pelo widget de IP. As fontes e decisões ficam em [atualizacoes-origens.md](atualizacoes-origens.md).
+
 ## Interface compartilhada — 1.7.35
 
 **496 testes automatizados aprovados**, compilação de todas as interfaces, TypeScript da Nova guia, `check:ui` e `git diff --check` aprovados.

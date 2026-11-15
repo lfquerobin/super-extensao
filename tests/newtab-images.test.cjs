@@ -231,3 +231,51 @@ test('GIPHY handles a rejected image result in the component without losing the 
     assert.match(ui.d.window.document.querySelector('[data-background]').dataset.background, /blob:cached/);
   } finally { await ui.close(); }
 });
+
+
+test('IP widget uses the updated HTTPS service and preserves the timestamp and loader on every result', async () => {
+  for (const body of [{ success: true, ip: '203.0.113.5', city: 'Test city', country: 'Test country' }, { success: true, ip: '2001:db8::1' }]) {
+    const f = fixture({ fetch: async () => new Response(JSON.stringify(body)) });
+    let pending = 0;
+    const result = await f.load('plugins/widgets/ipInfo/api.ts').getIpInfo({ push() { pending++; }, pop() { pending--; } });
+    assert.equal(result.ip, body.ip); assert.equal(result.city, body.city || '');
+    assert.equal(result.country, body.country || ''); assert.ok(Number.isFinite(result.timestamp)); assert.equal(pending, 0);
+    assert.equal(f.calls[0][0], 'https://ipwho.is/'); assert.equal(f.calls[0][1].credentials, 'omit');
+    assert.equal(f.calls[0][1].cache, 'no-store'); assert.equal(f.calls[0][1].redirect, 'error');
+  }
+  for (const response of [new Response('private details', { status: 429 }), new Response('bad json'), new Response(JSON.stringify({ success: false, message: 'private details' })), new Response(JSON.stringify({ success: true, ip: null }))]) {
+    let pending = 0;
+    const f = fixture({ fetch: async () => response });
+    await assert.rejects(() => f.load('plugins/widgets/ipInfo/api.ts').getIpInfo({ push() { pending++; }, pop() { pending--; } }), error => /Unable to update IP information/.test(error.message) && !error.message.includes('private'));
+    assert.equal(pending, 0);
+  }
+});
+
+test('Unsplash location uses name and remains compatible with older title responses', async () => {
+  for (const [location, expected] of [[{ name: 'New place', title: 'Old place' }, 'New place'], [{ title: 'Old place' }, 'Old place'], [null, undefined]]) {
+    const f = fixture({ keys: { unsplash: 'test-key' }, fetch: async () => new Response(JSON.stringify([{ ...photo, location }])) });
+    const [image] = await f.load('plugins/backgrounds/unsplash/api.ts').fetchImages(photoConfig);
+    assert.equal(image.credit.location, expected);
+  }
+});
+
+
+test('IP refresh failure keeps cached information and reports the failure without an unhandled rejection', async () => {
+  const ui = dom(), errors = [], saved = [];
+  let pending = 0;
+  const f = fixture({ fetch: async () => { throw Error('private network detail'); }, mocks: {
+    '../../../hooks': { useCachedEffect(effect) { React.useEffect(effect, []); } },
+    '../../../utils': { MINUTES: 60000 },
+    '../../../api': { usePushError: () => error => errors.push(error.message) },
+  } });
+  const { default: IpInfo } = f.load('plugins/widgets/ipInfo/IpInfo.tsx');
+  try {
+    await act(async () => { ui.root.render(React.createElement(IpInfo, {
+      cache: { ip: '203.0.113.5', city: 'Cached city', country: 'Cached country', timestamp: 0 },
+      setCache: value => saved.push(value), loader: { push() { pending++; }, pop() { pending--; } },
+    })); await tick(); });
+    assert.match(ui.d.window.document.body.textContent, /203.0.113.5.*Cached city.*Cached country/);
+    assert.equal(saved.length, 0); assert.equal(pending, 0); assert.equal(errors.length, 1);
+    assert.match(errors[0], /Unable to update IP information/); assert.ok(!errors[0].includes('private'));
+  } finally { await ui.close(); }
+});

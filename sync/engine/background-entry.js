@@ -8,6 +8,7 @@ import { i18n } from "@sync-engine/native/I18n";
 import { uiMessages, requestStageMessages } from "../source/messages";
 import { synchronize } from "./runner.cjs";
 import { fingerprint } from "./crypto.cjs";
+import { isSupportedProvider } from "../providers.cjs";
 
 const controller = new BrowserController();
 const originalSync = controller.syncAccount.bind(controller);
@@ -43,6 +44,36 @@ async function unlocked() {
     (await controller.getUnlocked())
   );
 }
+async function supported(account) {
+  if (isSupportedProvider(account.getData().type)) return true;
+  // Preserve configuration and credentials, but stop all automatic execution.
+  if (!(await unlocked())) return false;
+  const changes = {
+    enabled: false, syncIntervalEnabled: false, syncOnStartupEnabled: false,
+    scheduled: false, checkScheduled: false, syncing: false,
+    clickCountEnabled: false, pendingChanges: null, error: null,
+  };
+  if (Object.entries(changes).some(([key, value]) => account.getData()[key] !== value))
+    await account.setData(changes);
+  return false;
+}
+// Neither retained provider counts bookmark visits. Disable the inherited
+// history hook as well, including profiles created before this restriction.
+controller.onVisitUrl = async () => {};
+for (const method of ["scheduleSync", "scheduleCheck"]) {
+  const schedule = controller[method].bind(controller);
+  controller[method] = async (id, ...args) => {
+    if (!(await unlocked()) || !(await supported(await Account.get(id)))) return;
+    return schedule(id, ...args);
+  };
+}
+controller.scheduleAll = async () => {
+  if (!(await unlocked())) return;
+  for (const account of await Account.getAllAccounts()) {
+    if (await supported(account)) await account.setData({ scheduled: true });
+  }
+  await controller.updateStatus();
+};
 async function options(account, signal) {
   const profile = { ...account.getData() };
   const oauth = (await browser.storage.local.get({ oauthClients: {} }))
@@ -64,6 +95,7 @@ async function options(account, signal) {
   for (const other of profiles) {
     if (
       other.id === account.id ||
+      !isSupportedProvider(other.getData().type) ||
       !other.getData().localRoot ||
       other.getData().localRoot === "tabs"
     )
@@ -249,6 +281,7 @@ function enqueue(id, strategy, dryRun) {
 controller.syncAccount = async (id, strategy, force) => {
   if (!(await unlocked())) return;
   const account = await Account.get(id);
+  if (!(await supported(account))) return;
   if (!usesOwnEngine(account.getData()))
     return originalSync(id, strategy, force);
   return enqueue(id, strategy, false);
@@ -256,6 +289,7 @@ controller.syncAccount = async (id, strategy, force) => {
 controller.checkAccount = async (id) => {
   if (!(await unlocked())) return;
   const account = await Account.get(id);
+  if (!(await supported(account))) return;
   if (!usesOwnEngine(account.getData())) return originalCheck(id);
   return enqueue(id, undefined, true);
 };
@@ -336,6 +370,7 @@ controller.onchange = async (id, details) => {
 async function recoverPending() {
   const lock = await browser.storage.local.get({ accountsLocked: null });
   if (lock.accountsLocked || unlockingProfiles) return;
+  for (const account of await Account.getAllAccounts()) await supported(account);
   await controller.onLoad();
   for (const account of await Account.getAllAccounts()) {
     if (!usesOwnEngine(account.getData())) continue;

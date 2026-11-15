@@ -37,7 +37,7 @@ Configure o cliente OAuth em **Sincronização → Conexões** e autorize o perf
 
 O motor preserva a criptografia e mantém backup/checkpoints locais para retomar interrupções. Se o mesmo item mudar de forma incompatível nos dois lados, o perfil mostra um conflito em vez de sobrescrever uma versão. Confira os itens ou use **Enviar/Receber uma vez** nas ações avançadas; a proteção de exclusão continua válida.
 
-Demais provedores e perfis de abas ainda usam o motor anterior. Pastas sobrepostas entre perfis não são suportadas pelo núcleo próprio. Ainda falta validação real da conta Google e uma tela de restauração dos backups. [Escopo e limites](docs/sync-engine.md).
+Somente Google Drive e Git estão disponíveis. Git e perfis de abas ainda usam o motor anterior. Perfis antigos dos demais serviços ficam desativados, preservados para exportação ou remoção. Pastas sobrepostas entre perfis não são suportadas pelo núcleo próprio. Ainda falta validação real da conta Google e uma tela de restauração dos backups. [Escopo e limites](docs/sync-engine.md).
 
 Backup de perfis pode conter credenciais e não equivale a backup dos favoritos.
 

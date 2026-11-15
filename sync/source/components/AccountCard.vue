@@ -62,14 +62,14 @@
     <UiButton
       v-else
       class="sync-button sync-primary ui-button ui-button-primary"
-      :disabled="busy || Boolean(account.data.scheduled)"
+      :disabled="!supported || busy || Boolean(account.data.scheduled)"
       @click="onTriggerSync"
      type="submit">
       <SyncIcon small aria-hidden="true">mdi-sync</SyncIcon
       >{{ t("LabelSyncnow") }}
     </UiButton>
   </UiActions>
-  <details class="ui-disclosure sync-advanced">
+  <details v-if="supported" class="ui-disclosure sync-advanced">
     <summary>{{ t("UiAdvanced") }}</summary>
     <div>
       <UiButton
@@ -140,6 +140,7 @@
 </template>
 <script>
 import {confirmAction} from "../../../ui/confirmation.js";
+import { isSupportedProvider } from "../../providers.cjs";
 import PathHelper from "@sync-engine/PathHelper";
 import humanizeDuration from "humanize-duration";
 import { actions } from "../store/definitions";
@@ -207,6 +208,7 @@ export default {
     };
   },
   computed: {
+    supported() { return isSupportedProvider(this.account.data.type); },
     folderName() {
       const pathArray = PathHelper.pathToArray(
         this.rootPath || this.t("LabelRootfolder")
@@ -220,9 +222,10 @@ export default {
       return this.account.label;
     },
     needsAuthorization() {
-      return needsAuthorization(this.account.data);
+      return this.supported && needsAuthorization(this.account.data);
     },
     status() {
+      if (!this.supported) return "disabled";
       if (this.account.data.syncing) {
         return "syncing";
       }
@@ -279,6 +282,7 @@ export default {
       return "info";
     },
     statusDetail() {
+      if (!this.supported) return this.t("SyncProviderDisabled");
       if (this.needsAuthorization) {
         return this.t("DescriptionAuthorizationneeded");
       }

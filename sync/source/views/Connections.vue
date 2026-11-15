@@ -35,16 +35,6 @@
           class="ui-control"
       /></UiField>
     </UiFieldset>
-    <UiFieldset>
-      <legend>Dropbox</legend>
-      <UiField
-        >{{ t("SuperDropboxKey")
-        }}<input
-          v-model.trim="oauth.dropboxClientId"
-          autocomplete="off"
-          class="ui-control"
-      /></UiField>
-    </UiFieldset>
     <UiAsyncState :kind="error ? 'error' : loading ? 'loading' : ''" :text="error || t('UiWorking')" />
     <UiActions class="sync-save-row">
       <span role="status" class="ui-inline-status">{{
@@ -69,7 +59,6 @@ export default {
       oauth: {
         googleClientId: "",
         googleClientSecret: "",
-        dropboxClientId: "",
       },
       redirectUrl: chrome.identity.getRedirectURL(),
       saved: false,
