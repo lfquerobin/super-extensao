@@ -1,7 +1,7 @@
 "use strict";
 // Host-owned icon overlay. Reads only confirmed connection state and effective
 // routing rules, never session tokens, proxy passwords or browsing traffic.
-(() => {
+(function register(start) {if (globalThis.SuperModuleHost) SuperModuleHost.register('vpn',start);else start();})(() => {
   const COLORS = { direct: "#287de0", protected: "#18a568", blocked: "#d64b5b" };
   const BASE = { 16: "icons/icon16.png", 32: "icons/icon32.png" };
   const rendered = new Map(), applied = new Map();
@@ -115,4 +115,4 @@
   chrome.storage?.onChanged?.addListener((changes) => {
     if ("tabliss/config/locale" in changes) void refresh();
   });
-})();
+});

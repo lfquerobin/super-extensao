@@ -1,4 +1,8 @@
-# Interface própria da VPN — referência 1.7.39
+# Interface própria da VPN — referência 1.7.40
+
+## Módulo opcional
+
+Em Módulos, desligar VPN encerra o motor e libera os controles de proxy, WebRTC e tráfego próprios antes de confirmar. Conta e preferências permanecem guardadas, e o menu VPN fica oculto. Uma falha mantém o módulo ligado e apresenta aviso. [Detalhes e limites](modulos.md).
 
 ## Bloqueio durante falhas da VPN
 

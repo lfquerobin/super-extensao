@@ -48,6 +48,8 @@ function checkIntegrity(root = path.resolve(__dirname, "..")) {
   };
   const refs = [manifest.background?.service_worker, manifest.action?.default_popup, manifest.options_page,
     "sync/html/options.html", "sync/js/options.js", "vpn/interface.js",
+    "newtab/main.js", "newtab/polyfills.js", "newtab/integration.js", "newtab/main.css", "newtab/integration.css",
+    "autoplay-main.js", "autoplay-bridge.js", "vpn-auth-bridge.js", "vpn/js/transmit.js",
     ...Object.values(manifest.icons || {}), ...Object.values(manifest.action?.default_icon || {}),
     ...Object.values(manifest.chrome_url_overrides || {}), manifest.storage?.managed_schema,
     ...(manifest.content_scripts || []).flatMap(entry => [...(entry.js || []), ...(entry.css || [])]),

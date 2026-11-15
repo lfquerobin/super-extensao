@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: MPL-2.0 */
+import {read} from "../../modules.js";
 import { createApp } from "vue";
 import capacitor from "./plugins/capacitor";
 import App from "./App";
@@ -14,6 +15,7 @@ import "../../ui/vue.css";
 async function mountSync() {
   const mount = document.getElementById("syncApp") || document.getElementById("app");
   if (!mount) return;
+  if (!(await read()).sync) {mount.textContent = 'Sincronização desativada. Ative em Módulos.';return;}
   i18n.setLocales([await globalThis.SuperPreferences.locale.get()]);
   await i18n.load();
   setupDirection();

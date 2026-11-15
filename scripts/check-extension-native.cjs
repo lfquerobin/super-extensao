@@ -26,6 +26,7 @@ async function main() {
   const worker = context.serviceWorkers()[0] || await context.waitForEvent("serviceworker");
   const origin = worker.url().replace(/\/background\.js$/, "");
   assert.match(origin, /^chrome-extension:\/\/[a-z]+$/);
+  await worker.evaluate(() => SuperModuleHost.ready);
   const state = await worker.evaluate(async () => ({
     version: chrome.runtime.getManifest().version,
     preferences: typeof SuperPreferences?.locale?.get === "function",

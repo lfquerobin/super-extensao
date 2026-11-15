@@ -63,3 +63,7 @@ A interface usa Vue 3/Router 4 e controles HTML do catálogo compartilhado, sem 
 ## Gravação automática — 1.7.39
 
 Perfis, credenciais OAuth, criptografia e seleção de pasta são persistidos automaticamente. Não há botões Salvar nos formulários atuais. A fila comum serializa gravações, preserva o valor mais recente, mostra falhas e aguarda a conclusão antes da navegação interna. Campos inválidos permanecem no formulário sem sobrescrever a configuração válida; a correção retoma a gravação. Criar/importar/remover perfis e sincronização manual continuam como ações explícitas.
+
+## Módulo opcional — 1.7.40
+
+O worker é empacotado como fábrica e só inicializa quando a sincronização está habilitada. A página independente e o carregador do popup respeitam a mesma preferência. O despachante comum recebe mensagens/eventos antes da leitura assíncrona e os encaminha ao módulo ativo. Alterações de módulos são recusadas durante operações de sincronização; perfis, chaves, cache e backups são preservados.

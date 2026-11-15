@@ -897,5 +897,74 @@
    },
    "uiLocalStorageShort": {
       "message": "Local stor."
-   }
+   },
+  "uiModules": {
+    "message": "Modules"
+  },
+  "uiModulesHelp": {
+    "message": "Enable only what you use. Disabled modules retain their data."
+  },
+  "uiModulesRestart": {
+    "message": "Changes save automatically and reload the extension. Reload open pages to update their integrations."
+  },
+  "uiModulesCleanup": {
+    "message": "Cleanup"
+  },
+  "uiModulesCleanupHelp": {
+    "message": "Off: no automatic or manual cleanup."
+  },
+  "uiModulesAutoplay": {
+    "message": "Autoplay"
+  },
+  "uiModulesAutoplayHelp": {
+    "message": "Off: leaves website media playback unchanged."
+  },
+  "uiModulesTabs": {
+    "message": "Tabs"
+  },
+  "uiModulesTabsHelp": {
+    "message": "Off: no spare tabs or new-tab organization."
+  },
+  "uiModulesSync": {
+    "message": "Sync"
+  },
+  "uiModulesSyncHelp": {
+    "message": "Off: no engine, scheduling or Google Drive/Git connections."
+  },
+  "uiModulesVpn": {
+    "message": "VPN"
+  },
+  "uiModulesVpnHelp": {
+    "message": "Off: disconnects, releases the proxy and removes VPN traffic protection."
+  },
+  "uiModulesNewtab": {
+    "message": "New tab"
+  },
+  "uiModulesNewtabHelp": {
+    "message": "Off: opens a simple tab without widgets, images or external connections."
+  },
+  "uiModulesPackage": {
+    "message": "Disabling does not remove bundled files or fixed permissions. The new-tab replacement remains, with its dashboard off."
+  },
+  "uiModulesAutoSaved": {
+    "message": "Saved automatically"
+  },
+  "uiModulesChanging": {
+    "message": "Applying change…"
+  },
+  "uiModulesApplied": {
+    "message": "Saved. Reloading the extension…"
+  },
+  "uiModulesReadFailed": {
+    "message": "Could not read module settings. Try again."
+  },
+  "uiModulesWriteFailed": {
+    "message": "Could not complete the change. The module was not marked as disabled. Try again."
+  },
+  "uiModulesSyncBusy": {
+    "message": "Wait for synchronization to finish or cancel it before changing modules."
+  },
+  "uiModulesRetry": {
+    "message": "Try again"
+  }
 }

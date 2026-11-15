@@ -52,6 +52,7 @@
   }
 
   function prepare(tab) {
+    if (globalThis.SuperModulesUI && !SuperModulesUI.isEnabled(tab)) return Promise.resolve();
     if (!Object.hasOwn(assets, tab)) return Promise.resolve();
     if (!panels.has(tab)) {
       const status = document.getElementById(tab + "PanelStatus");
@@ -77,8 +78,8 @@
     return panels.get(tab);
   }
 
-  chrome.storage.local.get({popupView:null}).then(({popupView}) => {
-    if (popupView?.tab === "vpn") prefetchVpn();
+  Promise.resolve(globalThis.SuperModulesUI?.ready).then(() => chrome.storage.local.get({popupView:null})).then(({popupView}) => {
+    if (popupView?.tab === "vpn" && (!globalThis.SuperModulesUI || SuperModulesUI.isEnabled('vpn'))) prefetchVpn();
   }).catch(() => {});
 
   document.addEventListener("super-extension:panel-selected", event => {
@@ -90,6 +91,7 @@
     }
   });
   firstPaint.then(async () => {
+    await globalThis.SuperModulesUI?.ready;
     await prepare(document.body.dataset.activeTab);
     prepare("sync");
     prepare("vpn");

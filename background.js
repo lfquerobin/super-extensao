@@ -1,4 +1,4 @@
-importScripts("preferences.js", "i18n.js", "rules.js");
+importScripts("preferences.js", "i18n.js", "rules.js", "modules.js", "module-host.js");
 importScripts("navigation-rules.js", "tab-guard.js");
 // ====== デフォルト設定 ======
 const DEFAULT_SETTINGS = {
@@ -136,6 +136,8 @@ async function performClear(
   trigger,
   { ignoreAutomationState = false, settingsSnapshot = null } = {}
 ) {
+  await SuperModuleHost.ready;
+  if (!SuperModuleHost.isEnabled('cleanup')) return {cleared:false};
   const storedSettings = await chrome.storage.local.get(DEFAULT_SETTINGS);
   const manualSettings = normalizeManualSettings(settingsSnapshot);
   const settings = manualSettings
@@ -374,13 +376,13 @@ async function handleClearNotificationAction(notificationId) {
   await chrome.notifications.clear(notificationId);
 }
 
-chrome.notifications.onClicked.addListener((notificationId) => {
+SuperModuleHost.listen("cleanup", chrome.notifications.onClicked, (notificationId) => {
   handleClearNotificationAction(notificationId).catch((err) => {
     console.error("Auto Clear History: failed to open settings from notification", err);
   });
 });
 
-chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) => {
+SuperModuleHost.listen("cleanup", chrome.notifications.onButtonClicked, (notificationId, buttonIndex) => {
   if (buttonIndex !== 0) return;
   handleClearNotificationAction(notificationId).catch((err) => {
     console.error("Auto Clear History: failed to open settings from notification button", err);
@@ -411,7 +413,7 @@ async function handleWindowRemoved(windowId) {
   await clearPendingSession("exit", pendingSession);
 }
 
-chrome.windows.onRemoved.addListener((windowId) => {
+SuperModuleHost.listen("cleanup", chrome.windows.onRemoved, (windowId) => {
   handleWindowRemoved(windowId).catch(async (error) => {
     await chrome.storage.local.set({ lastClearErrorAt: new Date().toISOString() });
     console.error("Auto Clear History: exit clear failed", error);
@@ -446,7 +448,7 @@ async function handleStartup() {
 
 }
 
-chrome.runtime.onStartup.addListener(() => {
+SuperModuleHost.listen("cleanup", chrome.runtime.onStartup, () => {
   handleStartup().catch(async (error) => {
     await chrome.storage.local.set({ lastClearErrorAt: new Date().toISOString() });
     console.error("Auto Clear History: startup clear failed", error);
@@ -463,14 +465,14 @@ async function handleWindowCreated(createdWindow) {
   await markSessionPending();
 }
 
-chrome.windows.onCreated.addListener((createdWindow) => {
+SuperModuleHost.listen("cleanup", chrome.windows.onCreated, (createdWindow) => {
   handleWindowCreated(createdWindow).catch((error) => {
     console.error("Auto Clear History: failed to mark active session", error);
   });
 });
 
 // ====== インストール時 ======
-chrome.runtime.onInstalled.addListener(async () => {
+SuperModuleHost.listen("cleanup", chrome.runtime.onInstalled, async () => {
   const existing = await chrome.storage.local.get(null);
   const toSet = {};
   for (const [key, val] of Object.entries(DEFAULT_SETTINGS)) {
@@ -489,6 +491,14 @@ chrome.runtime.onInstalled.addListener(async () => {
 
 // ====== ポップアップからの操作 ======
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (!['pause','resume','clearNow'].includes(msg?.action)) return;
+  void SuperModuleHost.ready.then(() => {
+    if (!SuperModuleHost.isEnabled('cleanup')) {sendResponse({ok:false,error:'ModuleDisabled'});return;}
+    handleCleanupMessage(msg,sender,sendResponse);
+  }).catch(() => sendResponse({ok:false,error:'ModuleUnavailable'}));
+  return true;
+});
+function handleCleanupMessage(msg, sender, sendResponse) {
   if (msg.action === "pause") {
     handlePause(msg.duration)
       .then(() => sendResponse({ ok: true }))
@@ -517,7 +527,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       .catch((error) => sendResponse({ ok: false, error: String(error) }));
     return true;
   }
-});
+}
 
 async function handlePause(durationMinutes) {
   let pauseUntil = null;
@@ -537,12 +547,14 @@ async function handleResume() {
   chrome.action.setBadgeText({ text: "" });
 }
 
-chrome.alarms.onAlarm.addListener(async (alarm) => {
+SuperModuleHost.listen("cleanup", chrome.alarms.onAlarm, async (alarm) => {
   if (alarm.name === "pause-resume") {
     await chrome.storage.local.set({ paused: false, pauseUntil: null });
     chrome.action.setBadgeText({ text: "" });
   }
 });
+
+SuperModuleHost.onStop('cleanup', async () => {await clearQueue;});
 
 // Motor de sincronizacao isolado em superSync: e super-sync.
 importScripts("sync/js/background-script.js");

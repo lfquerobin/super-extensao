@@ -46,7 +46,7 @@ const failedResponse = (error: unknown) => ({
 export const initMessaging = () => {
 	const runtime = getRuntime();
 
-	runtime?.onMessage.addListener((message: any, sender, sendResponse) => {
+	const receiveMessage = (message: any, sender: browser.runtime.MessageSender, sendResponse: (response: any) => void) => {
 		if (message?.channel !== "super-vpn" || message.respondTo === "none")
 			return undefined;
 		const senderUrl = sender.url || sender.tab?.url || "";
@@ -71,15 +71,17 @@ export const initMessaging = () => {
 		}
 
 		return true;
-	});
+	};
+
+  if ((globalThis as any).SuperModuleHost) (globalThis as any).SuperModuleHost.message('vpn', receiveMessage);
+  else runtime?.onMessage.addListener(receiveMessage);
 
 	/**
 	 * Consumes a session fork request and sends response
 	 * to sender (account app) - to see full data flow :
 	 * `applications/account/src/app/content/PublicApp.tsx`
 	 */
-	runtime?.onMessageExternal.addListener(
-		async (request: WorkerExternalMessage, sender) => {
+	const receiveExternal = async (request: WorkerExternalMessage, sender: browser.runtime.MessageSender) => {
 			if (
 				request.type === BackgroundAction.FORK &&
 				isAccountUrl(sender.url || sender.tab?.url)
@@ -111,6 +113,7 @@ export const initMessaging = () => {
 			}
 
 			return;
-		},
-	);
+		};
+  if ((globalThis as any).SuperModuleHost) (globalThis as any).SuperModuleHost.external(receiveExternal);
+  else runtime?.onMessageExternal.addListener(receiveExternal);
 };

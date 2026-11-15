@@ -12,6 +12,8 @@
   const configReady = new Promise(resolve => {resolveConfig = resolve;});
   const blocked = new Map();
   const roots = new WeakSet();
+  const observers = new Set();
+  const mediaHandlers = [];
   let scheduled = false;
   function shouldBlock() { return blocking && !interacted; }
   function remember(media, resume = false) {
@@ -64,13 +66,14 @@
       // Don't retain removed media indefinitely on long-lived feeds.
       for (const media of blocked.keys()) if (!media.isConnected) blocked.delete(media);
     });
+    observers.add(observer);
     observer.observe(root,{childList:true,subtree:true,attributes:true,attributeFilter:attributes});
     scan(root);
   }
   for (const type of ["play","playing","canplay","loadeddata"]) {
-    document.addEventListener(type, event => {
-      if (shouldBlock() && event.target instanceof HTMLMediaElement) scrub(event.target);
-    },true);
+    const handler = event => {if (shouldBlock() && event.target instanceof HTMLMediaElement) scrub(event.target);};
+    mediaHandlers.push([type,handler]);
+    document.addEventListener(type,handler,true);
   }
   function interact(event) {
     if (!event.isTrusted) return;
@@ -78,7 +81,7 @@
     release(false);
   }
   for (const type of ["pointerdown","touchstart","keydown","click"]) window.addEventListener(type,interact,{capture:true,passive:true});
-  HTMLMediaElement.prototype.play = function (...args) {
+  const patchedPlay = HTMLMediaElement.prototype.play = function (...args) {
     const media = this;
     function perform() {
       if (!shouldBlock()) return nativePlay.apply(media,args);
@@ -91,22 +94,33 @@
   };
   // New shadow trees need their own observer, including closed shadow roots.
   const attachShadow = Element.prototype.attachShadow;
-  Element.prototype.attachShadow = function (...args) {
+  const patchedShadow = Element.prototype.attachShadow = function (...args) {
     const root = attachShadow.apply(this,args);
     observe(root);
     return root;
   };
-  document.addEventListener("super-extensao:autoplay-config", event => {
+  function configure(event) {
     try {
       const value = JSON.parse(event.detail);
       if (typeof value.block !== "boolean") return;
       const wasBlocking = blocking;
       blocking = value.block;
       if (!configured) {configured = true;resolveConfig();}
+      if (value.disabled === true) {
+        blocking = false;release(true);
+        if (HTMLMediaElement.prototype.play === patchedPlay) HTMLMediaElement.prototype.play = nativePlay;
+        if (Element.prototype.attachShadow === patchedShadow) Element.prototype.attachShadow = attachShadow;
+        for (const observer of observers) observer.disconnect();observers.clear();
+        for (const [type,handler] of mediaHandlers) document.removeEventListener(type,handler,true);
+        for (const type of ['pointerdown','touchstart','keydown','click']) window.removeEventListener(type,interact,true);
+        document.removeEventListener('super-extensao:autoplay-config',configure);
+        return;
+      }
       if (!blocking) release(true);
       else {if (!wasBlocking) interacted = false; scheduleScan();}
     } catch {}
-  });
+  }
+  document.addEventListener('super-extensao:autoplay-config',configure);
   observe(document);
   document.dispatchEvent(new Event("super-extensao:autoplay-ready"));
 })();

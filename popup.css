@@ -23,6 +23,7 @@ body > main { padding:0 20px; }
 .popup-navigation nav { display:flex; gap:3px; }
 .main-nav, .sub-nav { border:1px solid var(--line); border-radius:10px; }
 .main-nav { position:relative; z-index:1; padding:4px; background:var(--surface); }
+.main-nav .tab { flex:1 1 auto; white-space:nowrap; }
 .tab { flex:1; border:0; color:var(--muted); background:transparent; padding:8px 4px; font-size:12px; }
 .tab.active { background:var(--raised); color:var(--text); }
 .sub-nav { margin:-6px 6px 0; padding:9px 4px 4px; background:var(--bg); }

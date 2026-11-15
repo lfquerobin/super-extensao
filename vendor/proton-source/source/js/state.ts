@@ -505,13 +505,15 @@ export function privacyFault(): void {
 }
 
 export function connect(data: ConnectionState["data"]): Promise<void> {
-	return machine.connect(data);
+	if ((globalThis as any).SuperModuleHost && !(globalThis as any).SuperModuleHost.isEnabled('vpn')) return Promise.reject(new Error('ModuleDisabled'));
+  return machine.connect(data);
 }
 export function connectAfter(
 	data: ConnectionState["data"],
 	previousName?: string,
 ): Promise<void> {
-	return machine.connect(data, previousName);
+	if ((globalThis as any).SuperModuleHost && !(globalThis as any).SuperModuleHost.isEnabled('vpn')) return Promise.reject(new Error('ModuleDisabled'));
+  return machine.connect(data, previousName);
 }
 export function isLoggedIn(): boolean {
 	return !!currentState && currentState.name !== "loggedout";
@@ -570,6 +572,7 @@ export async function connectLogical(
 }
 
 export async function checkAutoConnect(): Promise<void> {
+  if ((globalThis as any).SuperModuleHost && !(globalThis as any).SuperModuleHost.isEnabled('vpn')) return;
 	const current = connectionLifecycle.guard();
 	const user = await getUser();
 	if (!current()) return;

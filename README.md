@@ -4,7 +4,7 @@
 
 Extensão pessoal para Helium e navegadores Chromium, com Nova guia, sincronização de favoritos, VPN no navegador, limpeza ao sair, controle de autoplay e proteção da última aba.
 
-**Versão instalada: 1.7.39.** Documentação revisada em 15 de novembro de 2026. Temas escuro, claro e sistema; idiomas PT-BR e inglês compartilhados entre os módulos. Requer Chromium 116 ou superior, conforme o manifest.
+**Versão instalada: 1.7.40.** Documentação revisada em 15 de novembro de 2026. Temas escuro, claro e sistema; idiomas PT-BR e inglês compartilhados entre os módulos. Requer Chromium 116 ou superior, conforme o manifest.
 
 Para investigar uma falha da VPN, abra `chrome://extensions`, localize a Super Extensão e inspecione o **service worker**. Na aba Console, reproduza a tentativa e execute `getVpnDiagnostics()`. Os últimos 50 eventos registram somente horário, etapa, resultado e código conhecido, sem credenciais ou dados da conta; falhas novas também aparecem como avisos `[Super VPN]`. Esse histórico é temporário e reinicia com o worker. `getLogs()` é o registro legado, dependente de debug, e pode estar vazio.
 
@@ -38,6 +38,10 @@ Os arquivos compilados já estão no repositório: instalar a extensão não exi
 ## Usar
 
 ### Preferências e navegação
+
+Em **Módulos**, ative somente o que você usa: Limpeza, Autoplay, Abas, Sincronização, VPN e Nova guia. Alterar um interruptor salva e recarrega a extensão automaticamente; recarregue páginas já abertas para atualizar as integrações. Os dados e as configurações são preservados para reativação. A atualização mantém todos os módulos ligados por padrão, até você escolher.
+
+Desligar a VPN desconecta e libera proxy, WebRTC e bloqueios de tráfego controlados pela extensão. Sincronização desligada não inicia o motor nem os agendamentos. Uma sincronização em andamento precisa terminar ou ser cancelada antes de mudar módulos. A Nova guia desligada abre uma página simples, sem dashboard, widgets ou conexões externas; a substituição da guia pelo manifesto permanece. Arquivos e permissões fixas continuam no pacote. [Funcionamento e limites](docs/modulos.md).
 
 Tema e idioma ficam no cabeçalho e atendem toda a extensão. Limpeza, Sincronização e VPN têm submenus fixos; o conteúdo interno continua rolável sem barras visíveis. Arraste a alça inferior para ajustar a altura do popup. A seção selecionada é preservada; a VPN também guarda sua página e rolagem.
 

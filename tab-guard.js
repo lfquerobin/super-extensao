@@ -1,6 +1,6 @@
 /* A pinned spare tab keeps Ctrl+W from closing the last normal browser window.
    Only tabs created and tracked by this module may be removed by the guard. */
-(function () {
+(function register(start) {if (globalThis.SuperModuleHost) SuperModuleHost.register('tabs',start);else start();})(function () {
   "use strict";
   let running = false;
   let dirty = false;
@@ -8,6 +8,10 @@
   const STATE_KEY = "tabGuardSession";
   const spareUrl = chrome.runtime.getURL("spare-tab.html");
   const dashboardUrl = chrome.runtime.getURL("newtab/index.html");
+  globalThis.SuperModuleHost?.onStop('tabs', async () => {
+    while (running) await new Promise(resolve => setTimeout(resolve, 10));
+    return () => schedule();
+  });
   async function reconcile() {
     const data = await chrome.storage.local.get({tabGuard:SuperTools.TAB_DEFAULTS});
     const settings = SuperTools.tabSettings(data.tabGuard);
@@ -63,6 +67,7 @@
     }
   }
   async function schedule() {
+    if (globalThis.SuperModuleHost && !SuperModuleHost.isEnabled('tabs')) return;
     dirty = true;
     if (running) return;
     running = true;
@@ -101,4 +106,4 @@
     void schedule();
   });
   void schedule();
-})();
+});

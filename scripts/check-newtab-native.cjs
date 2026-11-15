@@ -10,7 +10,7 @@ const root = path.resolve(__dirname, ".."),
   extension = path.join(base, "extension"),
   profile = path.join(base, "profile");
 fs.mkdirSync(extension, { recursive: true });
-for (const entry of ["newtab", "icons", "preferences.js", "ui-theme.css", "ui-components.css"])
+for (const entry of ["newtab", "icons", "preferences.js", "modules.js", "ui-theme.css", "ui-components.css"])
   fs.cpSync(path.join(root, entry), path.join(extension, entry), {
     recursive: true,
   });

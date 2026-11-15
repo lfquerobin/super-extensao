@@ -37,10 +37,12 @@ const EXCEPTION_LISTS = {
 const listElement = (type, name) => $(EXCEPTION_LISTS[type].prefix ? EXCEPTION_LISTS[type].prefix + name[0].toUpperCase() + name.slice(1) : name);
 const importType = () => Object.hasOwn(EXCEPTION_LISTS, $("importTarget").value) ? $("importTarget").value : "cookies";
 const CLEANUP_TABS = ["cleanup", "exceptions", "cache", "local-storage", "bookmarks"];
-const NAV_TABS = [...CLEANUP_TABS, "autoplay", "tabs", "sync", "vpn"];
+const NAV_TABS = [...CLEANUP_TABS, "autoplay", "tabs", "sync", "vpn", "modules"];
 let lastCleanupTab = "cleanup";
 function activateTab(tab, persist = true) {
   if (!NAV_TABS.includes(tab)) tab = "cleanup";
+  const module = CLEANUP_TABS.includes(tab) ? 'cleanup' : tab;
+  if (module !== 'modules' && globalThis.SuperModulesUI && !SuperModulesUI.isEnabled(module)) tab = 'modules';
   document.body.dataset.activeTab = tab;
   const isCleanup = CLEANUP_TABS.includes(tab);
   if (isCleanup) lastCleanupTab = tab;
@@ -138,6 +140,7 @@ async function refreshLanguage(){
 }
 async function init() {
   await SuperI18n.ready;
+  await globalThis.SuperModulesUI?.ready;
   $("language").addEventListener("change",handle(()=>SuperPreferences.locale.set($("language").value)));
   SuperI18n.watch(()=>{refreshLanguage().catch(showError);});
   $("language").value=SuperI18n.locale;
@@ -149,7 +152,7 @@ async function init() {
   window.addEventListener("unload", stopTheme, { once: true });
   const savedView = settings.popupView;
   if (CLEANUP_TABS.includes(savedView?.lastCleanupTab)) lastCleanupTab = savedView.lastCleanupTab;
-  activateTab(location.hash === "#vpn" ? "vpn" : savedView?.tab, false);
+  activateTab(location.hash === "#modules" ? "modules" : location.hash === "#vpn" ? "vpn" : savedView?.tab, false);
   refreshPresets();
   $("theme").addEventListener("change", handle(() => SuperPreferences.theme.set($("theme").value)));
   document.querySelectorAll("[data-tab]").forEach(button => button.addEventListener("click", () => activateTab(button.dataset.tab)));

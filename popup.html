@@ -18,6 +18,7 @@
       <button class="ui-tab tab" id="tab-tabs" data-tab="tabs" aria-pressed="false" data-i18n="uiTabs3cc23" type="button">Abas</button>
       <button class="ui-tab tab" id="tab-sync" data-tab="sync" aria-pressed="false" data-i18n="uiSyncda8aa" type="button">Sincronização</button>
       <button class="ui-tab tab" id="tab-vpn" data-tab="vpn" aria-pressed="false" type="button">VPN</button>
+      <button class="ui-tab tab" id="tab-modules" data-tab="modules" aria-pressed="false" data-i18n="uiModules" type="button">Módulos</button>
     </nav>
     <nav id="cleanupSubmenu" class="ui-nav sub-nav ui-submenu" aria-label="Opções de limpeza" data-i18n-aria-label="uiCleanupoptions18c23">
       <button class="ui-tab tab active" id="tab-cleanup" data-tab="cleanup" aria-pressed="true" data-i18n="uiWhattoclear08caf" type="button">Geral</button>
@@ -31,6 +32,22 @@
   </div>
   <main>
     <div id="error" class="ui-notice message error ui-notice-error" role="alert" hidden=""></div>
+    <section id="panel-modules" aria-labelledby="tab-modules" hidden>
+  <div class="ui-section-heading section-heading"><h2 data-i18n="uiModules">Módulos</h2><span data-i18n="uiModulesAutoSaved">Salvo automaticamente</span></div>
+  <p class="note" data-i18n="uiModulesHelp">Ative somente o que você usa. Os dados dos módulos desligados são preservados.</p>
+  <p class="note" data-i18n="uiModulesRestart">A alteração é salva automaticamente e recarrega a extensão. Recarregue as páginas abertas para atualizar suas integrações.</p>
+  <div class="ui-card options">
+    <label class="ui-toggle toggle-line"><span><span data-i18n="uiModulesCleanup">Limpeza</span><small data-i18n="uiModulesCleanupHelp">Desligado: não executa limpeza automática ou manual.</small></span><input type="checkbox" role="switch" class="ui-switch" data-module="cleanup"></label>
+    <label class="ui-toggle toggle-line"><span><span data-i18n="uiModulesAutoplay">Autoplay</span><small data-i18n="uiModulesAutoplayHelp">Desligado: não altera a reprodução de mídia nos sites.</small></span><input type="checkbox" role="switch" class="ui-switch" data-module="autoplay"></label>
+    <label class="ui-toggle toggle-line"><span><span data-i18n="uiModulesTabs">Abas</span><small data-i18n="uiModulesTabsHelp">Desligado: não cria abas de reserva nem organiza novas guias.</small></span><input type="checkbox" role="switch" class="ui-switch" data-module="tabs"></label>
+    <label class="ui-toggle toggle-line"><span><span data-i18n="uiModulesSync">Sincronização</span><small data-i18n="uiModulesSyncHelp">Desligado: interrompe o motor, os agendamentos e as conexões com Google Drive/Git.</small></span><input type="checkbox" role="switch" class="ui-switch" data-module="sync"></label>
+    <label class="ui-toggle toggle-line"><span><span data-i18n="uiModulesVpn">VPN</span><small data-i18n="uiModulesVpnHelp">Desligado: desconecta, libera o proxy e remove a proteção de tráfego da VPN.</small></span><input type="checkbox" role="switch" class="ui-switch" data-module="vpn"></label>
+    <label class="ui-toggle toggle-line"><span><span data-i18n="uiModulesNewtab">Nova guia</span><small data-i18n="uiModulesNewtabHelp">Desligado: abre uma guia simples, sem widgets, imagens ou conexões externas.</small></span><input type="checkbox" role="switch" class="ui-switch" data-module="newtab"></label>
+  </div>
+  <p class="note" data-i18n="uiModulesPackage">Desativar não remove os arquivos nem as permissões fixas do pacote. A substituição da Nova guia permanece, com o painel desligado.</p>
+  <p id="modulesStatus" role="status" aria-live="polite"></p><button id="modulesRetry" data-i18n="uiModulesRetry" class="ui-button" type="button">Tentar novamente</button>
+</section>
+
     <section id="panel-cleanup" aria-labelledby="tab-cleanup">
       <div class="ui-section-heading section-heading"><h2 data-i18n="uiWhattoclear08caf">Geral</h2><span data-i18n="uiSavedautomatically299aa">Salvo automaticamente</span></div>
       <div class="presets" aria-label="Modos de limpeza" data-i18n-aria-label="uiCleanupmodeseebda"><button class="ui-button ui-button-secondary" data-preset="safe" type="submit"><strong data-i18n="uiSafe39c09">Seguro</strong><small data-i18n="uiHistorybea29">Histórico</small></button><button class="ui-button ui-button-secondary" data-preset="standard" type="submit"><strong data-i18n="uiStandardd8e00">Padrão</strong><small>+ cache</small></button><button class="ui-button ui-button-secondary" data-preset="strong" type="submit"><strong data-i18n="uiStronga88f9">Forte</strong><small data-i18n="uiAlldatatypes067ff">Todos os tipos</small></button></div>
@@ -139,6 +156,7 @@
   <div id="popupResize" role="separator" tabindex="0" aria-label="Ajustar altura do popup" aria-orientation="horizontal" aria-valuemin="360" aria-valuemax="600" aria-valuenow="580" title="Arraste para ajustar a altura. Use ↑ e ↓ ou dê dois cliques para restaurar." data-i18n-title="uiDragtoresizeUseand9c407" data-i18n-aria-label="uiAdjustpopupheight48122"></div>
   <script src="ui.js"></script><script src="preferences.js"></script><script src="i18n.js"></script>
   <script src="popup-resize.js"></script>
+  <script src="modules.js"></script><script src="modules-popup.js"></script>
   <script src="popup-panels.js"></script>
   <script src="rules.js"></script><script src="ui/bookmark-preview.js"></script><script src="ui/domain-list.js"></script><script src="ui/async-state.js"></script><script src="ui/confirmation.js"></script><script src="ui/domain-editor.js"></script><script src="ui/bookmark-importer.js"></script><script src="navigation-rules.js"></script><script src="popup.js"></script><script src="tools-popup.js"></script>
 

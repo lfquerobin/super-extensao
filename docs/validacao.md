@@ -1,5 +1,13 @@
 # Validação da Super Extensão
 
+## Módulos opcionais — 1.7.40
+
+Em 15/11/2026, **543 testes passaram**, sem falhas ou testes ignorados. Workers/interfaces de sincronização e VPN, catálogos e templates foram compilados. TypeScript completo da origem VPN, `check:ui` e `check:integrity` passaram; a integridade inclui os recursos agora carregados dinamicamente e percorre 65 arquivos referenciados.
+
+O Edge 157.0.4341.60 validou os seis interruptores em uma instalação temporária: desativação total, menus ocultos, motores sem inicialização, ausência de alarmes/scripts de conteúdo, liberação de proxy/WebRTC/DNR próprios, restauração do método de mídia numa página de teste e Nova guia sem carregar dashboard/polyfills/widgets. Reativar sincronização e VPN preservou perfis e credenciais OAuth sintéticos. A extensão completa e a persistência da Nova guia também passaram sem erros de página.
+
+Os testes cobrem eventos recebidos antes da leitura das preferências (favoritos, alarmes, desafio do proxy e autorização externa), recusa de mudança durante sincronização e falhas de liberação/gravação sem declarar sucesso. Nenhuma conta real foi usada. [Arquitetura, efeitos e limites](modulos.md).
+
 ## Configurações automáticas — 1.7.39
 
 Em 15/11/2026, **528 testes passaram**, sem falhas ou testes ignorados. Foram compiladas as interfaces de sincronização, VPN e Nova guia, os painéis e os templates estáticos; TypeScript da Nova guia, `check:ui` e `check:integrity` passaram (61 arquivos referenciados e versão 1.7.39).

@@ -39,7 +39,8 @@ const initAuthInterceptorListeners = (webRequest: typeof chrome.webRequest) => {
 
 	webRequest.onBeforeRequest?.addListener(keepCredentialsReady, allUrls);
 
-	if (!webRequest.onAuthRequired?.hasListener(authHandler)) {
+  if ((globalThis as any).SuperModuleHost) (globalThis as any).SuperModuleHost.auth(authHandler);
+	else if (!webRequest.onAuthRequired?.hasListener(authHandler)) {
 		try {
 			webRequest.onAuthRequired?.addListener(authHandler, allUrls, [
 				'asyncBlocking',

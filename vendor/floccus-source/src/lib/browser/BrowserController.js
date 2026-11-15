@@ -12,6 +12,11 @@ import { onWakeUp } from '../on-wake-up'
 import { i18n } from '../native/I18n'
 import { getDueAction, isNotifyOnly } from '../SyncSchedule'
 
+function listen(name, handler) {
+  if (globalThis.SuperModuleHost) globalThis.SuperModuleHost.event('sync',name,handler)
+  else {const [area,event] = name.split('.');browser[area][event].addListener(handler)}
+}
+
 const INACTIVITY_TIMEOUT = 7 * 1000 // 7 seconds
 const NETWORK_SETTLE_TIMEOUT = 5 * 1000 // 5 seconds
 const STALE_SYNC_TIME = 1000 * 60 * 60 * 24 * 2 // two days
@@ -91,46 +96,46 @@ export default class BrowserController {
       })
     }
 
-    browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) =>
+    listen('tabs.onUpdated', (tabId, changeInfo, tab) =>
       this.onTabsChanged(tabId)
     )
-    browser.tabs.onRemoved.addListener((tabId, changeInfo, tab) =>
+    listen('tabs.onRemoved', (tabId, changeInfo, tab) =>
       this.onTabsChanged(tabId)
     )
-    browser.tabs.onMoved.addListener((tabId, changeInfo, tab) =>
+    listen('tabs.onMoved', (tabId, changeInfo, tab) =>
       this.onTabsChanged(tabId)
     )
-    browser.tabs.onDetached.addListener((tabId, changeInfo, tab) =>
+    listen('tabs.onDetached', (tabId, changeInfo, tab) =>
       this.onTabsChanged(tabId)
     )
 
     if (typeof browser.tabGroups !== 'undefined') {
-      browser.tabGroups.onCreated.addListener((tabId, changeInfo, tab) =>
+      listen('tabGroups.onCreated', (tabId, changeInfo, tab) =>
         this.onTabsChanged(tabId)
       )
-      browser.tabGroups.onMoved.addListener((tabId, changeInfo, tab) =>
+      listen('tabGroups.onMoved', (tabId, changeInfo, tab) =>
         this.onTabsChanged(tabId)
       )
-      browser.tabGroups.onRemoved.addListener((tabId, changeInfo, tab) =>
+      listen('tabGroups.onRemoved', (tabId, changeInfo, tab) =>
         this.onTabsChanged(tabId)
       )
-      browser.tabGroups.onUpdated.addListener((tabId, changeInfo, tab) =>
+      listen('tabGroups.onUpdated', (tabId, changeInfo, tab) =>
         this.onTabsChanged(tabId)
       )
     }
 
     if (typeof browser.bookmarks !== 'undefined') {
       // set up change listener
-      browser.bookmarks.onChanged.addListener((localId, details) =>
+      listen('bookmarks.onChanged', (localId, details) =>
         this.onchange(localId, details)
       )
-      browser.bookmarks.onMoved.addListener((localId, details) =>
+      listen('bookmarks.onMoved', (localId, details) =>
         this.onchange(localId, details)
       )
-      browser.bookmarks.onRemoved.addListener((localId, details) =>
+      listen('bookmarks.onRemoved', (localId, details) =>
         this.onchange(localId, details)
       )
-      browser.bookmarks.onCreated.addListener((localId, details) =>
+      listen('bookmarks.onCreated', (localId, details) =>
         this.onchange(localId, details)
       )
     }
@@ -156,7 +161,7 @@ export default class BrowserController {
 
     browser.alarms.create('super-sync:checkStorage', { periodInMinutes: 15 })
     browser.alarms.create('super-sync:checkSync', { periodInMinutes: 1 })
-    browser.alarms.onAlarm.addListener(async alarm => {
+    listen('alarms.onAlarm', async alarm => {
       if (!alarm.name.startsWith('super-sync:')) return
       const name=alarm.name.slice('super-sync:'.length)
       if(typeof this.alarms[name] === 'function') await this.alarms[name]()
@@ -194,11 +199,13 @@ export default class BrowserController {
         }
       })
     }
-    browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
+    const receiveMessage = (data, sender, sendResponse) => {
       if (!this._isRequest(data)) return
       this._receiveEvent(data, sendResponse)
       return true
-    })
+    }
+    if (globalThis.SuperModuleHost) globalThis.SuperModuleHost.message('sync', receiveMessage)
+    else browser.runtime.onMessage.addListener(receiveMessage)
     this.onStatusChange(async() => {
       if (self?.clients) {
         const clientList = await self.clients.matchAll()
@@ -222,7 +229,7 @@ export default class BrowserController {
     })
 
     // Run some things on browser startup
-    browser.runtime.onStartup.addListener(() => this.onStartup())
+    listen('runtime.onStartup', () => this.onStartup())
   }
 
   _isRequest(data) {

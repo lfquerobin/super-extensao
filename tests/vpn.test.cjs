@@ -207,7 +207,7 @@ test('Chromium auth adapter supports callback and Promise replies and preserves 
     if (typeof callback === 'function') callback({type: 'official'});
     else return Promise.resolve({type: 'official'});
   }};
-  const window = {addEventListener(_, fn) {listener = fn;}, postMessage(data) {requests.push(data);}};
+  const window = {addEventListener(type, fn) {if(type === 'message') listener = fn;}, removeEventListener() {}, postMessage(data) {requests.push(data);}};
   vm.runInNewContext(fs.readFileSync(path.resolve(source, '../../../../vpn-auth-bridge.js'), 'utf8'), {
     window, location: {origin}, chrome: {runtime}, crypto: {randomUUID: () => 'id-' + ++serial}, setTimeout, clearTimeout
   });

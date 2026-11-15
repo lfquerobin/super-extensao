@@ -17,6 +17,7 @@
       <ui-tab class="tab" id="tab-tabs" data-tab="tabs" aria-pressed="false" data-i18n="uiTabs3cc23">Abas</ui-tab>
       <ui-tab class="tab" id="tab-sync" data-tab="sync" aria-pressed="false" data-i18n="uiSyncda8aa">Sincronização</ui-tab>
       <ui-tab class="tab" id="tab-vpn" data-tab="vpn" aria-pressed="false">VPN</ui-tab>
+      <ui-tab class="tab" id="tab-modules" data-tab="modules" aria-pressed="false" data-i18n="uiModules">Módulos</ui-tab>
     </ui-nav>
     <ui-nav id="cleanupSubmenu" class="sub-nav ui-submenu" aria-label="Opções de limpeza" data-i18n-aria-label="uiCleanupoptions18c23">
       <ui-tab class="tab active" id="tab-cleanup" data-tab="cleanup" aria-pressed="true" data-i18n="uiWhattoclear08caf">Geral</ui-tab>
@@ -30,6 +31,7 @@
   </div>
   <main>
     <ui-notice id="error" class="message error ui-notice-error" role="alert" hidden="" as="div"></ui-notice>
+    <!-- include:popup/modules.html -->
     <!-- include:popup/cleanup.html -->
     <!-- include:popup/exceptions.html -->
     <!-- include:popup/cache.html -->
@@ -45,6 +47,7 @@
   <div id="popupResize" role="separator" tabindex="0" aria-label="Ajustar altura do popup" aria-orientation="horizontal" aria-valuemin="360" aria-valuemax="600" aria-valuenow="580" title="Arraste para ajustar a altura. Use ↑ e ↓ ou dê dois cliques para restaurar." data-i18n-title="uiDragtoresizeUseand9c407" data-i18n-aria-label="uiAdjustpopupheight48122"></div>
   <script src="ui.js"></script><script src="preferences.js"></script><script src="i18n.js"></script>
   <script src="popup-resize.js"></script>
+  <script src="modules.js"></script><script src="modules-popup.js"></script>
   <script src="popup-panels.js"></script>
   <script src="rules.js"></script><script src="ui/bookmark-preview.js"></script><script src="ui/domain-list.js"></script><script src="ui/async-state.js"></script><script src="ui/confirmation.js"></script><script src="ui/domain-editor.js"></script><script src="ui/bookmark-importer.js"></script><script src="navigation-rules.js"></script><script src="popup.js"></script><script src="tools-popup.js"></script>
 

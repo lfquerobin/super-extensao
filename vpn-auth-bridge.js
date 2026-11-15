@@ -7,13 +7,14 @@
   const original = runtime.sendMessage;
   const channel = 'super-vpn-auth';
   const pending = new Map();
-  window.addEventListener('message', event => {
+  const receive = event => {
     const data = event.data;
     if (event.source !== window || event.origin !== location.origin || data?.channel !== channel || data.direction !== 'response') return;
     const complete = pending.get(data.id);
     if (complete) complete(data.result);
-  });
-  runtime.sendMessage = function (...args) {
+  };
+  window.addEventListener('message',receive);
+  const adapter = runtime.sendMessage = function (...args) {
     const [extensionId, message] = args;
     if (extensionId !== 'jplgfhpmjnbigmhklmmbgecoobifkmpa' || message?.type !== 'fork' || typeof message.payload?.state !== 'string' || typeof message.payload?.selector !== 'string') {
       return original.apply(this, args);
@@ -38,4 +39,10 @@
     if (!callback) return attempt;
     void attempt;
   };
+  window.addEventListener('super-extension:vpn-disabled', () => {
+    if (runtime.sendMessage === adapter) runtime.sendMessage = original;
+    window.removeEventListener('message',receive);
+    for (const complete of pending.values()) complete({handled:true,response:{type:'error',payload:{message:'ModuleDisabled'}}});
+    pending.clear();
+  }, {once:true});
 })();

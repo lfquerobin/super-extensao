@@ -80,3 +80,7 @@ Removido `@sentry/browser`, o inicializador de telemetria e a chamada de captura
 ## Chaves de imagens automáticas — 1.7.39
 
 Unsplash/GIPHY gravam a chave local ao editar ou limpar, sem Salvar. A leitura inicial bloqueia o campo até concluir; falhas de leitura podem ser repetidas sem sobrescrever uma chave desconhecida. Gravações do registro compartilhado são serializadas, e respostas antigas não alteram o estado de um novo formulário. O aviso mostra gravação/erro e permite nova tentativa. A imagem aguarda pausa de 300 ms na digitação para repetir a requisição; a persistência não espera essa pausa.
+
+## Módulo opcional — 1.7.40
+
+O HTML usa `newtab/loader.js` para verificar o interruptor antes de executar dashboard/polyfills/integração. Desligada, a Nova guia mostra uma página simples com acesso às configurações, sem montar widgets ou acessar provedores. A substituição declarada no manifesto continua. Notas, configuração, imagens e chaves não são removidas.

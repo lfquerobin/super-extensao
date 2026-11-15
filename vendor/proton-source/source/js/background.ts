@@ -21,6 +21,16 @@ import { initSentry, handleError } from "./tools/sentry";
 import { setProxyToWaiterHost } from "./tools/proxy";
 import { connectedServer } from "./vpn/connectedServer";
 
+import { disconnect } from './state';
+import { privacyController } from './webrtc/privacyController';
+import { WebRTCState } from './webrtc/state';
+(globalThis as any).SuperModuleHost?.onStop('vpn', async (next: boolean) => {
+  if (next) return;
+  await disconnect();
+  await privacyController.apply(WebRTCState.CLEAR);
+  await nativeStorage.remove('local', 'superVpn:loginFlow');
+});
+
 initSentry();
 initStateRecovery();
 initAuthInterceptor();

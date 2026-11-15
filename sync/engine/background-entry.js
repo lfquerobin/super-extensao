@@ -390,11 +390,28 @@ controller.unlock = async (...args) => {
     unlockingProfiles = false;
   }
 };
-recoverPending().catch(() =>
+const initialization = recoverPending().catch(() =>
   Logger.log("Super Sync: recovery initialization failed")
 );
 globalThis.SuperPreferences.locale.watch((locale) => {
   i18n.setLocales([locale]);
   return i18n.load();
+});
+let moduleOperations = 0;
+for (const name of ['syncAccount','checkAccount']) {
+  const operation = controller[name].bind(controller);
+  controller[name] = async (...args) => {
+    if (globalThis.SuperModuleHost && !SuperModuleHost.isEnabled('sync')) return;
+    moduleOperations++;
+    try {return await operation(...args);} finally {moduleOperations--;}
+  };
+}
+globalThis.SuperModuleHost?.onStop('sync', async () => {
+  await initialization;
+  if (moduleOperations || active.size) throw Error('ModuleSyncBusy');
+  const enabled = controller.enabled;
+  controller.enabled = false;
+  clearTimeout(changeTimer);changed.clear();
+  return () => {controller.enabled = enabled;};
 });
 export { controller };

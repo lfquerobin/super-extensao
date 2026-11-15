@@ -10,6 +10,8 @@ execFileSync(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['run', 'build'],
 const target = path.join(root, 'vpn');
 // Keep vpn/source and the standalone interface when rebuilding the engine.
 fs.cpSync(path.join(source, 'distribution'), target, {recursive: true});
+require('./module-bundle.cjs').wrapModule(path.join(target, 'js/background.js'), 'vpn');
+require('./module-bundle.cjs').wrapModule(path.join(target, 'js/popup.js'), 'vpn');
 // The host owns the manifest and service worker. Never ship a second manifest.
 fs.rmSync(path.join(target, 'manifest.json'), {force: true});
 fs.copyFileSync(path.join(source, 'LICENSE'), path.join(target, 'LICENSE'));

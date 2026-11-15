@@ -18,6 +18,7 @@ test("integrity audit detects missing assets, invalid scripts, version drift and
     put("sync/html/options.html", '<link rel="stylesheet" href="../style.css">');
     put("sync/style.css", 'body {background:url("../icon.png")}'); put("icon.png", "image");
     put("sync/js/options.js", "void 0;"); put("vpn/interface.js", "void 0;");
+    for (const file of ['newtab/main.js','newtab/polyfills.js','newtab/integration.js','newtab/main.css','newtab/integration.css','autoplay-main.js','autoplay-bridge.js','vpn-auth-bridge.js','vpn/js/transmit.js']) put(file,file.endsWith('.css') ? 'body{}' : 'void 0;');
     assert.doesNotThrow(() => checkIntegrity(root));
     put("worker.js", 'importScripts("missing.js");'); assert.throws(() => checkIntegrity(root), /missing asset missing.js/);
     put("worker.js", 'let = ;'); assert.throws(() => checkIntegrity(root), /worker.js/);

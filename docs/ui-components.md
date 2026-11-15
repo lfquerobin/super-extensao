@@ -1,5 +1,9 @@
-# Componentes da interface — referência 1.7.39
+# Componentes da interface — referência 1.7.40
 
+
+## Módulos opcionais — 1.7.40
+
+A área Módulos usa switches nativos do catálogo e a mesma política de gravação automática. Ela permanece acessível quando todos os recursos estão desligados. O estado é aplicado pelo worker antes de confirmar a gravação e recarregar a extensão; o carregador dos painéis respeita as preferências. [Efeitos e limites](modulos.md).
 
 ## Política de configurações — 1.7.39
 

@@ -1,0 +1,15 @@
+<section id="panel-modules" aria-labelledby="tab-modules" hidden>
+  <ui-heading class="section-heading"><h2 data-i18n="uiModules">Módulos</h2><span data-i18n="uiModulesAutoSaved">Salvo automaticamente</span></ui-heading>
+  <p class="note" data-i18n="uiModulesHelp">Ative somente o que você usa. Os dados dos módulos desligados são preservados.</p>
+  <p class="note" data-i18n="uiModulesRestart">A alteração é salva automaticamente e recarrega a extensão. Recarregue as páginas abertas para atualizar suas integrações.</p>
+  <ui-card class="options">
+    <ui-toggle class="toggle-line"><span><span data-i18n="uiModulesCleanup">Limpeza</span><small data-i18n="uiModulesCleanupHelp">Desligado: não executa limpeza automática ou manual.</small></span><input type="checkbox" role="switch" class="ui-switch" data-module="cleanup"></ui-toggle>
+    <ui-toggle class="toggle-line"><span><span data-i18n="uiModulesAutoplay">Autoplay</span><small data-i18n="uiModulesAutoplayHelp">Desligado: não altera a reprodução de mídia nos sites.</small></span><input type="checkbox" role="switch" class="ui-switch" data-module="autoplay"></ui-toggle>
+    <ui-toggle class="toggle-line"><span><span data-i18n="uiModulesTabs">Abas</span><small data-i18n="uiModulesTabsHelp">Desligado: não cria abas de reserva nem organiza novas guias.</small></span><input type="checkbox" role="switch" class="ui-switch" data-module="tabs"></ui-toggle>
+    <ui-toggle class="toggle-line"><span><span data-i18n="uiModulesSync">Sincronização</span><small data-i18n="uiModulesSyncHelp">Desligado: interrompe o motor, os agendamentos e as conexões com Google Drive/Git.</small></span><input type="checkbox" role="switch" class="ui-switch" data-module="sync"></ui-toggle>
+    <ui-toggle class="toggle-line"><span><span data-i18n="uiModulesVpn">VPN</span><small data-i18n="uiModulesVpnHelp">Desligado: desconecta, libera o proxy e remove a proteção de tráfego da VPN.</small></span><input type="checkbox" role="switch" class="ui-switch" data-module="vpn"></ui-toggle>
+    <ui-toggle class="toggle-line"><span><span data-i18n="uiModulesNewtab">Nova guia</span><small data-i18n="uiModulesNewtabHelp">Desligado: abre uma guia simples, sem widgets, imagens ou conexões externas.</small></span><input type="checkbox" role="switch" class="ui-switch" data-module="newtab"></ui-toggle>
+  </ui-card>
+  <p class="note" data-i18n="uiModulesPackage">Desativar não remove os arquivos nem as permissões fixas do pacote. A substituição da Nova guia permanece, com o painel desligado.</p>
+  <p id="modulesStatus" role="status" aria-live="polite"></p><ui-button id="modulesRetry" data-i18n="uiModulesRetry">Tentar novamente</ui-button>
+</section>

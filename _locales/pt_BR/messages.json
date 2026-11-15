@@ -897,5 +897,74 @@
    },
    "uiLocalStorageShort": {
       "message": "Arm. Local"
-   }
+   },
+  "uiModules": {
+    "message": "Módulos"
+  },
+  "uiModulesHelp": {
+    "message": "Ative somente o que você usa. Os dados dos módulos desligados são preservados."
+  },
+  "uiModulesRestart": {
+    "message": "A alteração é salva automaticamente e recarrega a extensão. Recarregue as páginas abertas para atualizar suas integrações."
+  },
+  "uiModulesCleanup": {
+    "message": "Limpeza"
+  },
+  "uiModulesCleanupHelp": {
+    "message": "Desligado: não executa limpeza automática ou manual."
+  },
+  "uiModulesAutoplay": {
+    "message": "Autoplay"
+  },
+  "uiModulesAutoplayHelp": {
+    "message": "Desligado: não altera a reprodução de mídia nos sites."
+  },
+  "uiModulesTabs": {
+    "message": "Abas"
+  },
+  "uiModulesTabsHelp": {
+    "message": "Desligado: não cria abas de reserva nem organiza novas guias."
+  },
+  "uiModulesSync": {
+    "message": "Sincronização"
+  },
+  "uiModulesSyncHelp": {
+    "message": "Desligado: interrompe o motor, os agendamentos e as conexões com Google Drive/Git."
+  },
+  "uiModulesVpn": {
+    "message": "VPN"
+  },
+  "uiModulesVpnHelp": {
+    "message": "Desligado: desconecta, libera o proxy e remove a proteção de tráfego da VPN."
+  },
+  "uiModulesNewtab": {
+    "message": "Nova guia"
+  },
+  "uiModulesNewtabHelp": {
+    "message": "Desligado: abre uma guia simples, sem widgets, imagens ou conexões externas."
+  },
+  "uiModulesPackage": {
+    "message": "Desativar não remove os arquivos nem as permissões fixas do pacote. A substituição da Nova guia permanece, com o painel desligado."
+  },
+  "uiModulesAutoSaved": {
+    "message": "Salvo automaticamente"
+  },
+  "uiModulesChanging": {
+    "message": "Aplicando alteração…"
+  },
+  "uiModulesApplied": {
+    "message": "Salvo. Recarregando a extensão…"
+  },
+  "uiModulesReadFailed": {
+    "message": "Não foi possível ler os módulos. Tente novamente."
+  },
+  "uiModulesWriteFailed": {
+    "message": "Não foi possível concluir a alteração. O módulo não foi marcado como desativado. Tente novamente."
+  },
+  "uiModulesSyncBusy": {
+    "message": "Aguarde a sincronização terminar ou cancele-a antes de alterar os módulos."
+  },
+  "uiModulesRetry": {
+    "message": "Tentar novamente"
+  }
 }
