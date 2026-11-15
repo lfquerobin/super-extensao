@@ -50,8 +50,8 @@ body[data-active-tab="sync"] > main > footer { display:none!important; }
 
 
 .note { color:var(--muted); font-size:11px; line-height:1.6; margin:11px 0; }
-.field { display:block; margin:12px 0 6px; font-size:12px; font-weight:600; }
-.field select { display:block; width:100%; margin-top:6px; }
+.field { margin:12px 0 6px; font-size:12px; font-weight:600; }
+.field select { display:block; width:100%; }
 
 .input-row { display:flex; gap:7px; } .input-row input { flex:1; width:0; }
 .scope { font-size:11px; color:var(--warning); background:var(--raised); padding:10px 12px; border-radius:8px; margin:10px 0; }

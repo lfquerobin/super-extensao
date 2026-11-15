@@ -1,5 +1,7 @@
-# Componentes da interface — referência 1.7.41
+# Componentes da interface — referência 1.7.43
 
+
+Na 1.7.43, os campos do popup mantêm o grid e o espaçamento `--field-gap` de `.ui-field`. A classe local `.field` aplica margens externas; ela não substitui o layout nem adiciona uma segunda margem entre rótulo e controle.
 
 ## Inclusão e exclusão na limpeza — 1.7.41
 

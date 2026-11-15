@@ -1,5 +1,9 @@
 # Validação da Super Extensão
 
+## Espaçamento dos campos — 1.7.43
+
+A classe local `.field` deixava o seletor em bloco e anulava o espaço do componente compartilhado. Foi removida a sobrescrita, preservando o grid de `.ui-field` e seu token de 6 px. No Edge 157.0.4341.60, a medição do HTML/CSS reais confirmou 6 px entre título e controle nos três seletores de limpeza, no campo de domínio e nos dois seletores de Favoritos. Captura inspecionada. `check:ui`, `check:integrity` e `git diff --check` passaram; não houve alteração na persistência ou nas regras de limpeza.
+
 ## Limpar lista de exclusão — 1.7.42
 
 Em 15/11/2026, **560 testes passaram**, sem falhas ou testes ignorados. Templates/catálogos, `check:ui`, `check:integrity` e `git diff --check` foram verificados. Os casos novos cobrem limpar somente o tipo escolhido, confirmação/cancelamento, mudança de modo ou sites durante a confirmação e falha de gravação sem perder a lista.
