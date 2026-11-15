@@ -4,7 +4,7 @@
 
 Extensão pessoal para Helium e navegadores Chromium, com Nova guia, sincronização de favoritos, VPN no navegador, limpeza ao sair, controle de autoplay e proteção da última aba.
 
-**Versão instalada: 1.7.36.** Documentação revisada em 15 de novembro de 2026. Temas escuro, claro e sistema; idiomas PT-BR e inglês compartilhados entre os módulos. Requer Chromium 116 ou superior, conforme o manifest.
+**Versão instalada: 1.7.37.** Documentação revisada em 15 de novembro de 2026. Temas escuro, claro e sistema; idiomas PT-BR e inglês compartilhados entre os módulos. Requer Chromium 116 ou superior, conforme o manifest.
 
 Para investigar uma falha da VPN, abra `chrome://extensions`, localize a Super Extensão e inspecione o **service worker**. Na aba Console, reproduza a tentativa e execute `getVpnDiagnostics()`. Os últimos 50 eventos registram somente horário, etapa, resultado e código conhecido, sem credenciais ou dados da conta; falhas novas também aparecem como avisos `[Super VPN]`. Esse histórico é temporário e reinicia com o worker. `getLogs()` é o registro legado, dependente de debug, e pode estar vazio.
 
@@ -104,6 +104,8 @@ O sinal fica no canto superior direito, preservando o badge de limpeza pausada. 
 
 ### Nova guia
 
+Na **1.7.37**, fusos inválidos no backup são recusados antes de alterar configurações/imagens; dados antigos corrompidos usam o horário local para manter o dashboard e o editor acessíveis. A varredura passou 506 testes e validações nativas com perfil temporário. As dependências selecionadas foram corrigidas sem troca de versão principal; permanecem alertas nas bibliotecas legadas e ferramentas. [Relatório de integridade e limites](docs/auditoria-integridade.md).
+
 A **1.7.36** incorpora correções selecionadas do Tabliss: novo serviço HTTPS do widget de IP, com validação/erros e cache existente preservado; alinhamento dos links recolhidos; números do relógio com largura fixa; link do calendário para o perfil GitHub; e localização das fotos Unsplash com compatibilidade para o formato anterior. O widget de IP consulta `ipwho.is` somente quando adicionado ao dashboard, e sua informação pode permanecer em cache pelo intervalo configurado; ele não comprova o roteamento da VPN. [Avaliação das origens](docs/atualizacoes-origens.md).
 
 A **1.7.18** extrai estado, configuração, persistência, ações de fundos/widgets e importação/exportação para `newtab/engine`. O dashboard, editor e componentes dos widgets continuam baseados no Tabliss 2.6.0 adaptado. Mantém PT-BR/inglês, os dados existentes e o fundo inicial local. [Escopo, compatibilidade e limites da extração](docs/newtab-engine.md). A engrenagem abre o editor; o botão **Super Extensão** abre os controles da extensão. A importação substitui a configuração do dashboard; imagens próprias precisam ser selecionadas novamente.
@@ -143,6 +145,7 @@ npm run setup:vpn
 npm run setup:newtab
 npm run setup:sync
 npm test
+npm run check:integrity
 ```
 
 `setup:vpn` também fornece o PostCSS usado nos testes da base visual. Para editar e compilar a Sincronização, instale adicionalmente `npm run setup:sync`. Esse comando também remove cinco chaves/certificados de teste de `public-encrypt`, desnecessários para a extensão e sinalizados pelo Chromium ao carregar a pasta do projeto. Se as dependências já estiverem instaladas, execute `node scripts/clean-dependency-fixtures.cjs` para aplicar somente essa limpeza.

@@ -92,3 +92,25 @@ test('the production dashboard reads the old configuration and updates shared la
   w.dispatchEvent(new w.Event('beforeunload'));w.dispatchEvent(new w.PageTransitionEvent('pagehide',{persisted:false}));
  }finally{w.close();}
 });
+
+
+test('invalid global and per-clock time zones are rejected before replacing settings or images', () => {
+ const f=setup(); DB.put(f.cache,'photo',new Blob(['keep image'])); const before=f.actions.exportStore();
+ const clock={...dump(),'widget/note':null,'widget/clock':{id:'clock',key:'widget/time',order:0,display:{position:'middleCentre'}}};
+ for(const zone of ['Invalid/Zone','America/Does_Not_Exist',{},42]) for(const input of [{...dump(),timeZone:zone},{...clock,'data/clock':{timeZone:zone}}]) {
+  assert.throws(()=>f.actions.importStore(input)); assert.equal(f.actions.exportStore(),before); assert.equal(DB.get(f.cache,'photo').size,10);
+ }
+ for(const zone of [null,'','UTC','America/Sao_Paulo','+02:00','-0300']) assert.equal(decode({...dump(),timeZone:zone}).timeZone,zone);
+});
+
+test('damaged persisted time zones fall back to a valid date so the dashboard can still open', () => {
+ const {zonedTime}=core('time'),absolute=new Date('2026-11-15T12:00:00Z');
+ const {utcToZonedTime}=require('../vendor/tabliss-source/node_modules/date-fns-tz');
+ const {format}=require('../vendor/tabliss-source/node_modules/date-fns');
+ for(const zone of ['Invalid/Zone',{},null,'']) {
+  const result=zonedTime(absolute,zone,utcToZonedTime); assert.equal(result,absolute); assert.doesNotThrow(()=>format(result,'HH:mm:ss'));
+ }
+ const result=zonedTime(absolute,'America/Sao_Paulo',utcToZonedTime); assert.equal(result.getHours(),9);
+ assert.equal(zonedTime(absolute,'UTC',()=>new Date(NaN)),absolute);
+ assert.equal(zonedTime(absolute,'UTC',()=>{throw Error('bad stored zone');}),absolute);
+});

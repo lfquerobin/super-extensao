@@ -1,5 +1,15 @@
 # Validação da Super Extensão
 
+## Varredura de integridade — 1.7.37
+
+Em 15/11/2026, **506 testes passaram**, sem falhas ou testes ignorados. Todas as interfaces e workers foram recompilados; `check:ui`, TypeScript da Nova guia/núcleo/interface VPN/worker VPN e `check:integrity` passaram. A verificação estática percorreu 61 arquivos referenciados e conferiu as quatro declarações de versão (manifest, pacote, raiz do lock e pacote raiz do lock).
+
+O Edge 157.0.4341.60 carregou a extensão completa, com perfil vazio temporário: worker, painéis de limpeza/sincronização/VPN, dois provedores, ausência de proxy assumido sem login e Nova guia/editor sem erros de página. O mesmo teste reabriu a Nova guia com fusos globais e de relógio deliberadamente corrompidos e confirmou relógio válido e editor acessível. As verificações já existentes de interface e persistência da Nova guia também passaram.
+
+Os runners VPN de bloqueio/retorno estavam desatualizados para os imports `storedSplitTunneling` e `guard-routing`. Foram corrigidos, sem mudar o motor VPN, e passaram com servidores locais: bloqueio antes de conectar, proxy HTTP real, queda sem requisições diretas aos destinos protegidos, reinício, liberação explícita, inclusão/exclusão e host exato/subdomínios. O retorno GET preservou alvo/âncora e não repetiu POST. O desafio 407 cancelou a autenticação na restauração sem enviar credenciais; o worker compilado também passou com dados sintéticos de conta.
+
+[Achados, dependências e limites da conclusão](auditoria-integridade.md). Não foram usadas contas reais Google/Git/Proton, perfil pessoal, captura de tráfego de sistema ou testes completos de DNS/IPv6/WebRTC.
+
 ## 1.7.36 — dois provedores e correções selecionadas do Tabliss
 
 Em 15/11/2026, **502 testes automatizados passaram**, sem falhas ou testes ignorados. As compilações da interface de sincronização, worker e Nova guia, o TypeScript da Nova guia e `check:ui` passaram. Os testes também confirmam que perfis bloqueados não são regravados, que o estado transitório dos serviços desativados é limpo e que eles não registram visitas a favoritos.

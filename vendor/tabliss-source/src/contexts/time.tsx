@@ -2,6 +2,7 @@ import { utcToZonedTime } from "date-fns-tz";
 import React from "react";
 import { db } from "../db/state";
 import { useValue } from "../lib/db/react";
+import { zonedTime } from "../../../../newtab/engine/time";
 
 type Time = {
   absolute: Date;
@@ -10,7 +11,7 @@ type Time = {
 
 function getTime(timeZone: string | null = null): Time {
   const absolute = new Date();
-  const zoned = timeZone ? utcToZonedTime(absolute, timeZone) : absolute;
+  const zoned = zonedTime(absolute, timeZone, utcToZonedTime);
 
   return { absolute, zoned };
 }

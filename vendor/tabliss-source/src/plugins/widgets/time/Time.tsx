@@ -7,6 +7,7 @@ import Digital from "./Digital";
 import { Props, defaultData } from "./types";
 import "./Time.sass";
 import { utcToZonedTime } from "date-fns-tz";
+import { zonedTime } from "../../../../../../newtab/engine/time";
 
 const Time: FC<Props> = ({ data = defaultData }) => {
   const {
@@ -22,7 +23,7 @@ const Time: FC<Props> = ({ data = defaultData }) => {
   let time = useTime(timeZone ? "absolute" : "zoned");
 
   if (timeZone) {
-    time = utcToZonedTime(time, timeZone);
+    time = zonedTime(time, timeZone, utcToZonedTime);
   }
 
   return (

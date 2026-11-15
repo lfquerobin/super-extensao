@@ -31,6 +31,7 @@ for (const file of [
 }
 const sources = {
   guard: "vpn/engine/network-guard.ts",
+  guardRouting: "vpn/engine/guard-routing.ts",
   native: "vendor/proton-source/source/js/vpn/networkGuard.ts",
 };
 const factories = Object.entries(sources)
@@ -65,7 +66,7 @@ fs.writeFileSync(
   path.join(extension, "worker.js"),
   "const modules={" +
     factories +
-    '},cache={};function require(id){id=id.includes("network-guard")?"guard":id;if(cache[id])return cache[id].exports;const m=cache[id]={exports:{}};modules[id](m,m.exports,require);return m.exports;}globalThis.safety=require("native").networkGuard;chrome.runtime.onMessage.addListener((message,sender,reply)=>{if(message.channel!=="super-vpn"||message.type!=="protectionStatus")return;void safety.status().then(state=>reply({received:true,result:{status:state.blocked?"blocked":state.armed?"connected":"released",retryAvailable:false}}));return true;});',
+    '},cache={};function require(id){if(id.endsWith("/storedSplitTunneling"))return {storedSplitTunneling:{get:async()=>undefined}};id=id.includes("guard-routing")?"guardRouting":id.includes("network-guard")?"guard":id;if(cache[id])return cache[id].exports;const m=cache[id]={exports:{}};modules[id](m,m.exports,require);return m.exports;}globalThis.safety=require("native").networkGuard;chrome.runtime.onMessage.addListener((message,sender,reply)=>{if(message.channel!=="super-vpn"||message.type!=="protectionStatus")return;void safety.status().then(state=>reply({received:true,result:{status:state.blocked?"blocked":state.armed?"connected":"released",retryAvailable:false}}));return true;});',
 );
 const proc = spawn(
   process.env.CHROMIUM_PATH ||

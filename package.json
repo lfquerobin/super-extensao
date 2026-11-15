@@ -1,6 +1,6 @@
 {
   "name": "super-extensao",
-  "version": "1.7.36",
+  "version": "1.7.37",
   "private": true,
   "description": "Extensão Chromium com limpeza ao sair, controle de autoplay e proteção da última aba.",
   "scripts": {
@@ -17,6 +17,7 @@
     "build:newtab": "node scripts/build-newtab.cjs",
     "build:ui": "node scripts/build-ui.cjs",
     "check:ui": "node scripts/build-ui.cjs --check",
+    "check:integrity": "node scripts/check-integrity.cjs",
     "build:interfaces": "npm run build:ui && npm run build:sync && npm run build:vpn-ui && npm run build:newtab"
   },
   "engines": {
@@ -27,6 +28,6 @@
     "typescript": "6.0.3"
   },
   "dependencies": {
-    "fast-xml-parser": "5.11.2"
+    "fast-xml-parser": "5.12.1"
   }
 }

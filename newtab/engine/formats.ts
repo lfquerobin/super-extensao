@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 import { State, positions } from "./model";
+import { validTimeZone } from "./time";
 const object = (value: unknown): value is Record<string, any> =>
   !!value && typeof value === "object" && !Array.isArray(value);
 function fail(): never {
@@ -100,13 +101,18 @@ export function decode(input: unknown): Partial<State> {
       (typeof value !== "string" || value.length > 64)
     )
       fail();
-    else if (key === "timeZone" && value !== null && typeof value !== "string")
+    else if (key === "timeZone" && value !== null && value !== "" && !validTimeZone(value))
       fail();
     else if (
       !["background", "focus", "locale", "timeZone"].includes(key) &&
       !/^data\/[^/\0]+$/.test(key)
     )
       fail();
+  }
+  for (const [key, widget] of Object.entries(result)) {
+    if (!key.startsWith("widget/") || widget?.key !== "widget/time") continue;
+    const zone = result["data/" + widget.id]?.timeZone;
+    if (zone !== undefined && zone !== null && zone !== "" && !validTimeZone(zone)) fail();
   }
   for (const field of ["blur", "luminosity"])
     if (

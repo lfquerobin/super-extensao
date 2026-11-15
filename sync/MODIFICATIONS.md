@@ -51,3 +51,7 @@ O adaptador de tema usa `SuperPreferences.bindTheme` e mantém a integração co
 A aplicação oferece apenas Google Drive e Git. A política compartilhada `sync/providers.cjs` valida cadastro, importação integral e edição; o worker impede sincronização/verificação/agendamento dos demais provedores e desativa seus gatilhos no carregamento/desbloqueio. Perfis antigos são preservados para backup e remoção confirmada, sem os formulários de configuração dos serviços desativados. As fontes e os adaptadores históricos continuam presentes para leitura/exportação e atribuição. Conexões exibe apenas OAuth Google Drive, preservando campos antigos não exibidos no armazenamento.
 
 A 1.7.36 também desativa a contagem de visitas herdada dos serviços removidos, limpa seus estados transitórios pendentes e remove a permissão opcional `history`, não usada por Google Drive/Git. A limpeza do histórico continua pela API `browsingData`.
+
+## Parser XML — 1.7.37
+
+`fast-xml-parser` passa a 5.12.1 no lockfile do legado e na raiz do projeto, corrigindo o alerta identificado na auditoria sem mudar a versão principal. Interface e worker foram recompilados; os testes de leitura/limites/XBEL e sincronização passaram. [Relatório de integridade](../docs/auditoria-integridade.md).

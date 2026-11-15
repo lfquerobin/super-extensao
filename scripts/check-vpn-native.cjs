@@ -9,11 +9,11 @@ for(const file of ['vpn-blocked.html','vpn-blocked.css','ui-theme.css','ui-compo
  const target=path.join(extension,file);fs.mkdirSync(path.dirname(target),{recursive:true});fs.copyFileSync(path.join(root,file),target);
 }
 const modules={
- guard:'vpn/engine/network-guard.ts',native:'vendor/proton-source/source/js/vpn/networkGuard.ts',routing:'vpn/engine/routing.js',
+ guard:'vpn/engine/network-guard.ts',guardRouting:'vpn/engine/guard-routing.ts',native:'vendor/proton-source/source/js/vpn/networkGuard.ts',routing:'vpn/engine/routing.js',
 };
 const factories=Object.entries(modules).map(([name,file])=>`${JSON.stringify(name)}:function(module,exports,require){${file.endsWith('.ts')?ts.transpileModule(fs.readFileSync(path.join(root,file),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText:fs.readFileSync(path.join(root,file),'utf8')}\n}`).join(',');
 fs.writeFileSync(path.join(extension,'manifest.json'),JSON.stringify({manifest_version:3,name:'Super VPN isolated privacy audit',version:'1.0',permissions:['proxy','declarativeNetRequest','storage'],host_permissions:['<all_urls>'],background:{service_worker:'worker.js'},web_accessible_resources:[{resources:['vpn-blocked.html'],matches:['<all_urls>']}]}));
-fs.writeFileSync(path.join(extension,'worker.js'),`const modules={${factories}},cache={};function require(id){id=id.includes('network-guard')?'guard':id;if(cache[id])return cache[id].exports;const m=cache[id]={exports:{}};modules[id](m,m.exports,require);return m.exports;}globalThis.safety=require('native').networkGuard;globalThis.routing=require('routing');chrome.runtime.onMessage.addListener((message,sender,reply)=>{if(message.channel!=='super-vpn'||message.type!=='protectionStatus')return;void safety.status().then(state=>reply({received:true,result:{status:state.blocked?'blocked':state.armed?'connected':'released',retryAvailable:false}}));return true;});`);
+fs.writeFileSync(path.join(extension,'worker.js'),`const modules={${factories}},cache={};function require(id){if(id.endsWith('/storedSplitTunneling'))return {storedSplitTunneling:{get:async()=> (await chrome.storage.local.get('auditSplitPolicy')).auditSplitPolicy}};id=id.includes('guard-routing')?'guardRouting':id.includes('network-guard')?'guard':id;if(cache[id])return cache[id].exports;const m=cache[id]={exports:{}};modules[id](m,m.exports,require);return m.exports;}globalThis.safety=require('native').networkGuard;globalThis.routing=require('routing');chrome.runtime.onMessage.addListener((message,sender,reply)=>{if(message.channel!=='super-vpn'||message.type!=='protectionStatus')return;void safety.status().then(state=>reply({received:true,result:{status:state.blocked?'blocked':state.armed?'connected':'released',retryAvailable:false}}));return true;});`);
 let browser,direct=0,proxied=0;const origin=http.createServer((req,res)=>{if(req.url.startsWith('/audit'))direct++;res.end('DIRECT');}),proxy=http.createServer((req,res)=>{if(req.url.includes('/audit'))proxied++;res.end('PROXY');});
 const listen=s=>new Promise((resolve,reject)=>{s.once('error',reject);s.listen(0,'127.0.0.1',()=>resolve(s.address().port));});
 const close=s=>new Promise(resolve=>{s.closeAllConnections?.();s.close(()=>resolve());});
@@ -33,5 +33,17 @@ async function blocked(page,url,redirect=true){if(!redirect){await assert.reject
  await worker.evaluate(()=>safety.open(async()=>true));await browser.close();browser=undefined;
  worker=await launch();page=await browser.newPage();assert.equal((await worker.evaluate(()=>safety.status())).blocked,true);await blocked(page,url+'?restart');assert.equal(direct,0);
  await worker.evaluate(()=>safety.disarm(()=>true));await page.goto(url+'?explicit-release');assert.equal(await page.textContent('body'),'DIRECT');assert.ok(direct>0);
- console.log(JSON.stringify({native:true,checks:['block-before-connect','proxied-HTTP','explicit-return-after-recovery','no-return-for-POST','no-DIRECT-after-proxy-down','block-after-override','block-across-browser-restart','explicit-release'],directRequestsBeforeRelease:0}));
-})().catch(error=>{console.error('NATIVE VALIDATION BLOCKED/FAILED: '+error.message.split('\n')[0]);process.exitCode=1;}).finally(async()=>{await browser?.close().catch(()=>{});await Promise.all([close(origin),close(proxy)]);fs.rmSync(temp,{recursive:true,force:true});});
+ // Exercise the optional direct-traffic policy with the actual DNR rules.
+ await worker.evaluate(async()=>{await chrome.storage.local.set({auditSplitPolicy:{enabled:true,mode:'include',blockDirectOnFailure:false,value:[{domain:'site.audit.test',withSubDomains:false,mode:'include'}]}});await safety.block();});
+ await blocked(page,url+'?split-protected');
+ await page.goto(`http://outside.audit.test:${originPort}/audit?split-direct`);assert.equal(await page.textContent('body'),'DIRECT');
+ await page.goto(`http://sub.site.audit.test:${originPort}/audit?exact-host-only`);assert.equal(await page.textContent('body'),'DIRECT');
+ await worker.evaluate(async()=>{const policy=(await chrome.storage.local.get('auditSplitPolicy')).auditSplitPolicy;policy.value[0].withSubDomains=true;await chrome.storage.local.set({auditSplitPolicy:policy});await safety.block();});
+ await blocked(page,`http://sub.site.audit.test:${originPort}/audit?subdomains`);
+ await worker.evaluate(async()=>{await chrome.storage.local.set({auditSplitPolicy:{enabled:true,mode:'exclude',blockDirectOnFailure:false,value:[{domain:'outside.audit.test',withSubDomains:false,mode:'exclude'}]}});await safety.block();});
+ await blocked(page,url+'?exclude-protected');
+ await page.goto(`http://outside.audit.test:${originPort}/audit?exclude-direct`);assert.equal(await page.textContent('body'),'DIRECT');
+ await worker.evaluate(async()=>{await chrome.storage.local.remove('auditSplitPolicy');await safety.block();});
+ await blocked(page,`http://outside.audit.test:${originPort}/audit?default-block-all`);
+ console.log(JSON.stringify({native:true,checks:['block-before-connect','proxied-HTTP','explicit-return-after-recovery','no-return-for-POST','no-DIRECT-after-proxy-down','block-after-override','block-across-browser-restart','explicit-release','split-include-exclude-failure-policy','exact-host-and-subdomains'],directRequestsBeforeRelease:0}));
+})().catch(error=>{console.error('NATIVE VALIDATION BLOCKED/FAILED: '+error.message.split('\n')[0]);process.exitCode=1;}).finally(async()=>{await browser?.close().catch(()=>{});await Promise.all([close(origin),close(proxy)]);const target=path.resolve(temp);if(path.dirname(target)!==path.resolve(os.tmpdir())||!path.basename(target).startsWith('super-vpn-audit-'))throw Error('Unexpected temporary path');fs.rmSync(target,{recursive:true,force:true});});
