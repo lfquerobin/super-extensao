@@ -233,6 +233,10 @@ export const uiMessages = {
     "pt-BR": "Tentar novamente",
     en: "Try again",
   },
+  UiConnectionLoadFailed: {"pt-BR": "Não foi possível carregar as conexões. Tente novamente.", en: "Could not load connections. Try again."},
+  UiClose: {"pt-BR": "Fechar", en: "Close"},
+  UiInvalidConfig: {"pt-BR": "Corrija o campo inválido para salvar automaticamente.", en: "Correct the invalid field to save automatically."},
+  UiAutoSaveFailed: {"pt-BR": "Não foi possível concluir a gravação. Tente novamente.", en: "Could not finish saving. Try again."},
   UiSaved: {
     "pt-BR": "Alterações salvas.",
     en: "Changes saved.",

@@ -23,6 +23,7 @@ async function main() {
   await page.evaluate(()=>{
     const listeners=new Set(),event={addListener(fn){listeners.add(fn);},removeListener(fn){listeners.delete(fn);}};
     const local={theme:'dark','superSync:accounts':JSON.stringify({saved:{type:'git',label:'Perfil de teste',url:'https://example.test/dav/',username:'audit',password:'fictitious',localRoot:'1',rootPath:'/Favoritos',bookmark_file:'bookmarks.xbel',enabled:true,failsafe:true,strategy:'default',syncInterval:15}})};
+    window.auditStorage=local;
     const area=(data,name)=>({
       get(keys,callback){let result=typeof keys==='string'?{[keys]:data[keys]}:Array.isArray(keys)?Object.fromEntries(keys.map(key=>[key,data[key]])):{...keys,...data};callback?.(result);return Promise.resolve(result);},
       set(values,callback){const changes={};for(const [key,value]of Object.entries(values)){changes[key]={oldValue:data[key],newValue:value};data[key]=value;}listeners.forEach(fn=>fn(changes,name));callback?.();return Promise.resolve();},
@@ -36,6 +37,10 @@ async function main() {
   await page.evaluate(()=>{window.SuperPreferences.bindTheme(document.documentElement);});
   await page.waitForFunction(()=>window.superSyncApp,null,{timeout:10000});
   await page.evaluate(async()=>{await window.superSyncApp.$router.push('/options/saved');});
+  const label=page.locator('input[type="text"]').first();
+  await label.fill('Automatic native profile');
+  await page.waitForFunction(()=>JSON.parse(window.auditStorage['superSync:accounts']).saved.label==='Automatic native profile');
+  assert.equal(await page.getByRole('button',{name:'Save',exact:true}).count(),0);
   const folder=page.locator('input[readonly]').first();await folder.waitFor();await folder.click();
   await page.locator('dialog[open] .ui-folder-tree').waitFor();
   await page.locator('.ui-folder-tree summary').last().click();
@@ -48,10 +53,11 @@ async function main() {
   assert.equal(await page.locator('dialog[open]').evaluate(el=>el.scrollWidth<=el.clientWidth),true);
   await page.setViewportSize({width:600,height:700});
   await page.locator('.ui-folder-tree input').last().check();
+  await page.waitForFunction(()=>JSON.parse(window.auditStorage['superSync:accounts']).saved.localRoot==='2');
   await page.keyboard.press('Escape');assert.equal(await page.locator('dialog[open]').count(),0);
   assert.equal(await folder.evaluate(el=>el===document.activeElement),true);
   await folder.click();await page.locator('dialog[open] .ui-folder-tree').waitFor();
-  assert.equal(await page.locator('.ui-folder-tree input:checked').getAttribute('aria-label'),'Favorites');
+  assert.equal(await page.locator('.ui-folder-tree input:checked').getAttribute('aria-label'),'A long nested folder name used to verify wrapping and selection');
   await page.keyboard.press('Escape');
   await page.evaluate(async()=>{await window.superSyncApp.$router.push('/new');});
   await page.locator('.ui-steps').waitFor();
@@ -66,7 +72,7 @@ async function main() {
   assert.equal(await page.evaluate(()=>document.activeElement.getAttribute('role')),'heading');
   await page.screenshot({animations:"disabled",path:path.join(output,'sync-wizard-light.png')});
   assert.deepEqual(errors,[]);
-  console.log('PASS native folder hierarchy, exact selection, cancellation, Escape and focus restoration');
+  console.log('PASS native folder hierarchy, exact selection, automatic saving, Escape and focus restoration');
   console.log('PASS native wizard progression, lazy panels, heading focus and light/dark layouts');
   console.log('BROWSER',browser.version());
 }

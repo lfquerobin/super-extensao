@@ -180,7 +180,7 @@ async function boot(initial = snapshot(), options = {}) {
         [name]: { ...initial.features[name], enabled: value },
       };
     },
-    saveSplit: async (config) => calls.push(["split", plain(config)]),
+    saveSplit: async (config) => {calls.push(["split", plain(config)]); await options.saveSplit?.(plain(config));},
   };
   const globals = {
     window: w,
@@ -324,7 +324,64 @@ test("server picker keeps Free, paid and maintenance states, search and connecti
     await ui.close();
   }
 });
-test("split tunneling preserves modes and saves only after explicit action", async () => {
+test('VPN autosave serializes rapid switches and waits for application before navigation', async () => {
+  let release, count = 0;
+  const ui = await boot(snapshot(), {saveSplit: async () => {
+    if (++count === 1) await new Promise(resolve => {release = resolve;});
+  }});
+  try {
+    await ui.app.navigate('features');
+    const change = (field, checked) => {
+      const input = ui.w.document.querySelector(`[data-field="${field}"]`);
+      input.checked = checked;input.dispatchEvent(new ui.w.Event('change', {bubbles: true}));
+    };
+    change('block-direct-on-failure', false);await tick();
+    change('split-enabled', false);await tick();
+    assert.equal(ui.calls.filter(call => call[0] === 'split').length, 1);
+    const leaving = ui.app.navigate('connection');await tick();
+    assert.ok(ui.w.document.querySelector('[data-split]'));
+    release();await leaving;
+    const saved = ui.calls.filter(call => call[0] === 'split').at(-1)[1];
+    assert.equal(saved.blockDirectOnFailure, false);assert.equal(saved.enabled, false);
+    await ui.app.navigate('features');
+    assert.equal(ui.w.document.querySelector('[data-field="split-enabled"]').checked, false);
+    assert.equal(ui.w.document.querySelector('button[type="submit"]'), null);
+  } finally {await ui.close();}
+});
+
+test('VPN autosave keeps a failed edit visible and retries applying it', async () => {
+  let fail = true;
+  const ui = await boot(snapshot(), {saveSplit: async () => {if (fail) throw Error('write failure');}});
+  try {
+    await ui.app.navigate('features');
+    const input = ui.w.document.querySelector('[data-field="block-direct-on-failure"]');
+    input.checked = false;input.dispatchEvent(new ui.w.Event('change', {bubbles: true}));await tick();
+    assert.match(ui.w.document.body.textContent, /Não foi possível aplicar/);
+    assert.equal(ui.w.document.querySelector('[data-field="block-direct-on-failure"]').checked, false);
+    await ui.app.navigate('connection');assert.ok(ui.w.document.querySelector('[data-split]'));
+    fail = false;await ui.click('retry-rules');
+    assert.match(ui.w.document.body.textContent, /Regras salvas/);
+    await ui.app.navigate('connection');assert.equal(ui.w.document.querySelector('[data-split]'), null);
+  } finally {await ui.close();}
+});
+
+test('VPN refuses an empty active inclusion list without claiming it was saved', async () => {
+  const initial = snapshot();initial.split = {enabled: true, mode: 'exclude', value: []};
+  const ui = await boot(initial);
+  try {
+    await ui.app.navigate('features');
+    const mode = ui.w.document.querySelector('[data-field="split-mode"]');
+    mode.value = 'include';mode.dispatchEvent(new ui.w.Event('change', {bubbles: true}));await tick();
+    assert.equal(ui.calls.filter(call => call[0] === 'split').length, 0);
+    assert.ok(ui.w.document.querySelector('[data-pending="true"]'));
+    const input = ui.w.document.querySelector('[data-field="split-enabled"]');
+    input.checked = false;input.dispatchEvent(new ui.w.Event('change', {bubbles: true}));await tick();
+    assert.equal(ui.calls.filter(call => call[0] === 'split').length, 1);
+    assert.match(ui.w.document.body.textContent, /Regras salvas/);
+  } finally {await ui.close();}
+});
+
+test("split tunneling autosaves each domain change and preserves both modes", async () => {
   const ui = await boot();
   try {
     await ui.app.navigate("features");
@@ -336,7 +393,7 @@ test("split tunneling preserves modes and saves only after explicit action", asy
     field.value = "https://EXAMPLE.com/";
     field.dispatchEvent(new ui.w.Event("input", { bubbles: true }));
     await ui.click("add-domain");
-    assert.equal(ui.calls.filter((call) => call[0] === "split").length, 0);
+    assert.equal(ui.calls.filter((call) => call[0] === "split").length, 1);
     ui.w.document
       .querySelector("[data-split]")
       .dispatchEvent(
@@ -367,7 +424,7 @@ test("split tunneling preserves modes and saves only after explicit action", asy
     await ui.close();
   }
 });
-test("failure blocking switch defaults on and saves its draft in both split modes", async () => {
+test("failure blocking switch and mode changes autosave immediately", async () => {
   const ui = await boot();
   try {
     await ui.app.navigate("features");
@@ -376,14 +433,15 @@ test("failure blocking switch defaults on and saves its draft in both split mode
     const toggle = ui.w.document.querySelector(selector);
     toggle.checked = false;
     toggle.dispatchEvent(new ui.w.Event("change", {bubbles: true}));
-    assert.equal(ui.calls.some(call => call[0] === "split"), false);
+    await tick();
+    assert.equal(ui.calls.some(call => call[0] === "split"), true);
     const mode = ui.w.document.querySelector('[data-field="split-mode"]');
     mode.value = "include";
     mode.dispatchEvent(new ui.w.Event("change", {bubbles: true}));
     assert.equal(ui.w.document.querySelector(selector).checked, false);
     ui.w.document.querySelector("[data-split]").dispatchEvent(new ui.w.Event("submit", {bubbles: true, cancelable: true}));
     await tick();
-    const saved = ui.calls.find(call => call[0] === "split")[1];
+    const saved = ui.calls.filter(call => call[0] === "split").at(-1)[1];
     assert.equal(saved.blockDirectOnFailure, false);
     assert.equal(saved.mode, "include");
     await ui.app.navigate("connection");
@@ -1021,7 +1079,7 @@ const bookmarkTree = [{id: "0", children: [{id: "1", title: "Sites", children: [
   {id: "2", title: "Subpasta", children: [{url: "https://nested.example"}]},
 ]}]}];
 
-test("VPN imports bookmark domains into the draft and selected mode only, then saves explicitly", async () => {
+test("VPN imports and automatically applies bookmark domains in the selected mode", async () => {
   const requests = [];
   const ui = await boot(snapshot(), {browser: {
     permissions: {request: async value => { requests.push(value); return true; }},
@@ -1040,7 +1098,7 @@ test("VPN imports bookmark domains into the draft and selected mode only, then s
     const subdomains = ui.w.document.querySelector('[data-field="subdomains"]');
     subdomains.checked = false; subdomains.dispatchEvent(new ui.w.Event("change", {bubbles: true}));
     await ui.click("import-bookmarks");
-    assert.equal(ui.calls.filter(call => call[0] === "split").length, 0);
+    assert.equal(ui.calls.filter(call => call[0] === "split").length, 1);
     assert.equal(ui.w.document.querySelector('[data-action="import-bookmarks"]').disabled, true);
     const preview = ui.w.document.querySelector('[data-bookmark-preview]');
     assert.match(preview.textContent, /0 novos domínios/);
@@ -1053,7 +1111,7 @@ test("VPN imports bookmark domains into the draft and selected mode only, then s
     await ui.click("import-bookmarks");
     ui.w.document.querySelector('[data-split]').dispatchEvent(new ui.w.Event("submit", {bubbles: true, cancelable: true}));
     await tick();
-    const config = ui.calls.find(call => call[0] === "split")[1];
+    const config = ui.calls.filter(call => call[0] === "split").at(-1)[1];
     assert.deepEqual(config.value, [
       {domain: "old.example", withSubDomains: false, mode: "include"},
       {domain: "new.example", withSubDomains: false, mode: "exclude"},
@@ -1137,7 +1195,7 @@ test("confirmed device restrictions remain disabled and labeled after account lo
 });
 
 
-test("VPN shared domain list removes only the selected mode and keeps saving explicit", async () => {
+test("VPN shared domain list removes only the selected mode and saves automatically", async () => {
   const initial = snapshot();
   initial.split.value.push({domain: "old.example", mode: "exclude", withSubDomains: true});
   const ui = await boot(initial);
@@ -1148,7 +1206,7 @@ test("VPN shared domain list removes only the selected mode and keeps saving exp
     assert.equal(list.querySelector('small').textContent, 'Incluir subdomínios');
     assert.equal(list.querySelector('button').textContent, '×');
     await ui.click('remove-domain');
-    assert.equal(ui.calls.filter(call => call[0] === 'split').length, 0);
+    assert.equal(ui.calls.filter(call => call[0] === 'split').length, 1);
     assert.equal(ui.w.document.querySelector('[data-domain-list]').children.length, 0);
     ui.w.document.querySelector('[data-split]').dispatchEvent(new ui.w.Event('submit', {bubbles: true, cancelable: true}));
     await tick();

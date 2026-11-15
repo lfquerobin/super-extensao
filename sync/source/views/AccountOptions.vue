@@ -78,21 +78,13 @@
       @delete="onDelete"
     />
   </SyncForm>
-  <UiActions v-if="supported" class="sync-save-row">
-    <span role="status" class="ui-inline-status">{{
-      saved ? t("UiSaved") : ""
-    }}</span
-    ><UiButton
-      class="sync-button sync-primary ui-button ui-button-primary"
-      :disabled="loading || saving"
-      @click="onSave"
-     type="submit">
-      {{ saving ? t("UiWorking") : t("LabelSave") }}
-    </UiButton>
-  </UiActions>
+  <UiAsyncState v-if="supported" :kind="saving ? 'loading' : error ? 'error' : saved ? 'success' : ''"
+    :text="saving ? t('UiWorking') : error || (saved ? t('UiSaved') : '')"
+    :retry="error === t('UiAutoSaveFailed') ? t('UiRetry') : ''" @retry="autoSave.retry()" />
 </section>
 </template>
 <script>
+import { createAutoSave } from "../../../ui/autosave.js";
 import { isSupportedProvider } from "../../providers.cjs";
 import { confirmAction } from "../../../ui/confirmation.js";
 import PathHelper from "@sync-engine/PathHelper";
@@ -137,42 +129,52 @@ export default {
     },
   },
   watch: {
+    data: {
+      deep: true, flush: 'post',
+      async handler() {
+        await this.$nextTick();
+        if (!this.autoSave || this.deleted || this.loading || !this.supported) return;
+        if (this.saved && !this.saving && !this.autoSave.error) {this.error = ''; return;}
+        const form = this.$el.querySelector('form');
+        if (form && !form.checkValidity()) { this.error = this.t('UiInvalidConfig'); return; }
+        void this.autoSave.set(this.data);
+      },
+    },
     localRoot() {
       this.updateFolderName();
     },
     loading() {
       if (this.loading) return;
-      this.data = JSON.parse(
-        JSON.stringify(this.$store.state.accounts[this.id].data)
-      );
+      this.savedData = JSON.stringify(this.$store.state.accounts[this.id].data);
+      this.data = JSON.parse(this.savedData);
     },
   },
   created() {
+    const id = this.id;
+    this.autoSave = createAutoSave({
+      write: data => this.$store.dispatch(actions.STORE_ACCOUNT, {id, data}),
+      onState: state => {
+        this.saving = state.saving;
+        if (state.value) this.savedData = JSON.stringify(state.value);
+        const form = this.$el?.querySelector?.('form');
+        this.error = form && !form.checkValidity() && !this.saved ? this.t('UiInvalidConfig')
+          : state.error ? this.t('UiAutoSaveFailed') : '';
+      },
+    });
     this.updateFolderName();
     if (!this.loading) {
-      this.data = JSON.parse(
-        JSON.stringify(this.$store.state.accounts[this.id].data)
-      );
+      this.savedData = JSON.stringify(this.$store.state.accounts[this.id].data);
+      this.data = JSON.parse(this.savedData);
     }
+  },
+  async beforeRouteLeave() {
+    await this.$nextTick();
+    await this.autoSave.flush();
+    return this.deleted || this.saved || (!this.autoSave.error && !this.error);
   },
   methods: {
     async onDeleteUnsupported() {
       if (await confirmAction(document, this.t("SuperRemoveConfirm"))) await this.onDelete();
-    },
-    async onSave() {
-      this.saving = true;
-      this.error = "";
-      try {
-        await this.$store.dispatch(actions.STORE_ACCOUNT, {
-          id: this.id,
-          data: JSON.parse(JSON.stringify(this.data)),
-        });
-        this.savedData = JSON.stringify(this.data);
-      } catch (error) {
-        this.error = error.message || String(error);
-      } finally {
-        this.saving = false;
-      }
     },
     async updateFolderName() {
       const pathArray = PathHelper.pathToArray(
@@ -181,10 +183,13 @@ export default {
       this.folderName = pathArray[pathArray.length - 1];
     },
     async onDelete() {
+      this.deleted = true;
+      await this.autoSave.flush();
       try {
         await this.$store.dispatch(actions.DELETE_ACCOUNT, this.id);
         this.$router.push("/");
       } catch (error) {
+        this.deleted = false;
         this.error = error.message || String(error);
       }
     },

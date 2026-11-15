@@ -1,5 +1,7 @@
 # Integridade da interface — 1.7.38
 
+**Registro histórico da 1.7.38.** Na 1.7.39, perfis, OAuth, criptografia e regras passaram a gravar automaticamente; veja [a política atual](ui-components.md) e [a validação](validacao.md).
+
 Migração concluída em 15/11/2026 sobre a 1.7.37 (`301d601`).
 
 ## O que mudou

@@ -1,5 +1,17 @@
 # Validação da Super Extensão
 
+## Configurações automáticas — 1.7.39
+
+Em 15/11/2026, **528 testes passaram**, sem falhas ou testes ignorados. Foram compiladas as interfaces de sincronização, VPN e Nova guia, os painéis e os templates estáticos; TypeScript da Nova guia, `check:ui` e `check:integrity` passaram (61 arquivos referenciados e versão 1.7.39).
+
+Os testes exercitam gravação automática de perfis, credenciais Git/OAuth, criptografia, seleção de pasta e regras da VPN, inclusive importação/remoção de domínios. Gravações lentas, alterações rápidas, retorno ao valor original durante uma gravação, falhas com nova tentativa e espera antes da navegação são cobertos. Campos inválidos não substituem a configuração válida; o aviso permanece mesmo quando uma gravação anterior termina. Selecionar Favoritos depois do modo Abas só persiste IDs reais, sem destino intermediário vazio.
+
+As chaves de Unsplash/GIPHY são gravadas ao editar/limpar. Testes cobrem escritas concorrentes preservando ambos os provedores, erro/nova tentativa, leitura inicial recusada sem sobrescrever o valor existente e notificação do fundo após pausa na digitação. Não foram adicionadas dependências.
+
+No Edge 157.0.4341.60, os runners de interface, extensão completa e Nova guia passaram em perfis temporários com dados fictícios. O runner da sincronização alterou o nome do perfil e selecionou uma pasta, conferindo a persistência sem Salvar, além de Escape/foco, temas e assistente. A extensão abriu worker/painéis/editor sem erros de página, recuperou fusos inválidos e manteve o proxy livre sem login. A Nova guia preservou widgets, notas, idioma e imagem local após recarga/reinício; importação/exportação também passaram. Capturas foram inspecionadas. Google/Git/Proton reais e perfil pessoal não foram usados.
+
+Aguarde a indicação de conclusão antes de fechar o popup. Navegação interna aguarda a fila; fechar o processo do navegador durante uma gravação não é uma garantia de conclusão. Criar/importar/remover continuam ações explícitas. A política de não usar Salvar/Aplicar para confirmar configurações foi registrada em `AGENTS.md`.
+
 ## Vue 3 e remoção de Sentry — 1.7.38
 
 Em 15/11/2026, **514 testes passaram**, sem falhas ou testes ignorados. Interface/worker de sincronização e Nova guia foram recompilados; `check:ui` e `check:integrity` passaram (61 arquivos referenciados, versão 1.7.38). Os testes incluem os controles nativos, rascunhos e credenciais Git, criptografia, navegação por hash, exportação/importação de arquivos e autorização Google com permissão, PKCE e respostas de token/identidade sintéticas.

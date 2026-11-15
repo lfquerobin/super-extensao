@@ -48,10 +48,9 @@
         <UiAsyncState v-if="folderLoading" kind="loading" :text="t('UiFoldersLoading')" :progress="null" />
         <UiAsyncState v-else-if="folderError" kind="error" :text="t('UiFoldersFailed')" :retry="t('UiRetry')" @retry="onTriggerFinder" />
         <UiAsyncState v-else-if="!folders.length" kind="empty" :text="t('UiFoldersEmpty')" />
-        <UiFolderTree v-else :value="selectedLocalRoot" @input="selectedLocalRoot = $event" :items="folders" :label="t('LabelLocalfolder')" :empty-label="t('LabelUntitledfolder')" />
+        <UiFolderTree v-else :value="selectedLocalRoot" @input="selectFolder" :items="folders" :label="t('LabelLocalfolder')" :empty-label="t('LabelUntitledfolder')" />
         <UiActions class="ui-actions-end">
-          <UiButton @click="finder = false">{{ t('LabelCancel') }}</UiButton>
-          <UiButton class="ui-button-primary" :disabled="folderLoading || Boolean(folderError) || !selectedLocalRoot || !folders.length" @click="onSave">{{ t('LabelSave') }}</UiButton>
+          <UiButton @click="finder = false">{{ t('UiClose') }}</UiButton>
         </UiActions>
       </UiStack>
     </UiModal>
@@ -78,6 +77,7 @@ export default {
     };
   },
   watch: {
+    finder(open) { if (!open && this.value === 'tabs') this.mode = 'tabs'; },
     value(localRoot) {
       this.selectedLocalRoot = this.value;
       this.updatePath();
@@ -87,7 +87,7 @@ export default {
         this.$emit("input", "tabs");
       }
       if (this.mode === "folder" && this.value === "tabs") {
-        this.$emit("input", "");
+        void this.onTriggerFinder();
       }
     },
   },
@@ -97,10 +97,11 @@ export default {
   },
   methods: {
     async updatePath() {
-      if (this.mode === "tabs" || this.value === "tabs") {
+      if (this.value === "tabs") {
         this.mode = "tabs";
         return;
       }
+      this.mode = 'folder';
       const BrowserTree = (await import("@sync-engine/browser/BrowserTree"))
         .default;
       if (this.value) {
@@ -135,13 +136,10 @@ export default {
         return !item.url;
       });
     },
-    onUpdateSelection(active) {
-      this.selectedLocalRoot = active[0];
-    },
-    onSave() {
-      if (this.folderLoading || this.folderError || !this.selectedLocalRoot) return;
-      this.finder = false;
-      this.$emit("input", this.selectedLocalRoot);
+    selectFolder(id) {
+      if (this.folderLoading || this.folderError || !id) return;
+      this.selectedLocalRoot = id;
+      this.$emit('input', id);
     },
   },
 };

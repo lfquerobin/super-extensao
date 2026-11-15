@@ -1,5 +1,11 @@
-# Componentes da interface — referência 1.7.38
+# Componentes da interface — referência 1.7.39
 
+
+## Política de configurações — 1.7.39
+
+Configurações válidas são persistidas automaticamente, sem botões Salvar/Aplicar. `ui/autosave.js` serializa as gravações de perfis/OAuth e regras VPN, conserva o último valor enquanto a anterior termina e permite repetir falhas sem apagar o campo. A indicação de sucesso só aparece depois da conclusão. Validade dos campos é conferida após a atualização dos controles; dados inválidos continuam no formulário com aviso. A navegação interna aguarda as gravações e permanece na tela quando há erro pendente.
+
+Na Nova guia, as chaves dos fundos são gravadas automaticamente no armazenamento local. Escritas no registro compartilhado de Unsplash/GIPHY são serializadas; a atualização da imagem aguarda uma pausa de 300 ms na digitação para evitar requisições para cada caractere. Essa espera não adia a persistência. Limpeza, abas, autoplay e demais configurações da Nova guia já gravavam automaticamente. Adicionar/importar/criar e ações destrutivas continuam explícitas.
 
 ## Fluxos compartilhados — 1.7.31
 
@@ -16,7 +22,7 @@ Além das primitivas visuais, os seguintes fluxos têm uma fonte comum:
 | `ui/confirmation.js` | Confirmações explícitas da limpeza, saída/liberação/abandono de rascunho da VPN, exclusão de perfil/sincronização forçada e redefinição da nova guia. Usa diálogo modal nativo com textos seguros, foco inicial em Cancelar, Escape, circulação de foco, restauração do foco e cancelamento ao encerrar a página. |
 | `vpn/source/screens/` | Conexão, servidores, recursos e conta em módulos próprios. `app.js` conserva estado, eventos, integração com o motor e ciclo de vida. |
 
-O editor da limpeza continua gravando automaticamente. Importar na VPN altera apenas o rascunho do modo selecionado; Salvar aplica as regras. A interface não concede controles bloqueados por política nem altera o estado de proteção por conta própria. Uma confirmação de liberação da VPN fica inválida se o estado da conexão mudar enquanto o diálogo estiver aberto.
+O editor da limpeza continua gravando automaticamente. Na 1.7.39, importar na VPN aplica automaticamente a lista ao modo selecionado; alterações das configurações também persistem e aplicam sem Salvar. A interface não concede controles bloqueados por política nem altera o estado de proteção por conta própria. Uma confirmação de liberação da VPN fica inválida se o estado da conexão mudar enquanto o diálogo estiver aberto.
 
 Na 1.7.38, a sincronização usa o compilador próprio `scripts/sync-webpack.cjs`, sem Babel nem ferramentas Vue 2. Os módulos UMD compartilhados mantêm seus exports CommonJS. O requisito mínimo da extensão é Chromium 116.
 
@@ -24,7 +30,7 @@ Validação da entrega: **483 testes aprovados**, interfaces de VPN/sincronizaç
 
 ### Conclusão da unificação — 1.7.35
 
-- `ui/vue-structures.js` fornece `UiFolderTree`, `UiModal`, `UiSteps` e `UiWizardStep`. A seleção hierárquica conserva IDs exatos, expansão nativa, rascunho e cancelamento. O assistente monta etapas sob demanda, preserva controles visitados e leva o foco ao título da etapa ativa.
+- `ui/vue-structures.js` fornece `UiFolderTree`, `UiModal`, `UiSteps` e `UiWizardStep`. A seleção hierárquica conserva IDs exatos e expansão nativa. Na 1.7.39, selecionar aplica imediatamente; Escape fecha sem reverter uma alteração aplicada. O assistente monta etapas sob demanda, preserva controles visitados e leva o foco ao título da etapa ativa.
 - `ui/vue-validated.js` centraliza os controles HTML nativos para Vue 3 e as regras de validade dos campos/formulários. `sync/source/components/ui/engine.js` é somente um reexport de compatibilidade. Modelos, regras de validação, slots e injeção permanecem preservados.
 - O adaptador React fornece `UiEditorCard`, `UiDisclosure`, `UiModal` e `UiAsyncState`. Fundos e widgets usam o mesmo cartão de edição; seções de exibição/fonte usam disclosure nativo operável por teclado. Erros de importação aparecem no painel, sem alerta bloqueante e sem apagar configurações inválidas.
 - `ui/modal.js` concentra abertura, Escape, circulação de foco e restauração do disparador para diálogos Vue/React. A página de recuperação da VPN usa `ui/confirmation.js`, com foco inicial em Cancelar e invalidação ao recuperar a conexão ou descartar a página.
@@ -85,7 +91,7 @@ O catálogo define a estrutura e o CSS comum define sua apresentação. Não cop
   <ui-field for="token">Chave de API</ui-field>
   <ui-control id="token" type="password" />
   <ui-actions>
-    <ui-button type="submit">Salvar</ui-button>
+    <ui-button type="button">Importar</ui-button>
   </ui-actions>
 </ui-stack>
 ```

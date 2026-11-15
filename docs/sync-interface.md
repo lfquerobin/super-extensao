@@ -1,10 +1,10 @@
-# Interface de sincronização — referência 1.7.38
+# Interface de sincronização — referência 1.7.39
 
 ## Componentização e Vue 3
 
 As telas usam os componentes `Ui*` do catálogo comum para campos nativos, cartões, avisos, ações, formulários e navegação. Os controles validados e compostos passam pelos adaptadores `Sync*` em `sync/source/components/ui/engine.js`. Na 1.7.38, esses adaptadores usam Vue 3 e elementos HTML nativos, com valores/eventos explícitos, regras de validade nativa, slots e referências. Vue 2, Vuetify e Vuex foram removidos das dependências utilizadas pela extensão. A aparência da biblioteca fica em `ui/vue.css`; o layout das telas permanece em `sync/source/interface.css`.
 
-O registro ocorre em `sync/source/index.js`. Para mudar um controle comum, altere o adaptador ou o catálogo, em vez de replicar a implementação em cada provedor. Os fluxos de perfis, rascunhos, backup, autorização e os motores não foram alterados por essa migração. [Catálogo, fontes e compilação](ui-components.md).
+O registro ocorre em `sync/source/index.js`. Para mudar um controle comum, altere o adaptador ou o catálogo, em vez de replicar a implementação em cada provedor. Na 1.7.39, perfis e conexões adotam gravação automática; backup, autorização e motores mantêm suas fronteiras existentes. [Catálogo, fontes e compilação](ui-components.md).
 
 A aplicação fica em `sync/source`. Os perfis Google Drive de favoritos executam o núcleo próprio de `sync/engine` pelo worker; Git e perfis de abas continuam no Floccus adaptado de `vendor/floccus-source`. O bloco de comparação foi removido em 1.6.0. Cadastro, autenticação interativa e comandos da interface mantêm a camada de compatibilidade.
 
@@ -21,7 +21,7 @@ Tema e idioma acompanham as preferências compartilhadas. As telas internas não
 
 Na 1.7.36, `sync/providers.cjs` define Google Drive e Git como os únicos provedores disponíveis. O worker bloqueia sincronização, verificação e agendamento dos demais; ao carregar/desbloquear, desativa seus gatilhos preservando configuração, credenciais e armazenamento. Perfis antigos aparecem desativados, permitem backup e remoção confirmada, mas não edição, autorização ou sincronização. Backups com qualquer serviço removido são recusados por inteiro antes de criar perfis. O campo OAuth Dropbox antigo é preservado no armazenamento, sem exibi-lo. Adaptadores históricos e licenças permanecem na fonte para leitura dos dados antigos.
 
-As chaves `superSync:`, os IDs de perfil, os formatos de importação/exportação, alarmes e mensagens `super-sync` foram mantidos. Atualizar a interface não exige migração nem recriação de perfis. A edição usa um rascunho; sair sem salvar não altera o perfil carregado. As telas de perfis e credenciais só montam após consultar o bloqueio do motor.
+As chaves `superSync:`, os IDs de perfil, os formatos de importação/exportação, alarmes e mensagens `super-sync` foram mantidos. Atualizar a interface não exige migração nem recriação de perfis. A edição grava automaticamente alterações válidas, sem confirmação por Salvar. A fila serializa as gravações, mantém o último valor e aguarda a conclusão antes de navegar. Falhas mantêm o campo preenchido com opção de nova tentativa. Selecionar uma pasta já aplica seu ID; fechar o diálogo não desfaz a seleção. A senha de criptografia é um campo mascarado com gravação automática, inclusive ao limpá-lo. As telas de perfis e credenciais só montam após consultar o bloqueio do motor.
 
 A interface usa Vue 3 e inclui formulários e fluxos de autenticação adaptados do Floccus, sob MPL-2.0. Não é uma reimplementação integral de todos os componentes. Os créditos, licença e fonte original continuam disponíveis em `sync/LICENSE.txt`, `sync/MODIFICATIONS.md` e `vendor/floccus-source`.
 
@@ -47,7 +47,7 @@ Para alterar as telas, edite `sync/source`, e não as telas antigas em `vendor/f
 
 ## Validação
 
-A suíte Node inclui testes DOM do bundle de produção com JSDOM e APIs Chromium simuladas: navegação, idioma, Google Drive/Git, configuração OAuth isolada, leitura de perfis existentes, rascunhos antes/depois de salvar, seleção na exportação, confirmação de sincronização direcional, criação Git e recusa de cadastro/importação de serviços removidos, e bloqueio das telas quando o motor está protegido.
+A suíte Node inclui testes DOM do bundle de produção com JSDOM e APIs Chromium simuladas: navegação, idioma, Google Drive/Git, configuração OAuth isolada, leitura de perfis existentes, gravação automática, edição rápida, falhas/nova tentativa e navegação durante gravação, seleção na exportação, confirmação de sincronização direcional, criação Git e recusa de cadastro/importação de serviços removidos, e bloqueio das telas quando o motor está protegido.
 
 Na 1.7.38, o Edge com perfil temporário validou a extensão completa, árvore de pastas, cancelamento/Escape, foco, assistente e temas claro/escuro. Testes DOM do bundle exercitam também senha Git, criptografia, navegação por hash, arquivo de backup/importação e autorização Google com respostas sintéticas de permissão, PKCE, token e identidade. Autenticação e sincronização com contas reais continuam pendentes nesta rodada. [Evidências e limites](validacao.md).
 

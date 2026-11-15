@@ -1,10 +1,10 @@
-# Interface própria da VPN — referência 1.7.34
+# Interface própria da VPN — referência 1.7.39
 
 ## Bloqueio durante falhas da VPN
 
 Em Recursos → Tunelamento dividido, o switch **Bloquear também sites que não usam VPN quando ela cair** começa ligado. Desligado, libera pela conexão normal os sites da lista de exclusão ou os sites fora da lista de inclusão, conforme o modo ativo. Hosts exatos e subdomínios respeitam cada regra. Sites que devem usar a VPN permanecem bloqueados até a confirmação do túnel; rotas de serviço Proton e a proteção existente de WebTransport são preservadas. Com o tunelamento dividido desativado, o bloqueio continua geral.
 
-Clique em Salvar para persistir e aplicar, inclusive durante uma falha. As regras de emergência são duráveis e são reconstruídas no início; erros de armazenamento ou de instalação das exceções mantêm o bloqueio geral. Desconectar explicitamente remove as regras do bloqueio de emergência.
+Na 1.7.39, as alterações são salvas e aplicadas automaticamente, inclusive durante uma falha. A indicação de sucesso aguarda persistência e aplicação. Erros mantêm a configuração visível e oferecem Tentar novamente. As regras de emergência são duráveis e são reconstruídas no início; erros de armazenamento ou de instalação das exceções mantêm o bloqueio geral. Desconectar explicitamente remove as regras do bloqueio de emergência.
 
 ## Componentização 1.6.8
 
@@ -18,7 +18,7 @@ A aba VPN usa `vpn/source`, sem montar o HTML, JavaScript ou CSS do popup origin
 
 - **Conexão:** estado confirmado pelo worker, conexão automática ao país mais rápido, servidor aleatório, desconexão/cancelamento, lista de servidores gratuitos e conexões recentes quando ativadas.
 - **Servidores:** pesquisa por país, cidade ou nome; filtros Meu plano, Gratuitos, Todos e Secure Core; ocupação e manutenção. Contas Free continuam limitadas aos servidores gratuitos. Os servidores ficam agrupados por país, inicialmente recolhidos, com bandeiras SVG locais e contagem por grupo. Cada grupo carrega mais 50 servidores por vez. As barras de rolagem ficam ocultas, preservando a rolagem.
-- **Recursos:** conexão ao iniciar, proteção WebRTC, notificações, Secure Core e memória de conexões recentes. Disponibilidade e controle por dispositivo são respeitados. Regras de tunelamento dividido têm listas separadas de inclusão/exclusão e suporte a subdomínios. Alterações ficam em rascunho até salvar; regras são aplicadas à conexão ativa.
+- **Recursos:** conexão ao iniciar, proteção WebRTC, notificações, Secure Core e memória de conexões recentes. Disponibilidade e controle por dispositivo são respeitados. Regras de tunelamento dividido têm listas separadas de inclusão/exclusão e suporte a subdomínios. Alterações, inclusão/remoção de domínios e importação são salvas automaticamente e aplicadas à conexão ativa. Uma lista de inclusão ativa vazia é recusada com aviso; desative o tunelamento ou adicione um domínio para concluir.
 - **Conta:** identificação do plano, idioma compartilhado, links oficiais e saída da conta com confirmação.
 
 O login abre a página oficial Proton pelo fluxo de autorização existente, com estado aleatório e validação no worker. A interface não coleta a senha. A conexão só aparece como concluída após confirmação do motor; o IP mostrado é o IP de saída informado para o servidor, não uma medição independente do tráfego.

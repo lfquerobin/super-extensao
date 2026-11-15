@@ -1,12 +1,12 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 export const messages = {
   blockDirectOnFailure: {"pt-BR": "Bloquear também sites que não usam VPN quando ela cair", en: "Also block sites that bypass the VPN when it drops"},
-  blockDirectOnFailureHelp: {"pt-BR": "Desligado: sites fora da VPN continuam pela conexão normal durante uma falha. No modo de exclusão, são os sites da lista; no modo de inclusão, são os sites fora dela. Sites que usam VPN continuam bloqueados até a conexão ser confirmada. Clique em Salvar para aplicar.", en: "When off, sites that bypass the VPN keep using your regular connection during a failure: listed sites in exclusion mode, unlisted sites in inclusion mode. VPN sites stay blocked until the connection is verified. Click Save to apply."},
+  blockDirectOnFailureHelp: {"pt-BR": "Desligado: sites fora da VPN continuam pela conexão normal durante uma falha. No modo de exclusão, são os sites da lista; no modo de inclusão, são os sites fora dela. Sites que usam VPN continuam bloqueados até a conexão ser confirmada. As alterações são salvas automaticamente.", en: "When off, sites that bypass the VPN keep using your regular connection during a failure: listed sites in exclusion mode, unlisted sites in inclusion mode. VPN sites stay blocked until the connection is verified. Changes are saved automatically."},
   connectFastest: {"pt-BR": "Conectar ao mais rápido", en: "Connect to fastest"},
   domainsLabel: {"pt-BR": "domínios", en: "domains"},
   featuresLoading: {"pt-BR": "Aguardando carregar os recursos e os dados da conta…", en: "Waiting for features and account details to load…"},
   featuresLoadFailed: {"pt-BR": "Não foi possível concluir o carregamento dos recursos e da conta. Tente novamente para habilitar as opções disponíveis.", en: "Could not finish loading features and account details. Retry to enable available options."},
-  bookmarkHelp: {"pt-BR": "A importação copia apenas domínios HTTP/HTTPS e não altera os favoritos. Mudanças futuras na pasta não atualizam esta lista. Revise e clique em Salvar para aplicar. A opção de subdomínios acima vale para os novos itens.", "en": "Import copies only HTTP/HTTPS domains without changing bookmarks. Future folder changes do not update this list. Review and click Save to apply. The subdomains option above applies to new entries."},
+  bookmarkHelp: {"pt-BR": "A importação copia apenas domínios HTTP/HTTPS e não altera os favoritos. Mudanças futuras na pasta não atualizam esta lista. A lista é aplicada ao importar. A opção de subdomínios acima vale para os novos itens.", "en": "Import copies only HTTP/HTTPS domains without changing bookmarks. Future folder changes do not update this list. The list is applied when imported. The subdomains option above applies to new entries."},
   bookmarkExclude: {"pt-BR": "No modo de exclusão, estes sites navegarão fora da VPN quando o tunelamento dividido estiver ativo.", "en": "In exclusion mode, these sites will bypass the VPN when split tunneling is enabled."},
   bookmarkInclude: {"pt-BR": "No modo de inclusão, somente os sites incluídos usarão a VPN quando o tunelamento dividido estiver ativo.", "en": "In inclusion mode, only included sites will use the VPN when split tunneling is enabled."},
 
@@ -384,6 +384,9 @@ export const messages = {
     "pt-BR": "Nenhum domínio neste modo.",
     en: "No domains in this mode.",
   },
+  autoSaved: {"pt-BR": "Salvo automaticamente", en: "Saved automatically"},
+  saving: {"pt-BR": "Salvando…", en: "Saving…"},
+  saveFailed: {"pt-BR": "Não foi possível aplicar as regras. Tente novamente.", en: "Could not apply the rules. Try again."},
   save: {
     "pt-BR": "Salvar regras",
     en: "Save rules",

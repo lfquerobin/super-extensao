@@ -1,3 +1,4 @@
+import {createAutoSave} from "../../ui/autosave.js";
 import {normalizeBookmarkDomain} from "./bookmarks";
 import {confirmAction, cancelConfirmation} from "../../ui/confirmation.js";
 import {createServerViews} from "./screens/servers";
@@ -41,6 +42,8 @@ export async function mountVpn(root, engine, preferences, browser = globalThis.c
     domain: "",
     subdomains: true,
     saved: false,
+    splitSaving: false,
+    splitError: "",
   };
   let hydrated = false;
   let disposed = false,
@@ -88,6 +91,29 @@ export async function mountVpn(root, engine, preferences, browser = globalThis.c
     model.dirty = false;
     model.saved = false;
   };
+  const autoSave = createAutoSave({
+    write: config => engine.saveSplit(config),
+    onState(state) {
+      model.splitSaving = state.saving;
+      if (state.value) model.snapshot.split = clone(state.value);
+      model.dirty = JSON.stringify(model.draft) !== JSON.stringify(model.snapshot.split);
+      if (state.error) model.splitError = t('saveFailed');
+      else if (!model.dirty) model.splitError = '';
+      model.saved = !state.saving && !state.error && !model.dirty;
+      render();
+    },
+  });
+  function saveRules() {
+    model.dirty = true;
+    model.saved = false;
+    model.splitError = '';
+    if (model.draft.enabled && model.draft.mode === 'include' && !domainRules(model.draft, 'include').length) {
+      model.splitError = t('includeEmpty');
+      render();
+      return Promise.resolve();
+    }
+    return autoSave.set(model.draft);
+  }
   const createImporter = () => createBookmarkImporter({
     browser, locale: () => model.locale, scope: () => model.draft.mode,
     disabled: () => disposed || model.busy || !model.snapshot.signedIn || !model.snapshot.splitControllable || model.snapshot.featuresReady === false,
@@ -95,7 +121,7 @@ export async function mountVpn(root, engine, preferences, browser = globalThis.c
     existing: mode => domainRules(model.draft, mode).map(rule => rule.domain),
     import(domains, mode) {
       model.draft.value.push(...domains.map(domain => ({domain, withSubDomains: model.subdomains, mode})));
-      model.dirty = true; model.saved = false; model.error = ""; render();
+      model.error = ""; return saveRules();
     },
   });
   bookmarkImporter = createImporter();
@@ -277,14 +303,8 @@ export async function mountVpn(root, engine, preferences, browser = globalThis.c
   }
   async function navigate(page) {
     if (!pages.includes(page)) return;
-    if (
-      model.dirty &&
-      page !== "features" &&
-      !await confirmAction(root.ownerDocument, t("confirmLeave"), {locale: model.locale})
-    )
-      return;
-    if (disposed) return;
-    if (model.dirty && page !== "features") restoreRules();
+    await autoSave.flush();
+    if (disposed || model.dirty) return;
     initialScroll = undefined;
     model.page = page;
     root.scrollTop = 0;
@@ -307,10 +327,8 @@ export async function mountVpn(root, engine, preferences, browser = globalThis.c
           mode: model.draft.mode,
         });
       model.domain = "";
-      model.dirty = true;
-      model.saved = false;
       model.error = "";
-      render();
+      return saveRules();
     } catch {
       model.error = t("invalidDomain");
       render();
@@ -347,12 +365,13 @@ export async function mountVpn(root, engine, preferences, browser = globalThis.c
             (rule.mode || "exclude") === model.draft.mode
           ),
       );
-      model.dirty = true;
-      model.saved = false;
-      render();
+      void saveRules();
       return;
     }
+    if (action === "retry-rules") { void saveRules(); return; }
     if (action === "confirm-signout") {
+      await autoSave.flush();
+      if (model.dirty) return;
       const revision = stateRevision;
       if (model.busy || !await confirmAction(root.ownerDocument, t("confirmSignOut"), {
         locale: model.locale, confirmLabel: t("signOut"), cancelLabel: t("keepAccount"),
@@ -429,21 +448,15 @@ export async function mountVpn(root, engine, preferences, browser = globalThis.c
     }
     if (field === "split-mode") {
       model.draft.mode = event.target.value;
-      model.dirty = true;
-      model.saved = false;
-      render();
+      void saveRules();
     }
     if (field === "block-direct-on-failure") {
       model.draft.blockDirectOnFailure = event.target.checked;
-      model.dirty = true;
-      model.saved = false;
-      render();
+      void saveRules();
     }
     if (field === "split-enabled") {
       model.draft.enabled = event.target.checked;
-      model.dirty = true;
-      model.saved = false;
-      render();
+      void saveRules();
     }
     if (field === "subdomains") model.subdomains = event.target.checked;
     const feature = event.target.dataset.feature;
@@ -455,25 +468,8 @@ export async function mountVpn(root, engine, preferences, browser = globalThis.c
         );
       });
   };
-  const submit = (event) => {
-    if (!event.target.matches("[data-split]")) return;
-    event.preventDefault();
-    if (
-      model.draft.enabled &&
-      model.draft.mode === "include" &&
-      !domainRules(model.draft, "include").length
-    ) {
-      model.error = t("includeEmpty");
-      render();
-      return;
-    }
-    void run(async () => {
-      const config = clone(model.draft);
-      await engine.saveSplit(config);
-      model.snapshot.split = config;
-      model.dirty = false;
-      model.saved = true;
-    });
+  const submit = event => {
+    if (event.target.matches('[data-split]')) event.preventDefault();
   };
   const scroll = () => {
     clearTimeout(scrollTimer);

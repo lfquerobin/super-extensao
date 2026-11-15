@@ -264,6 +264,7 @@
   "Unable to load this background. Try again.": "Não foi possível carregar este fundo. Tente novamente.",
   "Saved only on this device; not included in exported settings.": "Salva apenas neste dispositivo; não é incluída nas configurações exportadas.",
   "Saved. The background will retry automatically.": "Salvo. O fundo tentará carregar novamente automaticamente.",
+  "Saving…": "Salvando…",
   "Save API key": "Salvar chave de API",
   "How to get an API key": "Como obter uma chave de API",
   "Try again": "Tentar novamente",

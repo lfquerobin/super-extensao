@@ -11,3 +11,7 @@ Após concluir e validar qualquer alteração no projeto, incluindo documentaç�
 Use `C:\Users\luizh\OneDrive\Documentos\super-extensao` como pasta principal e repositório Git. Confira o remoto antes de publicar: `https://github.com/thequerobin/super-extensao.git`. Preserve alterações do usuário e nunca use push forçado. Se a publicação falhar, informe o motivo e não declare que foi publicada.
 
 Alterações apenas de documentação não exigem incremento da versão da extensão. Alterações que afetem a extensão instalada seguem a regra de versionamento acima. Ao terminar, informe o commit publicado e confirme o estado do repositório.
+
+# Configurações salvas automaticamente
+
+Não use botões Salvar ou Aplicar para confirmar configurações. Alterações válidas devem ser persistidas automaticamente, com indicação de gravação e falhas, preservando a alteração para nova tentativa. Serialize gravações concorrentes para que o último valor prevaleça. Não grave valores intermediários inválidos nem informe sucesso antes da persistência/aplicação terminar. Criar perfis, adicionar/importar itens e ações destrutivas continuam sendo ações explícitas; não são confirmações de configurações pendentes.

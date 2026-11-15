@@ -34,7 +34,10 @@ export async function readProviderKey(provider: Provider): Promise<string> {
   if (!key || key === "undefined") throw new ProviderError("key");
   return key;
 }
-export async function saveProviderKey(provider: Provider, key: string): Promise<void> {
+// Both provider keys share one storage record. Serialize its read/modify/write.
+let providerWrites: Promise<void> = Promise.resolve();
+export function saveProviderKey(provider: Provider, key: string): Promise<void> {
+  const pending = providerWrites.then(async () => {
   try {
     if (BUILD_TARGET === "web") {
       const values = JSON.parse(localStorage.getItem(providerKey) || "{}");
@@ -45,6 +48,9 @@ export async function saveProviderKey(provider: Provider, key: string): Promise<
       await browser.storage.local.set({ [providerKey]: { ...values, [provider]: key.trim() } });
     }
   } catch { throw new ProviderError("settings"); }
+  });
+  providerWrites = pending.catch(() => {});
+  return pending;
 }
 export function watchProviderKeys(callback: () => void): () => void {
   if (BUILD_TARGET === "web") {

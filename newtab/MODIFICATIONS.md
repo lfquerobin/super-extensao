@@ -76,3 +76,7 @@ O lockfile atualiza pacotes selecionados dentro das faixas existentes: nanoid 3.
 ## Remoção de Sentry — 1.7.38
 
 Removido `@sentry/browser`, o inicializador de telemetria e a chamada de captura no limite de erros dos widgets. O componente local `Crashed` continua tratando falhas e permitindo acesso ao editor. O bundle foi recompilado; esta mudança não altera configurações nem formatos de backup.
+
+## Chaves de imagens automáticas — 1.7.39
+
+Unsplash/GIPHY gravam a chave local ao editar ou limpar, sem Salvar. A leitura inicial bloqueia o campo até concluir; falhas de leitura podem ser repetidas sem sobrescrever uma chave desconhecida. Gravações do registro compartilhado são serializadas, e respostas antigas não alteram o estado de um novo formulário. O aviso mostra gravação/erro e permite nova tentativa. A imagem aguarda pausa de 300 ms na digitação para repetir a requisição; a persistência não espera essa pausa.

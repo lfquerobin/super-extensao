@@ -12,8 +12,8 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
 function fixture(options = {}) {
   const storage = { 'superNewtab:imageProviders': { ...(options.keys || {}) } }, calls = [], listeners = new Set(), cache = new Map();
   const browser = { storage: { local: {
-    async get(key) { return { [key]: storage[key] }; },
-    async set(values) { Object.assign(storage, values); for (const listener of listeners) listener(Object.fromEntries(Object.keys(values).map(key => [key, { newValue: values[key] }])), 'local'); },
+    async get(key) { await options.get?.(key); return { [key]: storage[key] }; },
+    async set(values) { await options.set?.(values); Object.assign(storage, values); for (const listener of listeners) listener(Object.fromEntries(Object.keys(values).map(key => [key, { newValue: values[key] }])), 'local'); },
   }, sync: { set() { throw Error('Keys must not sync'); } }, onChanged: { addListener: fn => listeners.add(fn), removeListener: fn => listeners.delete(fn) } } };
   const globals = { console, Headers, Request, Response, Blob, URL, URLSearchParams, AbortController, setTimeout, clearTimeout, BUILD_TARGET: 'chromium', UNSPLASH_API_KEY: undefined, GIPHY_API_KEY: undefined, browser,
     fetch: async (...args) => { calls.push(args); return options.fetch ? options.fetch(...args) : Promise.reject(Error('Unexpected request')); }, ...(options.globals || {}) };
@@ -170,6 +170,53 @@ test('small image batches keep a valid cursor and stale configuration responses 
     assert.equal(latest.cursor, 0); assert.deepEqual(latest.items, ['new']); assert.equal(ui.d.window.document.body.textContent, 'new');
   } finally { await ui.close(); }
 });
+test('provider key writes preserve both providers during concurrent edits', async () => {
+  let release, count = 0;
+  const f = fixture({set: async () => {if (++count === 1) await new Promise(resolve => {release = resolve;});}});
+  const {saveProviderKey} = f.load('plugins/backgrounds/shared/provider.ts');
+  const first = saveProviderKey('unsplash', 'old');await tick();
+  const second = saveProviderKey('giphy', 'other-key');
+  const last = saveProviderKey('unsplash', 'latest');await tick();
+  assert.equal(count, 1);release();await Promise.all([first, second, last]);
+  assert.deepEqual(JSON.parse(JSON.stringify(f.storage['superNewtab:imageProviders'])), {unsplash: 'latest', giphy: 'other-key'});
+});
+
+test('failed provider-key loading cannot overwrite the stored key and retry reloads it', async () => {
+  let fail = true;
+  const ui = dom(), f = fixture({keys: {unsplash: 'existing-key', giphy: 'other-key'}, get: async () => {
+    if (fail) throw Error('read failure');
+  }});
+  const {ProviderAccess} = f.load('plugins/backgrounds/shared/ProviderAccess.tsx');
+  try {
+    await act(async () => {ui.root.render(React.createElement(ProviderAccess, {provider: 'unsplash'}));await tick();});
+    assert.equal(ui.d.window.document.querySelector('input').disabled, true);
+    assert.equal(f.storage['superNewtab:imageProviders'].unsplash, 'existing-key');
+    fail = false;
+    await act(async () => {ui.d.window.document.querySelector('button').click();await tick();});
+    const input = ui.d.window.document.querySelector('input');
+    assert.equal(input.disabled, false);assert.equal(input.value, 'existing-key');
+    assert.equal(f.storage['superNewtab:imageProviders'].giphy, 'other-key');
+    assert.equal(ui.d.window.document.querySelector('button'), null);
+  } finally {await ui.close();}
+});
+
+test('provider access autosaves input, displays a failed write and retries', async () => {
+  let fail = true;
+  const ui = dom(), f = fixture({set: async () => {if (fail) throw Error('storage failure');}});
+  const {ProviderAccess} = f.load('plugins/backgrounds/shared/ProviderAccess.tsx');
+  try {
+    await act(async () => {ui.root.render(React.createElement(ProviderAccess, {provider: 'unsplash'}));await tick();});
+    const input = ui.d.window.document.querySelector('input');
+    await act(async () => {Simulate.change(input, {target: {value: 'new-key'}});await tick();});
+    assert.equal(f.storage['superNewtab:imageProviders'].unsplash, undefined);
+    assert.equal(input.value, 'new-key');assert.match(ui.d.window.document.body.textContent, /Unable to read or save/);
+    fail = false;
+    await act(async () => {ui.d.window.document.querySelector('button').click();await tick();});
+    assert.equal(f.storage['superNewtab:imageProviders'].unsplash, 'new-key');
+    assert.equal(ui.d.window.document.querySelector('button'), null);
+  } finally {await ui.close();}
+});
+
 test('provider access settings save through the local key store and trigger a new revision', async () => {
   const ui = dom(), f = fixture(), { ProviderAccess, useProviderRevision } = f.load('plugins/backgrounds/shared/ProviderAccess.tsx');
   let revision;
@@ -178,8 +225,11 @@ test('provider access settings save through the local key store and trigger a ne
     await act(async () => { ui.root.render(React.createElement(View)); await tick(); });
     const input = ui.d.window.document.querySelector('input');
     await act(async () => { Simulate.change(input, { target: { value: 'local-access' } }); });
-    await act(async () => { ui.d.window.document.querySelector('button').click(); await tick(); });
-    assert.equal(f.storage['superNewtab:imageProviders'].unsplash, 'local-access'); assert.equal(revision, 1);
+    await act(async () => { await tick(); });
+    assert.equal(ui.d.window.document.querySelector('button'), null);
+    assert.equal(f.storage['superNewtab:imageProviders'].unsplash, 'local-access');
+    await act(async () => {await new Promise(resolve => setTimeout(resolve, 350));});
+    assert.equal(revision, 1);
     assert.match(ui.d.window.document.body.textContent, /retry automatically/);
   } finally { await ui.close(); }
   assert.equal(f.listeners.size, 0);

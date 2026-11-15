@@ -195,6 +195,68 @@ const profile = {
   syncInterval: 15,
   nestedSync: true,
 };
+test('profile autosave keeps the latest edit during a slow write and waits before leaving', async () => {
+  const ui = await boot({local: {'superSync:accounts': JSON.stringify({saved: profile})}});
+  try {
+    await ui.route('/options/saved');
+    const dispatch = ui.app.$store.dispatch.bind(ui.app.$store);
+    let release, count = 0;
+    ui.app.$store.dispatch = async (type, value) => {
+      if (type === 'STORE_ACCOUNT' && ++count === 1) await new Promise(resolve => {release = resolve;});
+      return dispatch(type, value);
+    };
+    const options = ui.component('AccountOptions');
+    options.data.label = 'Primeira';await tick();
+    assert.equal(options.saving, true);
+    options.data.label = profile.label;await tick();
+    const leaving = ui.app.$router.push('/');await tick();
+    assert.equal(ui.app.$route.path, '/options/saved');
+    release();await leaving;await tick();
+    assert.equal(count, 2);
+    assert.equal(JSON.parse(ui.local['superSync:accounts']).saved.label, profile.label);
+    assert.equal(ui.app.$route.path, '/');assert.deepEqual(ui.warnings, []);
+  } finally {ui.close();}
+});
+
+test('profile autosave reports failure, retains input and retries without a Save button', async () => {
+  const ui = await boot({local: {'superSync:accounts': JSON.stringify({saved: profile})}});
+  try {
+    await ui.route('/options/saved');
+    const dispatch = ui.app.$store.dispatch.bind(ui.app.$store);let fail = true;
+    ui.app.$store.dispatch = async (type, value) => {
+      if (type === 'STORE_ACCOUNT' && fail) throw Error('private storage failure');
+      return dispatch(type, value);
+    };
+    const options = ui.component('AccountOptions');options.data.label = 'Mantido';await tick();
+    assert.equal(options.saving, false);assert.match(options.error, /gravação/);
+    assert.equal(JSON.parse(ui.local['superSync:accounts']).saved.label, profile.label);
+    await ui.route('/');assert.equal(ui.app.$route.path, '/options/saved');
+    assert.equal(options.data.label, 'Mantido');
+    fail = false;await options.autoSave.retry();await tick();
+    assert.equal(options.error, '');assert.equal(JSON.parse(ui.local['superSync:accounts']).saved.label, 'Mantido');
+    await ui.route('/');assert.equal(ui.app.$route.path, '/');assert.deepEqual(ui.warnings, []);
+  } finally {ui.close();}
+});
+
+test('invalid profile input is not persisted and correcting it resumes autosave', async () => {
+  const ui = await boot({local: {'superSync:accounts': JSON.stringify({saved: profile})}});
+  try {
+    await ui.route('/options/saved');const options = ui.component('AccountOptions');
+    const dispatch = ui.app.$store.dispatch.bind(ui.app.$store);let release, first = true;
+    ui.app.$store.dispatch = async (type, data) => {
+      if (type === 'STORE_ACCOUNT' && first) {first = false;await new Promise(resolve => {release = resolve;});}
+      return dispatch(type, data);
+    };
+    options.data.label = 'Valid edit';await tick();
+    options.data.url = 'invalid-url';await tick();
+    release();await options.autoSave.flush();await tick();
+    assert.equal(JSON.parse(ui.local['superSync:accounts']).saved.url, profile.url);
+    assert.ok(options.error);assert.ok(ui.w.document.querySelector('input[aria-invalid="true"]'));
+    options.data.url = 'https://updated.example/repo.git';await tick();
+    assert.equal(JSON.parse(ui.local['superSync:accounts']).saved.url, 'https://updated.example/repo.git');
+    assert.equal(options.error, '');assert.deepEqual(ui.warnings, []);
+  } finally {ui.close();}
+});
 test("sync interface navigates internally, switches language and isolates OAuth settings", async () => {
   const ui = await boot({
     local: { theme: "dark", excludedSites: ["example.com"] },
@@ -212,7 +274,7 @@ test("sync interface navigates internally, switches language and isolates OAuth 
     await ui.route("/connections");
     const form = ui.component("Connections");
     form.oauth.googleClientId = "test-client";
-    await form.save();
+    await tick();
     assert.equal(
       ui.local["superSync:oauthClients"].googleClientId,
       "test-client"
@@ -229,7 +291,7 @@ test("sync interface navigates internally, switches language and isolates OAuth 
     await tick();
     assert.match(
       ui.w.document.body.textContent,
-      /Save connection settings/
+      /Configure Google Drive access/
     );
     await ui.route("/new");
     assert.equal(ui.w.document.querySelectorAll(".sync-service").length, 2);
@@ -245,7 +307,7 @@ test("sync interface navigates internally, switches language and isolates OAuth 
     ui.close();
   }
 });
-test("existing profiles retain data, edits are drafts, backup selects profiles and directional sync confirms", async () => {
+test("existing profiles autosave edits, backup selects profiles and directional sync confirms", async () => {
   const ui = await boot({
     local: { "superSync:accounts": JSON.stringify({ saved: profile }) },
   });
@@ -270,20 +332,20 @@ test("existing profiles retain data, edits are drafts, backup selects profiles a
     const options = ui.component("AccountOptions");
     options.data.label = "Rascunho";
     await tick();
-    assert.equal(ui.app.$store.state.accounts.saved.data.label, "Trabalho");
+    assert.equal(ui.app.$store.state.accounts.saved.data.label, "Rascunho");
     await ui.route("/");
-    assert.match(ui.w.document.body.textContent, /Trabalho/);
+    assert.match(ui.w.document.body.textContent, /Rascunho/);
     await ui.route("/options/saved");
     const second = ui.component("AccountOptions");
     second.data.label = "Atualizado";
-    await second.onSave();
+    await tick();
     assert.equal(
       JSON.parse(ui.local["superSync:accounts"]).saved.label,
       "Atualizado"
     );
     second.data.label = "Outro rascunho";
     await tick();
-    assert.equal(ui.app.$store.state.accounts.saved.data.label, "Atualizado");
+    assert.equal(ui.app.$store.state.accounts.saved.data.label, "Outro rascunho");
     await ui.route("/importexport");
     assert.equal(ui.component("ImportExport").selected.saved, true);
     assert.match(ui.w.document.body.textContent, /credenciais/);
@@ -338,24 +400,37 @@ test("locked engine keeps profile and credential views hidden", async () => {
   }
 });
 
-test("shared folder dialog preserves the current scope on cancel and saves only the selected folder", async () => {
+test("folder selection saves immediately and closing without selecting does not change scope", async () => {
   const ui = await boot({local:{"superSync:accounts":JSON.stringify({saved:profile})}});
   try {
     await ui.route("/options/saved");
     const folder = ui.component("OptionSyncFolder");
-    assert.ok(folder);
     await folder.onTriggerFinder();await tick();
-    const dialog = ui.w.document.querySelector('dialog[open]');
-    assert.ok(dialog);assert.ok(dialog.querySelector('.ui-folder-tree'));
+    let dialog = ui.w.document.querySelector('dialog[open]');
     assert.equal(dialog.querySelectorAll('input[type=radio]').length,2);
-    folder.selectedLocalRoot='0';
     dialog.dispatchEvent(new ui.w.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));await tick();
-    assert.equal(folder.value,'1');assert.equal(dialog.open,false);
+    assert.equal(folder.value,'1');assert.equal(JSON.parse(ui.local["superSync:accounts"]).saved.localRoot,'1');
     await folder.onTriggerFinder();await tick();
-    assert.equal(folder.selectedLocalRoot,'1');
-    folder.selectedLocalRoot='0';folder.onSave();await tick();
-    assert.equal(folder.finder,false);assert.equal(folder.value,'0');
+    dialog = ui.w.document.querySelector('dialog[open]');
+    const selection=dialog.querySelector('input[type=radio]');selection.checked=true;
+    selection.dispatchEvent(new ui.w.Event('change',{bubbles:true}));await tick();
+    assert.equal(folder.value,'0');assert.equal(JSON.parse(ui.local["superSync:accounts"]).saved.localRoot,'0');
+    assert.equal(dialog.querySelectorAll('button').length,1);
     assert.deepEqual(ui.warnings,[]);
+  } finally {ui.close();}
+});
+
+test('switching from tabs to folders persists only a real selection and closing restores the saved mode', async () => {
+  const ui = await boot({local: {'superSync:accounts': JSON.stringify({saved: {...profile, localRoot: 'tabs'}})}});
+  try {
+    await ui.route('/options/saved');const folder = ui.component('OptionSyncFolder');
+    folder.mode = 'folder';await tick();assert.equal(folder.finder, true);
+    assert.equal(JSON.parse(ui.local['superSync:accounts']).saved.localRoot, 'tabs');
+    folder.finder = false;await tick();assert.equal(folder.mode, 'tabs');
+    await folder.onTriggerFinder();await tick();folder.selectFolder('1');await tick();
+    assert.equal(folder.mode, 'folder');
+    assert.equal(JSON.parse(ui.local['superSync:accounts']).saved.localRoot, '1');
+    assert.deepEqual(ui.warnings, []);
   } finally {ui.close();}
 });
 
@@ -398,7 +473,7 @@ test("removed providers stay readable for backup but cannot be created, imported
     assert.equal(ui.component("ImportExport").selected.saved, true);
     await ui.route("/connections");
     assert.ok(!ui.w.document.body.textContent.includes("Dropbox"));
-    await ui.component("Connections").save();
+    await tick();
     assert.equal(ui.local["superSync:oauthClients"].dropboxClientId, "preserve-old-key");
     assert.equal(ui.local["superSync:accounts"], before);
     assert.deepEqual(ui.warnings, []);
@@ -406,7 +481,7 @@ test("removed providers stay readable for backup but cannot be created, imported
 });
 
 
-test("Vue 3 native fields keep string/boolean values and save Git credentials only after confirmation", async () => {
+test("native fields autosave Git credentials, booleans and intervals without a Save button", async () => {
   const ui = await boot({ local: { "superSync:accounts": JSON.stringify({ saved: { ...profile, branch: "main", syncIntervalEnabled: true } }) } });
   try {
     await ui.route("/options/saved");
@@ -415,7 +490,7 @@ test("Vue 3 native fields keep string/boolean values and save Git credentials on
     assert.equal(secret.value, profile.password);
     secret.value = "updated-private-test";secret.dispatchEvent(new ui.w.Event("input", { bubbles: true }));await tick();
     assert.equal(options.data.password, "updated-private-test");
-    assert.equal(JSON.parse(ui.local["superSync:accounts"]).saved.password, profile.password);
+    assert.equal(JSON.parse(ui.local["superSync:accounts"]).saved.password, "updated-private-test");
     const auto = ui.component("OptionAutoSync").$el.querySelector('input[type="checkbox"]');
     auto.click();await tick();assert.equal(options.data.enabled, false);
     const failsafe = ui.component("OptionFailsafe").$el.querySelector('input[value="false"]');
@@ -424,25 +499,25 @@ test("Vue 3 native fields keep string/boolean values and save Git credentials on
     direction.click();await tick();assert.equal(options.data.strategy, "slave");
     const interval = ui.component("OptionSyncInterval").$el.querySelector('input[type="range"]');
     interval.value="1";interval.dispatchEvent(new ui.w.Event("input", { bubbles:true }));await tick();assert.equal(options.data.syncInterval,10);
-    await options.onSave();
+    await tick();
     const saved=JSON.parse(ui.local["superSync:accounts"]).saved;
     assert.equal(saved.password,"updated-private-test");assert.equal(saved.enabled,false);assert.equal(saved.failsafe,false);assert.equal(saved.strategy,"slave");assert.equal(saved.syncInterval,10);
     assert.deepEqual(ui.warnings,[]);
   } finally { ui.close(); }
 });
 
-test("Google Drive encryption edits can be canceled without changing the stored profile or retaining the canceled draft", async () => {
+test("Google Drive encryption changes and removal save automatically with a masked field", async () => {
   const original={...profile,type:"google-drive",password:"original-encryption",refreshToken:"private-refresh"};
   const ui=await boot({local:{"superSync:accounts":JSON.stringify({saved:original})}});
   try {
-    await ui.route("/options/saved");const editor=ui.component("OptionPassphrase"),options=ui.component("AccountOptions");
-    const click=text=>[...editor.$el.querySelectorAll("button")].find(button=>button.textContent.includes(editor.t(text))).click();
-    click("LabelChange");await tick();let input=editor.$el.querySelector("input");input.value="discard-secret";input.dispatchEvent(new ui.w.Event("input",{bubbles:true}));await tick();
-    click("LabelCancel");await tick();assert.equal(options.data.password,"original-encryption");assert.equal(editor.passphrase,"");
-    click("LabelChange");await tick();input=editor.$el.querySelector("input");assert.equal(input.value,"");input.value="new-encryption";input.dispatchEvent(new ui.w.Event("input",{bubbles:true}));await tick();
-    click("LabelSave");await tick();assert.equal(options.data.password,"new-encryption");assert.equal(editor.passphrase,"");
-    assert.equal(JSON.parse(ui.local["superSync:accounts"]).saved.password,"original-encryption");
-    await options.onSave();assert.equal(JSON.parse(ui.local["superSync:accounts"]).saved.password,"new-encryption");assert.deepEqual(ui.warnings,[]);
+    await ui.route("/options/saved");const editor=ui.component("OptionPassphrase");
+    const input=editor.$el.querySelector("input");assert.equal(input.type,"password");assert.equal(input.value,"original-encryption");
+    input.value="new-encryption";input.dispatchEvent(new ui.w.Event("input",{bubbles:true}));await tick();
+    assert.equal(JSON.parse(ui.local["superSync:accounts"]).saved.password,"new-encryption");
+    input.value="";input.dispatchEvent(new ui.w.Event("input",{bubbles:true}));await tick();
+    assert.equal(JSON.parse(ui.local["superSync:accounts"]).saved.password,"");
+    assert.equal(JSON.parse(ui.local["superSync:accounts"]).saved.refreshToken,"private-refresh");
+    assert.ok(!ui.w.document.querySelector('.sync-save-row button'));assert.deepEqual(ui.warnings,[]);
   } finally {ui.close();}
 });
 
@@ -484,7 +559,7 @@ test("the Vue 3 backup view exports compatible profiles and imports Git without 
 });
 
 
-test("Google Drive login in the migrated view handles denial and applies synthetic OAuth credentials only to the draft", async () => {
+test("Google Drive login handles denial and autosaves synthetic OAuth credentials", async () => {
  const original={...profile,type:"google-drive",password:"encryption-secret",refreshToken:"old-private-refresh"};
  const config={permissionsGranted:false,local:{"superSync:accounts":JSON.stringify({saved:original}),"superSync:oauthClients":{googleClientId:"test-client",googleClientSecret:"test-secret"}}};
  const ui=await boot(config);
@@ -498,8 +573,8 @@ test("Google Drive login in the migrated view handles denial and applies synthet
   await drive.authenticate();await tick();
   assert.equal(drive.authError,"");assert.equal(drive.authenticating,false);assert.equal(requests.length,2);
   assert.equal(options.data.refreshToken,"new-private-refresh");assert.equal(options.data.username,"Synthetic Account");assert.equal(options.data.password,"encryption-secret");
-  assert.equal(JSON.parse(ui.local["superSync:accounts"]).saved.refreshToken,"old-private-refresh");
-  await options.onSave();const saved=JSON.parse(ui.local["superSync:accounts"]).saved;assert.equal(saved.refreshToken,"new-private-refresh");assert.equal(saved.password,"encryption-secret");assert.ok(!JSON.stringify(saved).includes("synthetic-access"));
+  assert.equal(JSON.parse(ui.local["superSync:accounts"]).saved.refreshToken,"new-private-refresh");
+  await tick();const saved=JSON.parse(ui.local["superSync:accounts"]).saved;assert.equal(saved.refreshToken,"new-private-refresh");assert.equal(saved.password,"encryption-secret");assert.ok(!JSON.stringify(saved).includes("synthetic-access"));
   assert.deepEqual(ui.warnings,[]);
  } finally {ui.close();}
 });

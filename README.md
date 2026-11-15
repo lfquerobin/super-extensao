@@ -4,7 +4,7 @@
 
 Extensão pessoal para Helium e navegadores Chromium, com Nova guia, sincronização de favoritos, VPN no navegador, limpeza ao sair, controle de autoplay e proteção da última aba.
 
-**Versão instalada: 1.7.38.** Documentação revisada em 15 de novembro de 2026. Temas escuro, claro e sistema; idiomas PT-BR e inglês compartilhados entre os módulos. Requer Chromium 116 ou superior, conforme o manifest.
+**Versão instalada: 1.7.39.** Documentação revisada em 15 de novembro de 2026. Temas escuro, claro e sistema; idiomas PT-BR e inglês compartilhados entre os módulos. Requer Chromium 116 ou superior, conforme o manifest.
 
 Para investigar uma falha da VPN, abra `chrome://extensions`, localize a Super Extensão e inspecione o **service worker**. Na aba Console, reproduza a tentativa e execute `getVpnDiagnostics()`. Os últimos 50 eventos registram somente horário, etapa, resultado e código conhecido, sem credenciais ou dados da conta; falhas novas também aparecem como avisos `[Super VPN]`. Esse histórico é temporário e reinicia com o worker. `getLogs()` é o registro legado, dependente de debug, e pode estar vazio.
 
@@ -41,6 +41,8 @@ Os arquivos compilados já estão no repositório: instalar a extensão não exi
 
 Tema e idioma ficam no cabeçalho e atendem toda a extensão. Limpeza, Sincronização e VPN têm submenus fixos; o conteúdo interno continua rolável sem barras visíveis. Arraste a alça inferior para ajustar a altura do popup. A seção selecionada é preservada; a VPN também guarda sua página e rolagem.
 
+Na **1.7.39**, as configurações são salvas automaticamente, sem botões Salvar: perfis e OAuth da sincronização, regras da VPN e chaves de imagens da Nova guia. Campos inválidos e falhas de gravação mostram um aviso; corrija ou use Tentar novamente. Selecionar uma pasta já aplica a seleção, e fechar o diálogo não desfaz uma alteração aplicada. Criar perfis, adicionar regras, importar e remover dados continuam sendo ações explícitas.
+
 A [biblioteca de componentes](docs/ui-components.md) centraliza estrutura, botões, campos, grupos de ações, cartões, avisos e espaçamento. Popup, sincronização, VPN, editor da nova guia e aba de reserva consomem essa base por seus adaptadores. A sincronização usa Vue 3 e controles HTML nativos; a Nova guia usa React. Os motores existentes permanecem. Detalhes da migração e das dependências em [docs/sync-migration.md](docs/sync-migration.md).
 
 ### Sincronização de favoritos
@@ -59,11 +61,11 @@ Veja [a interface e a compatibilidade](docs/sync-interface.md) e [o escopo do no
 
 ### VPN
 
-Na **1.7.34**, o switch **Bloquear também sites que não usam VPN quando ela cair**, em Recursos, permite manter os sites fora da VPN acessíveis durante falhas. Começa ligado; desligado, respeita o modo de inclusão/exclusão e subdomínios. Clique em Salvar. Sites que exigem VPN continuam bloqueados até a confirmação da conexão.
+Na **1.7.34**, o switch **Bloquear também sites que não usam VPN quando ela cair**, em Recursos, permite manter os sites fora da VPN acessíveis durante falhas. Começa ligado; desligado, respeita o modo de inclusão/exclusão e subdomínios. A alteração é salva e aplicada automaticamente. Sites que exigem VPN continuam bloqueados até a confirmação da conexão.
 
 A **1.7.31** compartilha os fluxos completos de importação e edição de domínios, a lista de regras do autoplay e as confirmações dos módulos. Também cancela desafios do próprio proxy durante a restauração inicial quando o endpoint ainda não pode receber credenciais. A correção desse caso passou em navegador nativo com proxy fictício local; ainda falta confirmar o cenário no perfil pessoal.
 
-Na **1.7.27**, importe domínios de uma pasta de favoritos em **VPN → Recursos**, com prévia, subpastas opcionais e duplicados ignorados. A coleta reaproveita o código da limpeza. A importação preenche o rascunho do modo selecionado (exclusões ou inclusões); revise e clique em **Salvar** para aplicar. Em exclusões, esses sites navegarão fora da VPN quando o tunelamento dividido estiver ativo.
+Na **1.7.27**, importe domínios de uma pasta de favoritos em **VPN → Recursos**, com prévia, subpastas opcionais e duplicados ignorados. A coleta reaproveita o código da limpeza. A importação aplica automaticamente a lista ao modo selecionado (exclusões ou inclusões). Em exclusões, esses sites navegarão fora da VPN quando o tunelamento dividido estiver ativo.
 
 Na **1.7.26**, a página de bloqueio oferece **Voltar à página** depois que a VPN é confirmada. O clique confere novamente a conexão e reabre o endereço na mesma aba; não há retorno automático. O atalho aparece para novas navegações GET interceptadas após atualizar. Páginas de bloqueio antigas, abertas manualmente ou originadas de POST não oferecem o botão; formulários e pagamentos não são reenviados.
 

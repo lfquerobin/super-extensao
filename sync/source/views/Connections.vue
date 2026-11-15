@@ -7,7 +7,7 @@
       <p>{{ t("UiConnectionHelp") }}</p>
     </div>
   </UiHeading>
-  <UiForm class="sync-form" @submit.prevent="save">
+  <UiForm class="sync-form" @submit.prevent>
     <UiNotice class="ui-notice sync-notice">{{ t("SuperOAuthHelp") }}</UiNotice>
     <UiField
       >{{ t("SuperRedirect")
@@ -17,7 +17,7 @@
         @focus="$event.target.select()"
         class="ui-control"
     /></UiField>
-    <UiFieldset>
+    <UiFieldset :disabled="loading || loadError">
       <legend>Google Drive</legend>
       <UiField
         >{{ t("SuperGoogleId")
@@ -36,21 +36,13 @@
       /></UiField>
     </UiFieldset>
     <UiAsyncState :kind="error ? 'error' : loading ? 'loading' : ''" :text="error || t('UiWorking')" />
-    <UiActions class="sync-save-row">
-      <span role="status" class="ui-inline-status">{{
-        saved ? t("UiSaved") : ""
-      }}</span
-      ><UiButton
-        class="sync-button sync-primary ui-button ui-button-primary"
-        :disabled="saving || loading"
-       type="submit">
-        {{ saving ? t("UiWorking") : t("SuperSave") }}
-      </UiButton>
-    </UiActions>
+    <UiAsyncState :kind="saving ? 'loading' : saved ? 'success' : ''" :text="saving ? t('UiWorking') : saved ? t('UiSaved') : ''" />
+    <UiButton v-if="error && !loading" @click="retry">{{ t('UiRetry') }}</UiButton>
   </UiForm>
 </section>
 </template>
 <script>
+import { createAutoSave } from "../../../ui/autosave.js";
 import browser from "@sync-engine/browser-api";
 export default {
   name: "Connections",
@@ -62,42 +54,53 @@ export default {
       },
       redirectUrl: chrome.identity.getRedirectURL(),
       saved: false,
+      savedData: "",
       saving: false,
       loading: true,
+      loadError: false,
       error: "",
     };
   },
   watch: {
     oauth: {
-      deep: true,
+      deep: true, flush: 'post',
       handler() {
+        if (this.loading || (!this.saving && !this.autoSave.error && JSON.stringify(this.oauth) === this.savedData)) return;
         this.saved = false;
+        void this.autoSave.set(this.oauth);
       },
     },
   },
   async created() {
-    try {
-      const data = await browser.storage.local.get({ oauthClients: {} });
-      this.oauth = { ...this.oauth, ...data.oauthClients };
-    } catch (error) {
-      this.error = error.message;
-    } finally {
-      this.loading = false;
-    }
+    this.autoSave = createAutoSave({
+      write: oauthClients => browser.storage.local.set({oauthClients}),
+      onState: state => {
+        this.saving = state.saving;
+        this.error = state.error ? this.t('UiAutoSaveFailed') : '';
+        if (state.value) this.savedData = JSON.stringify(state.value);
+        this.saved = !state.saving && !state.error && JSON.stringify(this.oauth) === this.savedData;
+      },
+    });
+    await this.load();
   },
   methods: {
-    async save() {
-      this.saving = true;
-      this.error = "";
+    retry() {return this.loadError ? this.load() : this.autoSave.retry();},
+    async load() {
+      this.loading = true; this.error = ''; this.loadError = false;
       try {
-        await browser.storage.local.set({ oauthClients: { ...this.oauth } });
-        this.saved = true;
-      } catch (error) {
-        this.error = error.message;
-      } finally {
-        this.saving = false;
-      }
+        const data = await browser.storage.local.get({oauthClients: {}});
+        this.oauth = {...this.oauth, ...data.oauthClients};
+        this.savedData = JSON.stringify(this.oauth);
+      } catch {
+        this.loadError = true;
+        this.error = this.t('UiConnectionLoadFailed');
+      } finally {this.loading = false;}
     },
+  },
+  async beforeRouteLeave() {
+    await this.$nextTick();
+    await this.autoSave.flush();
+    return this.loadError || !this.error;
   },
 };
 </script>
