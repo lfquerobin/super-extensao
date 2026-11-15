@@ -1,7 +1,7 @@
 "use strict";
 const $ = id => document.getElementById(id);
 const TOGGLES = ["enabled", "clearHistory", "clearCache", "clearCookies", "clearDownloads", "clearFormData", "clearLocalStorage"];
-const DEFAULTS = {enabled:true, clearHistory:true, clearCache:false, clearCookies:false, clearDownloads:false, clearFormData:false, clearLocalStorage:false, excludedSites:[], excludedCacheSites:[], excludedLocalStorageSites:[], paused:false, pauseUntil:null};
+const DEFAULTS = {...ClearRules.filterDefaults(),enabled:true, clearHistory:true, clearCache:false, clearCookies:false, clearDownloads:false, clearFormData:false, clearLocalStorage:false, excludedSites:[], excludedCacheSites:[], excludedLocalStorageSites:[], paused:false, pauseUntil:null};
 const PRESETS = {
   safe: {clearHistory:true, clearCache:false, clearCookies:false, clearDownloads:false, clearFormData:false, clearLocalStorage:false},
   standard: {clearHistory:true, clearCache:true, clearCookies:false, clearDownloads:false, clearFormData:false, clearLocalStorage:false},
@@ -22,7 +22,7 @@ function showError(error) {
 let lastNotice;
 function renderNotice(){if(lastNotice)SuperAsyncState.renderAsyncState($("popupStatus"), {kind:lastNotice.kind || "success", text:lastNotice.key?SuperI18n.t(lastNotice.key,lastNotice.values):SuperI18n.text(lastNotice.literal), ...(lastNotice.kind === "loading" ? {progress:null} : {})});}
 function notify(message, kind = "success") {lastNotice={literal:message, kind};renderNotice();$("error").hidden=true;}
-function notifyMessage(key,values){lastNotice={key,values};renderNotice();$("error").hidden=true;}
+function notifyMessage(key,values,kind="success"){lastNotice={key,values,kind};renderNotice();$("error").hidden=true;}
 function handle(action) { return (...args) => Promise.resolve().then(() => action(...args)).catch(showError); }
 function serializeMutation(action) {
   const result = mutationQueue.catch(() => {}).then(action);
@@ -34,6 +34,24 @@ const EXCEPTION_LISTS = {
   cache: {key:"excludedCacheSites", tab:"cache", prefix:"cache"},
   localStorage: {key:"excludedLocalStorageSites", tab:"local-storage", prefix:"localStorage"}
 };
+const currentModes = Object.fromEntries(Object.keys(EXCEPTION_LISTS).map(type => [type,'exclude']));
+const listRevisions = {};
+const pendingModes = new Set();
+const unavailableFilters = new Set();
+function filterTarget(type, mode = currentModes[type]) {
+  const filter = ClearRules.SITE_FILTERS[type];
+  if (!filter) throw Error('Invalid cleanup filter');
+  mode = ClearRules.normalizeMode(mode);
+  return {...filter,mode,key:mode === 'include' ? filter.includeKey : filter.excludeKey};
+}
+const importScope = () => importType() + '/' + currentModes[importType()];
+function scopeTarget(scope) {
+  const [type,mode] = scope.split('/');
+  return {type,...filterTarget(type,mode)};
+}
+function modeHelp(mode, count) {
+  return SuperI18n.t(mode === 'include' ? count ? 'uiCleanupIncludeHelp' : 'uiCleanupIncludeEmpty' : 'uiCleanupExcludeHelp');
+}
 const listElement = (type, name) => $(EXCEPTION_LISTS[type].prefix ? EXCEPTION_LISTS[type].prefix + name[0].toUpperCase() + name.slice(1) : name);
 const importType = () => Object.hasOwn(EXCEPTION_LISTS, $("importTarget").value) ? $("importTarget").value : "cookies";
 const CLEANUP_TABS = ["cleanup", "exceptions", "cache", "local-storage", "bookmarks"];
@@ -99,9 +117,22 @@ async function message(payload) {
 }
 async function refreshList(type) {
   if (!type) { await Promise.all(Object.keys(EXCEPTION_LISTS).map(refreshList)); return; }
-  const {key} = EXCEPTION_LISTS[type];
-  const data = await chrome.storage.local.get({[key]:[]});
+  const revision = listRevisions[type] = (listRevisions[type] || 0) + 1;
+  try {
+  const filter = ClearRules.SITE_FILTERS[type];
+  const data = await chrome.storage.local.get({[filter.modeKey]:'exclude',[filter.excludeKey]:[],[filter.includeKey]:[]});
+  if (revision !== listRevisions[type] || pendingModes.has(type)) return;
+  const mode = ClearRules.normalizeMode(data[filter.modeKey]);
+  const {key} = filterTarget(type,mode);
   const sites = ClearRules.normalizeList(data[key]);
+  currentModes[type] = mode;
+  listElement(type,'listMode').value = mode;
+  listElement(type,'listModeHelp').textContent = modeHelp(mode,sites.length);
+  listElement(type,'listModeHelp').classList.toggle('ui-notice-warning',mode === 'include' && !sites.length);
+  if (importType() === type) {
+    $('importMode').value = mode;
+    $('importModeHelp').textContent = modeHelp(mode,sites.length);
+  }
   const list = listElement(type, "domainList");
   SuperDomainList.renderDomainList(list, sites.map(domain => ({domain})), {
     removeLabel: domain => SuperI18n.t("uiRemoveDomain", {domain}),
@@ -117,9 +148,24 @@ async function refreshList(type) {
   });
   listElement(type,"listCount").textContent = SuperI18n.t(sites.length===1?"uiDomainsOne":"uiDomainsMany",{count:sites.length});
   listElement(type,"emptyList").hidden = sites.length > 0;
+  unavailableFilters.delete(type);
+  listElement(type,'filterEditor').disabled = false;
+  listElement(type,'filterRetry').hidden = true;
+  if (importType() === type) $('importMode').disabled = false;
+  } catch (error) {
+    if (revision === listRevisions[type]) {
+      unavailableFilters.add(type);
+      listElement(type,'filterEditor').disabled = true;
+      listElement(type,'filterRetry').hidden = false;
+      if (importType() === type) $('importMode').disabled = true;
+      bookmarkImporter?.render();
+    }
+    throw error;
+  }
+
 }
-async function addDomains(values, type = "cookies") {
-  const {key} = EXCEPTION_LISTS[type];
+async function addDomains(values, type = "cookies", mode = currentModes[type]) {
+  const {key} = filterTarget(type,mode);
   return serializeMutation(async () => {
     const data = await chrome.storage.local.get({[key]:[]});
     const before = ClearRules.normalizeList(data[key]);
@@ -128,7 +174,30 @@ async function addDomains(values, type = "cookies") {
     return after.length - before.length;
   });
 }
+async function changeListMode(type, mode) {
+  if (pendingModes.has(type)) return;
+  mode = ClearRules.normalizeMode(mode);
+  const previous = currentModes[type];
+  currentModes[type] = mode;
+  pendingModes.add(type);
+  listRevisions[type] = (listRevisions[type] || 0) + 1;
+  listElement(type,'filterEditor').disabled = true;
+  $('importMode').disabled = true;
+  bookmarkImporter?.render();
+  try {
+    await serializeMutation(() => chrome.storage.local.set({[ClearRules.SITE_FILTERS[type].modeKey]:mode}));
+    notifyMessage('uiCleanupModeSaved');
+  } catch (error) {
+    currentModes[type] = previous;
+    throw error;
+  } finally {
+    pendingModes.delete(type);
+    await refreshList(type);
+    await refreshPreview();
+  }
+}
 async function refreshPreview() {
+  if (!pendingModes.has(importType())) await refreshList(importType());
   if (bookmarkImporter) await bookmarkImporter.refresh();
 }
 async function refreshLanguage(){
@@ -187,6 +256,8 @@ async function init() {
   })));
   $("resume").addEventListener("click", handle(async () => { await message({action:"resume"}); await refreshPause(); }));
   for (const type of Object.keys(EXCEPTION_LISTS)) {
+    listElement(type,'filterRetry').addEventListener('click',handle(async () => {await refreshList(type);await refreshPreview();notifyMessage('uiCleanupListReady');}));
+    listElement(type,'listMode').addEventListener('change',handle(event => changeListMode(type,event.target.value)));
     domainEditors.push(SuperDomainEditor.bindDomainEditor(listElement(type,"domainForm"), {
       normalize: ClearRules.normalizeDomain,
       onError: showError,
@@ -204,18 +275,21 @@ async function init() {
   }
   bookmarkImporter = SuperBookmarkImporter.createBookmarkImporter({
     browser: chrome, locale: () => SuperI18n.locale, normalize: ClearRules.normalizeDomain,
-    scope: importType,
-    async existing(type) {
-      const {key} = EXCEPTION_LISTS[type];
+    scope: importScope,
+    disabled: () => pendingModes.has(importType()) || unavailableFilters.has(importType()),
+    async existing(scope) {
+      const {key} = scopeTarget(scope);
       return ClearRules.normalizeList((await chrome.storage.local.get({[key]:[]}))[key]);
     },
-    async import(domains, type) {
-      const count = await addDomains(domains, type);
+    async import(domains, scope) {
+      const {type,mode} = scopeTarget(scope);
+      const count = await addDomains(domains, type,mode);
       await refreshList();
       notifyMessage(count === 1 ? "uiImportedOne" : "uiImportedMany", {count});
     },
   });
   bookmarkImporter.attach(document.querySelector("#panel-bookmarks [data-bookmark-importer]"));
+  $('importMode').addEventListener('change',handle(event => changeListMode(importType(),event.target.value)));
   $("importTarget").addEventListener("change", handle(refreshPreview));
   window.addEventListener("unload", () => {bookmarkImporter.dispose(); domainEditors.forEach(dispose => dispose());}, {once: true});
   $("clearNow").addEventListener("click", handle(async () => {
@@ -224,7 +298,9 @@ async function init() {
     if (!Object.keys(LABELS).some(type => snapshot[{history:"clearHistory", cache:"clearCache", cookies:"clearCookies", downloads:"clearDownloads", formData:"clearFormData", localStorage:"clearLocalStorage"}[type]])) {
       notify(SuperI18n.text("Escolha pelo menos um tipo de dado na aba Limpeza.")); return;
     }
-    if (snapshot.clearCookies && !await SuperConfirmation.confirmAction(document, SuperI18n.text("Limpar os dados selecionados agora? Cookies fora das exceções serão apagados e isso pode desconectar contas."))) return;
+    const plan = ClearRules.removalPlan(snapshot);
+    if (!plan.length) {notifyMessage('uiCleanupNoTargets',undefined,'warning');return;}
+    if (plan.some(operation => operation.method === 'removeCookies') && !await SuperConfirmation.confirmAction(document, SuperI18n.t('uiCleanupConfirm'))) return;
     $("clearNow").disabled = true;
     notify(SuperI18n.text("Limpando…"), "loading");
     try {
@@ -235,7 +311,7 @@ async function init() {
   }));
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== "local") return;
-    for (const [type, {key}] of Object.entries(EXCEPTION_LISTS)) if (changes[key]) {
+    for (const type of Object.keys(EXCEPTION_LISTS)) if (Object.values(ClearRules.SITE_FILTERS[type]).some(key => changes[key])) {
       refreshList(type).catch(showError); refreshPreview().catch(showError);
     }
     if (changes.lastClearTime || changes.lastClearErrorAt) refreshReport().catch(showError);

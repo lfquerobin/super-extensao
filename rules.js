@@ -18,28 +18,51 @@
     if (!Array.isArray(values)) throw new Error("Lista de exceções inválida; limpeza cancelada.");
     return [...new Set(values.map(normalizeDomain))].sort();
   }
-  function removalOptions(values) {
+  const SITE_FILTERS = Object.freeze({
+    cookies: {excludeKey:'excludedSites',includeKey:'includedSites',modeKey:'cookieCleanupMode'},
+    cache: {excludeKey:'excludedCacheSites',includeKey:'includedCacheSites',modeKey:'cacheCleanupMode'},
+    localStorage: {excludeKey:'excludedLocalStorageSites',includeKey:'includedLocalStorageSites',modeKey:'localStorageCleanupMode'}
+  });
+  function normalizeMode(value) {
+    if (value === undefined) return 'exclude';
+    if (value !== 'include' && value !== 'exclude') throw new Error('Modo de limpeza inválido; limpeza cancelada.');
+    return value;
+  }
+  function filterDefaults() {
+    return Object.fromEntries(Object.values(SITE_FILTERS).flatMap(item => [[item.modeKey,'exclude'],[item.excludeKey,[]],[item.includeKey,[]]]));
+  }
+  function removalOptions(values, mode = 'exclude') {
+    mode = normalizeMode(mode);
     const hosts = normalizeList(values);
     const origins = [...new Set(hosts.flatMap(host => [new URL(`http://${host}`).origin, new URL(`https://${host}`).origin]))];
+    if (mode === 'include') return origins.length ? {since:0,origins} : null;
     return origins.length ? {since: 0, excludeOrigins: origins} : {since: 0};
   }
   function removalPlan(settings) {
-    // Validate every exception list before deleting any data.
-    const cookieOptions = removalOptions(settings.excludedSites === undefined ? [] : settings.excludedSites);
+    // Validate both lists and all modes before deleting any data. Missing legacy
+    // settings preserve the exclusion behavior; an empty inclusion never clears all.
+    const options = {};
+    for (const [type, filter] of Object.entries(SITE_FILTERS)) {
+      const excluded = normalizeList(settings[filter.excludeKey] === undefined ? [] : settings[filter.excludeKey]);
+      const included = normalizeList(settings[filter.includeKey] === undefined ? [] : settings[filter.includeKey]);
+      const mode = normalizeMode(settings[filter.modeKey]);
+      options[type] = removalOptions(mode === 'include' ? included : excluded,mode);
+    }
+    const cookieOptions = options.cookies;
     const scoped = [
-      {key:"clearCache", type:"cache", options:removalOptions(settings.excludedCacheSites === undefined ? [] : settings.excludedCacheSites)},
-      {key:"clearLocalStorage", type:"localStorage", options:removalOptions(settings.excludedLocalStorageSites === undefined ? [] : settings.excludedLocalStorageSites)}
+      {key:"clearCache", type:"cache", options:options.cache},
+      {key:"clearLocalStorage", type:"localStorage", options:options.localStorage}
     ];
     const globalData = {};
     for (const [key, type] of [["clearHistory", "history"], ["clearDownloads", "downloads"], ["clearFormData", "formData"]]) {
       if (settings[key] === true) globalData[type] = true;
     }
-    for (const item of scoped) if (settings[item.key] === true && !item.options.excludeOrigins) globalData[item.type] = true;
+    for (const item of scoped) if (settings[item.key] === true && item.options && !item.options.excludeOrigins && !item.options.origins) globalData[item.type] = true;
     const plan = Object.keys(globalData).length ? [{method:"remove", options:{since:0}, data:globalData}] : [];
-    for (const item of scoped) if (settings[item.key] === true && item.options.excludeOrigins)
+    for (const item of scoped) if (settings[item.key] === true && (item.options?.excludeOrigins || item.options?.origins))
       plan.push({method:"remove", options:item.options, data:{[item.type]:true}});
     // Cookies run last, preserving the original worker's dedicated cookie API.
-    if (settings.clearCookies === true) plan.push({method: "removeCookies", options: cookieOptions});
+    if (settings.clearCookies === true && cookieOptions) plan.push({method: "removeCookies", options: cookieOptions});
     return plan;
   }
   function bookmarkDomains(folder, recursive = true, normalize = normalizeDomain) {
@@ -71,7 +94,7 @@
     tree.forEach(node => visit(node, []));
     return folders;
   }
-  const rules = {normalizeDomain, normalizeList, removalOptions, removalPlan, bookmarkDomains, bookmarkFolders};
+  const rules = {SITE_FILTERS, filterDefaults, normalizeMode, normalizeDomain, normalizeList, removalOptions, removalPlan, bookmarkDomains, bookmarkFolders};
   if (typeof module !== "undefined" && module.exports) module.exports = rules;
   else root.ClearRules = rules;
 })(globalThis);

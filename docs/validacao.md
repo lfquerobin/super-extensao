@@ -1,5 +1,11 @@
 # Validação da Super Extensão
 
+## Inclusão e exclusão na limpeza — 1.7.41
+
+Em 15/11/2026, **556 testes passaram**, sem falhas ou testes ignorados. Templates/catálogos foram gerados e `check:ui`, `check:integrity` e `git diff --check` passaram. Os modos por tipo preservam as listas antigas, não misturam inclusão/exclusão e não ampliam filtros vazios ou inválidos. Foram exercitados snapshots manuais, relatórios sem falso sucesso, falha de gravação, leituras antigas e troca de destino durante importação.
+
+O Edge 157.0.4341.60 executou remoção real em perfil temporário com dois sites locais, sem dados pessoais: cookies, cache HTTP e localStorage seguiram inclusão e exclusão; inclusão vazia não removeu dados nem registrou sucesso. O cache foi comprovado por requisições ao servidor local. Capturas foram inspecionadas. [Regras, formatos e limites](limpeza-por-site.md).
+
 ## Módulos opcionais — 1.7.40
 
 Em 15/11/2026, **543 testes passaram**, sem falhas ou testes ignorados. Workers/interfaces de sincronização e VPN, catálogos e templates foram compilados. TypeScript completo da origem VPN, `check:ui` e `check:integrity` passaram; a integridade inclui os recursos agora carregados dinamicamente e percorre 65 arquivos referenciados.

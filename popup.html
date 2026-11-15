@@ -54,57 +54,84 @@
       <div class="ui-card options">
         <label class="ui-toggle toggle-line"><span data-i18n="uiBrowsinghistory8c5ab">Histórico de navegação</span><input id="clearHistory" type="checkbox" role="switch" class="ui-switch"></label>
         <label class="ui-toggle toggle-line"><span data-i18n="uiBrowsercache18f9e">Cache do navegador</span><input id="clearCache" type="checkbox" role="switch" class="ui-switch"></label>
-        <label class="ui-toggle toggle-line"><span>Cookies<small data-i18n="uiMaysignoutaccountsoutside23482">Pode desconectar contas fora das exceções</small></span><input id="clearCookies" type="checkbox" role="switch" class="ui-switch"></label>
+        <label class="ui-toggle toggle-line"><span>Cookies<small data-i18n="uiMaysignoutaccountsoutside23482">Pode desconectar contas nos sites limpos</small></span><input id="clearCookies" type="checkbox" role="switch" class="ui-switch"></label>
         <label class="ui-toggle toggle-line"><span><span data-i18n="uiDownloadhistorya142a">Histórico de downloads</span><small data-i18n="uiDownloadedfilesarepreserved42e52">Os arquivos baixados são preservados</small></span><input id="clearDownloads" type="checkbox" role="switch" class="ui-switch"></label>
         <label class="ui-toggle toggle-line"><span data-i18n="uiFormdata06d50">Dados de formulários</span><input id="clearFormData" type="checkbox" role="switch" class="ui-switch"></label>
         <label class="ui-toggle toggle-line"><span><span data-i18n="uiLocalstorage3d640">Armazenamento local</span><small data-i18n="uiWebsitelocalStorage2e49d">localStorage dos sites</small></span><input id="clearLocalStorage" type="checkbox" role="switch" class="ui-switch"></label>
       </div>
       <p class="ui-note note" data-i18n="uiSavedpasswordsarenotdeleted74677">Senhas salvas não são apagadas. A limpeza pode ser concluída na próxima abertura se o navegador encerrar antes de terminar.</p>
+      <p class="ui-note note" data-i18n="uiCleanupGlobalNotice">As listas de sites afetam somente cookies, cache e armazenamento local. Histórico e formulários continuam sendo limpos globalmente.</p>
     </section>
 
     <section id="panel-exceptions" aria-labelledby="tab-exceptions" hidden="">
-      <div class="ui-section-heading section-heading"><h2 data-i18n="uiKeepcookiesbywebsite78b44">Preservar cookies por site</h2></div>
-      <p class="ui-note note" data-i18n="uiCookiesforthewebsitesin80c36">Esta lista protege somente cookies. Para cache e armazenamento local, use as abas correspondentes. Preservar cookies não garante todos os logins.</p>
-      <p class="ui-notice scope ui-notice-warning" data-i18n="uiCookiesareprotectedforthe852f6" role="status">Cookies são protegidos para o domínio registrável inteiro: uma exceção para accounts.exemplo.com também preserva cookies de exemplo.com e seus subdomínios.</p>
-      <form id="domainForm" class="ui-domain-editor" data-domain-editor>
+      <div class="ui-section-heading section-heading"><h2 data-i18n="uiKeepcookiesbywebsite78b44">Cookies por site</h2></div>
+      <p class="ui-note note" data-i18n="uiCookiesforthewebsitesin80c36">Escolha quais sites preservar ou limpar. Esta lista afeta somente cookies. Preservar cookies não garante todos os logins.</p>
+      <p class="ui-notice scope ui-notice-warning" data-i18n="uiCookiesareprotectedforthe852f6" role="status">Cookies são tratados para o domínio registrável inteiro: accounts.exemplo.com também abrange exemplo.com e seus subdomínios, tanto para preservar como para limpar.</p>
+      <fieldset id="filterEditor" class="cleanup-site-filter">
+    <label class="ui-field field" for="listMode"><span data-i18n="uiCleanupListMode">Modo da lista</span>
+      <select class="ui-control" id="listMode">
+        <option value="exclude" data-i18n="uiCleanupExclude">Excluir da limpeza — preservar a lista</option>
+        <option value="include" data-i18n="uiCleanupInclude">Incluir na limpeza — limpar somente a lista</option>
+      </select>
+    </label><p id="listModeHelp" class="note" role="status"></p>
+    <form id="domainForm" class="ui-domain-editor" data-domain-editor>
       <label class="ui-field" for="domainInput"><span data-i18n="uiDomainorURL10cc7">Domínio ou URL</span><span class="ui-actions ui-domain-entry"><input id="domainInput" class="ui-control" data-domain-input data-field="domain" value="" placeholder="example.com" autocomplete="off" spellcheck="false" required><button type="button" class="ui-button" data-domain-add data-action="add-domain" data-i18n="uiAddfadcf">Adicionar</button></span></label>
 
       <div class="ui-domain-heading"><span id="listCount" data-domain-count>0 domínios</span><button type="button" id="goImport" class="ui-button ui-domain-import" data-i18n="uiImportfrombookmarksa9c2c">Importar de favoritos →</button></div>
       <ul id="domainList" data-domain-list class="domain-list"></ul><p id="emptyList" class="ui-empty" data-domain-empty data-i18n="uiNodomainsinthislist5b710">Nenhum domínio nesta lista.</p>
     </form>
-      <p class="ui-note note" data-i18n="uiAddinganexceptiondoesnot95152">Adicionar uma exceção não ativa a exclusão de cookies. Essa opção é controlada em Geral.</p>
+  </fieldset><button type="button" class="ui-button" id="filterRetry" data-i18n="uiCleanupRetry" hidden>Tentar novamente</button>
+      <p class="ui-note note" data-i18n="uiAddinganexceptiondoesnot95152">Adicionar sites ou mudar o modo não ativa a exclusão de cookies. Essa opção é controlada em Geral.</p>
     </section>
 
     <section id="panel-cache" aria-labelledby="tab-cache" hidden="">
-  <div class="ui-section-heading section-heading"><h2 data-i18n="uiKeepCacheBySite">Preservar cache por site</h2></div>
-  <p class="ui-note note" data-i18n="uiKeepCacheBySiteDescription">Os sites desta lista terão o cache preservado durante a limpeza. Esta lista não protege cookies nem armazenamento local.</p>
-  <p class="ui-notice scope ui-notice-warning" data-i18n="uiExactCleanupScope" role="status">A exceção vale para o endereço informado em HTTP e HTTPS. Outros subdomínios e portas precisam ser adicionados separadamente.</p>
-  <form id="cacheDomainForm" class="ui-domain-editor" data-domain-editor>
+  <div class="ui-section-heading section-heading"><h2 data-i18n="uiKeepCacheBySite">Cache por site</h2></div>
+  <p class="ui-note note" data-i18n="uiKeepCacheBySiteDescription">Escolha quais sites preservar ou limpar no cache. Esta lista não afeta cookies nem armazenamento local.</p>
+  <p class="ui-notice scope ui-notice-warning" data-i18n="uiExactCleanupScope" role="status">O filtro vale para o endereço informado em HTTP e HTTPS. Outros subdomínios e portas precisam ser adicionados separadamente.</p>
+  <fieldset id="cacheFilterEditor" class="cleanup-site-filter">
+    <label class="ui-field field" for="cacheListMode"><span data-i18n="uiCleanupListMode">Modo da lista</span>
+      <select class="ui-control" id="cacheListMode">
+        <option value="exclude" data-i18n="uiCleanupExclude">Excluir da limpeza — preservar a lista</option>
+        <option value="include" data-i18n="uiCleanupInclude">Incluir na limpeza — limpar somente a lista</option>
+      </select>
+    </label><p id="cacheListModeHelp" class="note" role="status"></p>
+    <form id="cacheDomainForm" class="ui-domain-editor" data-domain-editor>
       <label class="ui-field" for="cacheDomainInput"><span data-i18n="uiDomainorURL10cc7">Domínio ou URL</span><span class="ui-actions ui-domain-entry"><input id="cacheDomainInput" class="ui-control" data-domain-input data-field="domain" value="" placeholder="example.com" autocomplete="off" spellcheck="false" required><button type="button" class="ui-button" data-domain-add data-action="add-domain" data-i18n="uiAddfadcf">Adicionar</button></span></label>
 
       <div class="ui-domain-heading"><span id="cacheListCount" data-domain-count>0 domínios</span><button type="button" id="cacheGoImport" class="ui-button ui-domain-import" data-i18n="uiImportfrombookmarksa9c2c">Importar de favoritos →</button></div>
       <ul id="cacheDomainList" data-domain-list class="domain-list"></ul><p id="cacheEmptyList" class="ui-empty" data-domain-empty data-i18n="uiNodomainsinthislist5b710">Nenhum domínio nesta lista.</p>
     </form>
-  <p class="ui-note note" data-i18n="uiCleanupExceptionDoesNotEnable">Adicionar uma exceção não ativa a exclusão desse tipo de dado. Essa opção é controlada em Geral.</p>
+  </fieldset><button type="button" class="ui-button" id="cacheFilterRetry" data-i18n="uiCleanupRetry" hidden>Tentar novamente</button>
+  <p class="ui-note note" data-i18n="uiCleanupExceptionDoesNotEnable">Adicionar sites ou mudar o modo não ativa a exclusão desse tipo de dado. Essa opção é controlada em Geral.</p>
 </section>
 
     <section id="panel-local-storage" aria-labelledby="tab-local-storage" hidden="">
-  <div class="ui-section-heading section-heading"><h2 data-i18n="uiKeepLocalStorageBySite">Preservar armazenamento local por site</h2></div>
-  <p class="ui-note note" data-i18n="uiKeepLocalStorageBySiteDescription">Os sites desta lista terão o localStorage preservado durante a limpeza. Esta lista não protege cookies nem cache.</p>
-  <p class="ui-notice scope ui-notice-warning" data-i18n="uiExactCleanupScope" role="status">A exceção vale para o endereço informado em HTTP e HTTPS. Outros subdomínios e portas precisam ser adicionados separadamente.</p>
-  <form id="localStorageDomainForm" class="ui-domain-editor" data-domain-editor>
+  <div class="ui-section-heading section-heading"><h2 data-i18n="uiKeepLocalStorageBySite">Armazenamento local por site</h2></div>
+  <p class="ui-note note" data-i18n="uiKeepLocalStorageBySiteDescription">Escolha quais sites preservar ou limpar no localStorage. Esta lista não afeta cookies nem cache.</p>
+  <p class="ui-notice scope ui-notice-warning" data-i18n="uiExactCleanupScope" role="status">O filtro vale para o endereço informado em HTTP e HTTPS. Outros subdomínios e portas precisam ser adicionados separadamente.</p>
+  <fieldset id="localStorageFilterEditor" class="cleanup-site-filter">
+    <label class="ui-field field" for="localStorageListMode"><span data-i18n="uiCleanupListMode">Modo da lista</span>
+      <select class="ui-control" id="localStorageListMode">
+        <option value="exclude" data-i18n="uiCleanupExclude">Excluir da limpeza — preservar a lista</option>
+        <option value="include" data-i18n="uiCleanupInclude">Incluir na limpeza — limpar somente a lista</option>
+      </select>
+    </label><p id="localStorageListModeHelp" class="note" role="status"></p>
+    <form id="localStorageDomainForm" class="ui-domain-editor" data-domain-editor>
       <label class="ui-field" for="localStorageDomainInput"><span data-i18n="uiDomainorURL10cc7">Domínio ou URL</span><span class="ui-actions ui-domain-entry"><input id="localStorageDomainInput" class="ui-control" data-domain-input data-field="domain" value="" placeholder="example.com" autocomplete="off" spellcheck="false" required><button type="button" class="ui-button" data-domain-add data-action="add-domain" data-i18n="uiAddfadcf">Adicionar</button></span></label>
 
       <div class="ui-domain-heading"><span id="localStorageListCount" data-domain-count>0 domínios</span><button type="button" id="localStorageGoImport" class="ui-button ui-domain-import" data-i18n="uiImportfrombookmarksa9c2c">Importar de favoritos →</button></div>
       <ul id="localStorageDomainList" data-domain-list class="domain-list"></ul><p id="localStorageEmptyList" class="ui-empty" data-domain-empty data-i18n="uiNodomainsinthislist5b710">Nenhum domínio nesta lista.</p>
     </form>
-  <p class="ui-note note" data-i18n="uiCleanupExceptionDoesNotEnable">Adicionar uma exceção não ativa a exclusão desse tipo de dado. Essa opção é controlada em Geral.</p>
+  </fieldset><button type="button" class="ui-button" id="localStorageFilterRetry" data-i18n="uiCleanupRetry" hidden>Tentar novamente</button>
+  <p class="ui-note note" data-i18n="uiCleanupExceptionDoesNotEnable">Adicionar sites ou mudar o modo não ativa a exclusão desse tipo de dado. Essa opção é controlada em Geral.</p>
 </section>
 
     <section id="panel-bookmarks" aria-labelledby="tab-bookmarks" hidden="">
       <div class="ui-section-heading section-heading"><h2 data-i18n="uiImportfrombookmarksab35d">Importar dos favoritos</h2></div>
-      <p class="ui-note note" data-i18n="uiImportdomainsfromafolder684b6">Importe os domínios de uma pasta para a lista de exceções escolhida abaixo. Os favoritos não serão modificados.</p>
+      <p class="ui-note note" data-i18n="uiImportdomainsfromafolder684b6">Importe os domínios de uma pasta para o tipo e o modo escolhidos abaixo. Os favoritos não serão modificados.</p>
       <label class="ui-field field" for="importTarget"><span data-i18n="uiCleanupImportTarget">Lista de destino</span><select id="importTarget" class="ui-control"><option value="cookies">Cookies</option><option value="cache" data-i18n="cache">Cache</option><option value="localStorage" data-i18n="uiLocalstorage3d640">Armazenamento local</option></select></label>
+      <label class="ui-field field" for="importMode"><span data-i18n="uiCleanupListMode">Modo da lista</span><select id="importMode" class="ui-control"><option value="exclude" data-i18n="uiCleanupExclude">Excluir da limpeza — preservar a lista</option><option value="include" data-i18n="uiCleanupInclude">Incluir na limpeza — limpar somente a lista</option></select></label>
+      <p id="importModeHelp" class="note" role="status"></p>
       <div class="ui-bookmark-importer" data-bookmark-importer><button type="button" class="ui-button ui-button-secondary" data-bookmark-load data-action="load-bookmarks" id="loadFolders">Escolher pasta de favoritos</button><div data-bookmark-status></div><div data-bookmark-controls id="bookmarkControls" hidden><label class="ui-field"><span data-bookmark-folder-label>Pasta</span><select class="ui-control" data-bookmark-folder data-field="bookmark-folder" id="bookmarkFolder"></select></label><label class="ui-check"><input type="checkbox" data-bookmark-recursive data-field="bookmark-recursive" id="includeSubfolders" checked><span data-bookmark-recursive-label>Incluir subpastas</span></label><div class="ui-card import-preview" data-bookmark-preview><strong id="previewCount"></strong><p id="previewDetail"></p><ul id="previewDomains"></ul></div><button type="button" class="ui-button" data-bookmark-apply data-action="import-bookmarks" id="importBookmarks" disabled>Importar domínios</button></div></div>
       <p class="ui-note note" data-i18n="uiBookmarkaccessalsoallowsfoldere6e7f">O acesso aos favoritos também permite sincronizar pastas no painel de sincronização. A importação é uma cópia: mudanças futuras na pasta não atualizam as exceções. Links HTTP/HTTPS são aceitos e duplicados são ignorados.</p>
     </section>

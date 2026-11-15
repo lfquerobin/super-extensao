@@ -2,6 +2,7 @@ importScripts("preferences.js", "i18n.js", "rules.js", "modules.js", "module-hos
 importScripts("navigation-rules.js", "tab-guard.js");
 // ====== デフォルト設定 ======
 const DEFAULT_SETTINGS = {
+  ...ClearRules.filterDefaults(),
   enabled: true,
   clearHistory: true,
   clearCache: false,
@@ -67,14 +68,14 @@ function normalizeManualSettings(snapshot) {
     clearDownloads: snapshot.clearDownloads === true,
     clearFormData: snapshot.clearFormData === true,
     clearLocalStorage: snapshot.clearLocalStorage === true,
-    excludedSites: ClearRules.normalizeList(snapshot.excludedSites === undefined ? [] : snapshot.excludedSites),
-    ...(snapshot.excludedCacheSites === undefined ? {} : {excludedCacheSites:ClearRules.normalizeList(snapshot.excludedCacheSites)}),
-    ...(snapshot.excludedLocalStorageSites === undefined ? {} : {excludedLocalStorageSites:ClearRules.normalizeList(snapshot.excludedLocalStorageSites)})
+    ...Object.fromEntries(Object.values(ClearRules.SITE_FILTERS).flatMap(filter => [
+      ...[filter.excludeKey,filter.includeKey].filter(key => snapshot[key] !== undefined).map(key => [key,ClearRules.normalizeList(snapshot[key])]),
+      ...(snapshot[filter.modeKey] === undefined ? [] : [[filter.modeKey,ClearRules.normalizeMode(snapshot[filter.modeKey])]])
+    ]))
   };
 }
 
-async function removeSelectedData(settings) {
-  const plan = ClearRules.removalPlan(settings);
+async function removeSelectedData(settings, plan = ClearRules.removalPlan(settings)) {
   for (const operation of plan) {
     if (operation.method === "removeCookies") {
       await chrome.browsingData.removeCookies(operation.options);
@@ -171,9 +172,12 @@ async function performClear(
   const hasTarget = Object.values(dataToRemove).some(v => v);
   if (!hasTarget) return { cleared: false, startedAt };
 
+  let plan;
   try {
-    // Cookieは必ず他データの後に専用APIで削除する。
-    await removeSelectedData(settings, dataToRemove);
+    plan = ClearRules.removalPlan(settings);
+    if (!plan.length) return {cleared:false,startedAt};
+    // Cookies run last through their dedicated API.
+    await removeSelectedData(settings, plan);
   } catch (error) {
     await chrome.storage.local.set({ lastClearErrorAt: new Date().toISOString() });
     throw error;
@@ -182,8 +186,9 @@ async function performClear(
   // Record the completion time only after every removal API has succeeded.
   const now = new Date().toISOString();
   // 削除記録
+  const appliedTypes = new Set(plan.flatMap(operation => operation.method === 'removeCookies' ? ['cookies'] : Object.keys(operation.data)));
   const clearedTypeKeys = Object.entries(dataToRemove)
-    .filter(([, v]) => v)
+    .filter(([key, v]) => v && appliedTypes.has(key))
     .map(([key]) => key);
   const clearedTypes = clearedTypeKeys.map((key) => getTypeLabels()[key]);
 

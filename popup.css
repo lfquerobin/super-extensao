@@ -143,3 +143,5 @@ body > main, #panel-vpn, #panel-sync { min-width: 0; max-width: 100%; overflow-x
 #cleanupActions[hidden] { display: none; }
 #cleanupActions .report { margin-bottom: 0; }
 body:not([data-active-tab="cleanup"]) > main > #cleanupFooter { display: none !important; }
+
+.cleanup-site-filter { border:0; padding:0; margin:0; min-width:0; }

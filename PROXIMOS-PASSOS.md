@@ -1,6 +1,6 @@
 # Próximos passos da Super Extensão
 
-Revisado em **15 de novembro de 2026**, referência **1.7.40**. A página de bloqueio permite voltar ao endereço interceptado após confirmação da VPN e novo clique, com revalidação de estado e sem repetir POST. Consulta/cache de conta, política Free/pago e resolução das configurações de recursos usam núcleos próprios desde a 1.7.25. Endpoints, formatos e fachadas de compatibilidade permanecem. A conexão Proton pessoal ainda precisa ser repetida após a correção da previsão de rede da 1.7.24. Evidências, limites, confirmações do usuário e validações ainda pendentes estão separados em [docs/validacao.md](docs/validacao.md).
+Revisado em **15 de novembro de 2026**, referência **1.7.41**. A página de bloqueio permite voltar ao endereço interceptado após confirmação da VPN e novo clique, com revalidação de estado e sem repetir POST. Consulta/cache de conta, política Free/pago e resolução das configurações de recursos usam núcleos próprios desde a 1.7.25. Endpoints, formatos e fachadas de compatibilidade permanecem. A conexão Proton pessoal ainda precisa ser repetida após a correção da previsão de rede da 1.7.24. Evidências, limites, confirmações do usuário e validações ainda pendentes estão separados em [docs/validacao.md](docs/validacao.md).
 
 ## Estado e prioridade
 
@@ -10,7 +10,7 @@ Revisado em **15 de novembro de 2026**, referência **1.7.40**. A página de blo
 | 2 | Validação em navegador | Testes de execução, recuperação, transporte e interface; interface conferida parcialmente no Helium isolado | Conferir Google Drive com dois perfis de teste e tráfego real da VPN |
 | 3 | Demais sincronizações | Git e perfis de abas continuam no legado; demais serviços desativados | Migrar o conector Git e definir propriedade de pastas sobrepostas |
 | 4 | Motor próprio da VPN | 1.7.19: runner nativo aprovado; conta, troca EUA/Canadá, recuperação pela página local e inclusão/exclusão com medições externas no Helium; regras originais restauradas | Medir queda e transições com captura autorizada pelo Windows, ampliar IPv6/DNS, testar suspensão/reinício completo, liberação/cancelamento e recursos de terceiros; ver docs/vpn-validacao-pc.md |
-| Contínua | Interface e manutenção | 1.7.40: seis módulos opcionais, com gravação automática e preservação de dados; Vue 3/HTML nativo | Validar contas reais e reduzir ferramentas legadas ainda sinalizadas pelo npm audit. Ver docs/sync-migration.md |
+| Contínua | Interface e manutenção | 1.7.41: limpeza com inclusão/exclusão por tipo, gravação automática e seis módulos opcionais | Validar contas reais e reduzir ferramentas legadas ainda sinalizadas pelo npm audit. Ver docs/sync-migration.md |
 
 ## 1. Motor próprio de sincronização
 

@@ -162,3 +162,61 @@ test('snapshot manual aplica as novas exceções e preserva listas armazenadas q
     assert.deepEqual(plain(w.calls.find(call=>call.data.localStorage).options.excludeOrigins),[`http://${includeLists?'manual':'stored'}-local.example`,`https://${includeLists?'manual':'stored'}-local.example`]);
   }
 });
+
+test('inclusão e exclusão são independentes por tipo e não restringem histórico/formulários',()=>{
+  const plan=plain(R.removalPlan({clearHistory:true,clearDownloads:true,clearFormData:true,clearCookies:true,clearCache:true,clearLocalStorage:true,
+    cookieCleanupMode:'include',includedSites:['only.example'],excludedSites:['old.example'],
+    cacheCleanupMode:'exclude',excludedCacheSites:['keep.example'],includedCacheSites:['unused.example'],
+    localStorageCleanupMode:'include',includedLocalStorageSites:['local.example:8443']}));
+  assert.deepEqual(plan,[
+    {method:'remove',options:{since:0},data:{history:true,downloads:true,formData:true}},
+    {method:'remove',options:{since:0,excludeOrigins:['http://keep.example','https://keep.example']},data:{cache:true}},
+    {method:'remove',options:{since:0,origins:['http://local.example:8443','https://local.example:8443']},data:{localStorage:true}},
+    {method:'removeCookies',options:{since:0,origins:['http://only.example','https://only.example']}}
+  ]);
+  assert.ok(plan.every(operation=>!(operation.options.origins&&operation.options.excludeOrigins)));
+});
+
+test('inclusão vazia nunca vira limpeza global, para nenhum dos três tipos',()=>{
+  for(const [type,flag] of [['cookies','clearCookies'],['cache','clearCache'],['localStorage','clearLocalStorage']]) {
+    const filter=R.SITE_FILTERS[type];
+    assert.deepEqual(plain(R.removalPlan({[flag]:true,[filter.modeKey]:'include',[filter.includeKey]:[]})),[]);
+    assert.equal(R.removalOptions([],'include'),null);
+    assert.equal(R.removalPlan({[flag]:true,[filter.modeKey]:'exclude'}).length,1);
+  }
+});
+
+test('inclusão vazia não registra limpeza concluída e tipos ignorados não aparecem no relatório',async()=>{
+  const w=worker({clearHistory:false,clearCookies:true,clearCache:true,clearLocalStorage:true,
+    cookieCleanupMode:'include',cacheCleanupMode:'include',localStorageCleanupMode:'include'});
+  const skipped=await vm.runInContext('requestClear("exit")',w.context);
+  assert.equal(skipped.cleared,false);assert.equal(w.calls.length,0);assert.equal(w.state.lastClearTime,undefined);
+  w.state.clearHistory=true;
+  const result=await vm.runInContext('requestClear("exit")',w.context);
+  assert.equal(result.cleared,true);assert.deepEqual(plain(w.state.lastClearTypeKeys),['history']);
+  assert.deepEqual(plain(w.calls),[{method:'remove',options:{since:0},data:{history:true}}]);
+});
+
+test('modo corrompido e listas de inclusão inválidas interrompem antes da primeira exclusão',async()=>{
+  for(const invalid of [{cookieCleanupMode:null},{cacheCleanupMode:'all'},{localStorageCleanupMode:true},
+    {includedSites:['*.example.com']},{includedCacheSites:null},{includedLocalStorageSites:'example.com'}]) {
+    const w=worker({...invalid,clearHistory:true});
+    await assert.rejects(vm.runInContext('requestClear("exit")',w.context));
+    assert.equal(w.calls.length,0);assert.ok(w.state.lastClearErrorAt);
+  }
+});
+
+test('snapshot confirmado usa inclusão mesmo quando a configuração armazenada é de exclusão',async()=>{
+  const w=worker({excludedSites:['keep.example']});
+  const settings={clearHistory:false,clearCookies:true,cookieCleanupMode:'include',includedSites:['target.example']};
+  const response=await new Promise(resolve=>w.listeners.message({action:'clearNow',settings},{},resolve));
+  assert.equal(response.cleared,true);
+  assert.deepEqual(plain(w.calls),[{method:'removeCookies',options:{since:0,origins:['http://target.example','https://target.example']}}]);
+});
+
+test('popup antigo que omite o modo não amplia uma inclusão já armazenada',async()=>{
+  const w=worker({cookieCleanupMode:'include',includedSites:['target.example']});
+  const response=await new Promise(resolve=>w.listeners.message({action:'clearNow',settings:{clearHistory:false,clearCookies:true,excludedSites:[]}},{},resolve));
+  assert.equal(response.cleared,true);
+  assert.deepEqual(plain(w.calls[0].options),{since:0,origins:['http://target.example','https://target.example']});
+});

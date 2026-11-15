@@ -1,5 +1,9 @@
-# Componentes da interface — referência 1.7.40
+# Componentes da interface — referência 1.7.41
 
+
+## Inclusão e exclusão na limpeza — 1.7.41
+
+`ui/cleanup-editors.cjs` gera o seletor de modo, seu estado vazio e os três editores com IDs estáveis. Os controles gravam automaticamente; o fieldset fica bloqueado enquanto o modo é persistido para não editar a lista anterior sob um rótulo novo. A prévia/importação usa tipo e modo como destino, com invalidação de respostas antigas. O contrato fica em `rules.js`. [Escopo e validação](limpeza-por-site.md).
 
 ## Módulos opcionais — 1.7.40
 

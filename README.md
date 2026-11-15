@@ -4,7 +4,7 @@
 
 Extensão pessoal para Helium e navegadores Chromium, com Nova guia, sincronização de favoritos, VPN no navegador, limpeza ao sair, controle de autoplay e proteção da última aba.
 
-**Versão instalada: 1.7.40.** Documentação revisada em 15 de novembro de 2026. Temas escuro, claro e sistema; idiomas PT-BR e inglês compartilhados entre os módulos. Requer Chromium 116 ou superior, conforme o manifest.
+**Versão instalada: 1.7.41.** Documentação revisada em 15 de novembro de 2026. Temas escuro, claro e sistema; idiomas PT-BR e inglês compartilhados entre os módulos. Requer Chromium 116 ou superior, conforme o manifest.
 
 Para investigar uma falha da VPN, abra `chrome://extensions`, localize a Super Extensão e inspecione o **service worker**. Na aba Console, reproduza a tentativa e execute `getVpnDiagnostics()`. Os últimos 50 eventos registram somente horário, etapa, resultado e código conhecido, sem credenciais ou dados da conta; falhas novas também aparecem como avisos `[Super VPN]`. Esse histórico é temporário e reinicia com o worker. `getLogs()` é o registro legado, dependente de debug, e pode estar vazio.
 
@@ -122,7 +122,7 @@ Preferências usam `tabliss/config` em `storage.sync`; imagens e cache usam Inde
 
 Por padrão, apenas o histórico é selecionado para limpeza. A limpeza é tentada ao fechar a última janela; se interrompida, há recuperação na próxima abertura. O resultado só é registrado após as APIs terminarem com sucesso. **Limpar agora** funciona mesmo com a automação pausada.
 
-As abas **Cookies**, **Cache** e **Armazenamento local** possuem listas de exceções independentes. Cookies preservam o domínio registrável e seus subdomínios; cache e localStorage preservam o endereço informado em HTTP/HTTPS, exigindo entradas separadas para outros subdomínios e portas. As listas não garantem todos os logins. A aba Favoritos permite escolher a lista de destino e importar domínios sem alterar os favoritos. **Última limpeza** e **Limpar agora** aparecem somente em **Geral**. Arquivos baixados, senhas salvas e histórico da Conta Google não são apagados.
+Na **1.7.41**, as abas **Cookies**, **Cache** e **Armazenamento local** oferecem **Excluir da limpeza** (preservar a lista) e **Incluir na limpeza** (limpar somente a lista). Cada tipo mantém duas listas independentes, salvas automaticamente; as exceções antigas continuam no modo de preservação. Uma inclusão vazia não apaga dados daquele tipo. Em Favoritos, escolha o tipo e o modo de destino antes de importar, sem alterar os favoritos. Cookies abrangem o domínio registrável inteiro; cache e localStorage usam o endereço informado em HTTP/HTTPS, com entradas separadas para outros subdomínios e portas. Os históricos e formulários continuam globais. [Funcionamento e validação](docs/limpeza-por-site.md). **Última limpeza** e **Limpar agora** aparecem somente em **Geral**. Arquivos baixados, senhas salvas e histórico da Conta Google não são apagados.
 
 Autoplay inicia com padrão **Bloquear**, com regras por domínio/subdomínio. Interação real libera mídia naquele quadro até a próxima navegação. Permitir na extensão continua sujeito às restrições nativas do navegador; páginas internas e protegidas não aceitam os scripts.
 

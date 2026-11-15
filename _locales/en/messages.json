@@ -428,7 +428,7 @@
       "message": "Browser cache"
    },
    "uiMaysignoutaccountsoutside23482": {
-      "message": "May sign out accounts outside the exceptions"
+      "message": "May sign accounts out on cleared sites"
    },
    "uiDownloadhistorya142a": {
       "message": "Download history"
@@ -449,13 +449,13 @@
       "message": "Saved passwords are not deleted. Cleanup may finish on the next launch if the browser exits before it completes."
    },
    "uiKeepcookiesbywebsite78b44": {
-      "message": "Keep cookies by website"
+      "message": "Cookies by website"
    },
    "uiCookiesforthewebsitesin80c36": {
-      "message": "This list protects cookies only. Use the respective tabs for cache and local storage. Keeping cookies does not guarantee every login."
+      "message": "Choose which sites to keep or clear. This list affects only cookies. Keeping cookies does not guarantee every login."
    },
    "uiCookiesareprotectedforthe852f6": {
-      "message": "Cookies are protected for the entire registrable domain: an exception for accounts.example.com also keeps cookies for example.com and its subdomains."
+      "message": "Cookies apply to the entire registrable domain: accounts.example.com also covers example.com and its subdomains, both when keeping and clearing them."
    },
    "uiDomainorURL10cc7": {
       "message": "Domain or URL"
@@ -473,13 +473,13 @@
       "message": "No domains in this list."
    },
    "uiAddinganexceptiondoesnot95152": {
-      "message": "Adding an exception does not enable cookie deletion. Control it under General."
+      "message": "Adding sites or changing the mode does not enable cookie deletion. This option is controlled in General."
    },
    "uiImportfrombookmarksab35d": {
       "message": "Import from bookmarks"
    },
    "uiImportdomainsfromafolder684b6": {
-      "message": "Import domains from a folder into the exception list selected below. Bookmarks are not modified."
+      "message": "Import domains from a folder into the data type and mode selected below. Bookmarks are not modified."
    },
    "uiChooseabookmarksfolder55714": {
       "message": "Choose a bookmarks folder"
@@ -704,7 +704,7 @@
       "message": "The cleanup service did not respond."
    },
    "uiExceptionremoved098bd": {
-      "message": "Exception removed."
+      "message": "Domain removed from the list."
    },
    "uiBookmarkaccesswasnotgrantedc3dab": {
       "message": "Bookmark access was not granted. You can still add domains manually."
@@ -872,28 +872,28 @@
       "message": "{count} rules imported. Existing rules were merged."
    },
    "uiKeepCacheBySite": {
-      "message": "Keep cache by website"
+      "message": "Cache by website"
    },
    "uiKeepCacheBySiteDescription": {
-      "message": "Cache for websites in this list is preserved during cleanup. This list does not protect cookies or local storage."
+      "message": "Choose which sites to keep or clear from the cache. This list affects neither cookies nor local storage."
    },
    "uiKeepLocalStorageBySite": {
-      "message": "Keep local storage by website"
+      "message": "Local storage by website"
    },
    "uiKeepLocalStorageBySiteDescription": {
-      "message": "localStorage for websites in this list is preserved during cleanup. This list does not protect cookies or cache."
+      "message": "Choose which sites to keep or clear from localStorage. This list affects neither cookies nor cache."
    },
    "uiExactCleanupScope": {
-      "message": "The exception covers the entered address over HTTP and HTTPS. Add other subdomains and ports separately."
+      "message": "The filter covers the entered address over HTTP and HTTPS. Add other subdomains and ports separately."
    },
    "uiCleanupExceptionDoesNotEnable": {
-      "message": "Adding an exception does not enable deletion for this data type. Control it under General."
+      "message": "Adding sites or changing the mode does not enable deletion of this data type. This option is controlled in General."
    },
    "uiCleanupImportTarget": {
       "message": "Destination list"
    },
    "uiDomainAddedToExceptions": {
-      "message": "Domain added to exceptions."
+      "message": "Domain added to the list."
    },
    "uiLocalStorageShort": {
       "message": "Local stor."
@@ -966,5 +966,41 @@
   },
   "uiModulesRetry": {
     "message": "Try again"
+  },
+  "uiCleanupListMode": {
+    "message": "List mode"
+  },
+  "uiCleanupExclude": {
+    "message": "Exclude from cleanup — keep listed sites"
+  },
+  "uiCleanupInclude": {
+    "message": "Include in cleanup — clear listed sites only"
+  },
+  "uiCleanupExcludeHelp": {
+    "message": "Listed sites are kept. Other sites can be cleared when this data type is enabled in General."
+  },
+  "uiCleanupIncludeHelp": {
+    "message": "Only listed sites are cleared when this data type is enabled in General. Other sites are kept."
+  },
+  "uiCleanupIncludeEmpty": {
+    "message": "Empty inclusion list: no data of this type will be deleted. Add sites or import bookmarks."
+  },
+  "uiCleanupModeSaved": {
+    "message": "List mode saved automatically."
+  },
+  "uiCleanupNoTargets": {
+    "message": "No sites to clear: inclusion lists for the selected data types are empty."
+  },
+  "uiCleanupConfirm": {
+    "message": "Clear the selected data now, respecting each type’s list and mode? Deleting cookies may sign accounts out."
+  },
+  "uiCleanupGlobalNotice": {
+    "message": "Site lists affect only cookies, cache and local storage. History and form data are still cleared globally."
+  },
+  "uiCleanupRetry": {
+    "message": "Try again"
+  },
+  "uiCleanupListReady": {
+    "message": "List loaded."
   }
 }

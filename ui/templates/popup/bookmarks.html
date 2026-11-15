@@ -1,7 +1,9 @@
 <section id="panel-bookmarks" aria-labelledby="tab-bookmarks" hidden="">
       <ui-heading class="section-heading"><h2 data-i18n="uiImportfrombookmarksab35d">Importar dos favoritos</h2></ui-heading>
-      <ui-note class="note" data-i18n="uiImportdomainsfromafolder684b6">Importe os domínios de uma pasta para a lista de exceções escolhida abaixo. Os favoritos não serão modificados.</ui-note>
+      <ui-note class="note" data-i18n="uiImportdomainsfromafolder684b6">Importe os domínios de uma pasta para o tipo e o modo escolhidos abaixo. Os favoritos não serão modificados.</ui-note>
       <ui-field class="field" for="importTarget"><span data-i18n="uiCleanupImportTarget">Lista de destino</span><ui-control id="importTarget" as="select"><option value="cookies">Cookies</option><option value="cache" data-i18n="cache">Cache</option><option value="localStorage" data-i18n="uiLocalstorage3d640">Armazenamento local</option></ui-control></ui-field>
+      <ui-field class="field" for="importMode"><span data-i18n="uiCleanupListMode">Modo da lista</span><ui-control id="importMode" as="select"><option value="exclude" data-i18n="uiCleanupExclude">Excluir da limpeza — preservar a lista</option><option value="include" data-i18n="uiCleanupInclude">Incluir na limpeza — limpar somente a lista</option></ui-control></ui-field>
+      <p id="importModeHelp" class="note" role="status"></p>
       <!-- bookmark-importer -->
       <ui-note class="note" data-i18n="uiBookmarkaccessalsoallowsfoldere6e7f">O acesso aos favoritos também permite sincronizar pastas no painel de sincronização. A importação é uma cópia: mudanças futuras na pasta não atualizam as exceções. Links HTTP/HTTPS são aceitos e duplicados são ignorados.</ui-note>
     </section>

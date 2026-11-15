@@ -428,7 +428,7 @@
       "message": "Cache do navegador"
    },
    "uiMaysignoutaccountsoutside23482": {
-      "message": "Pode desconectar contas fora das exceções"
+      "message": "Pode desconectar contas nos sites limpos"
    },
    "uiDownloadhistorya142a": {
       "message": "Histórico de downloads"
@@ -449,13 +449,13 @@
       "message": "Senhas salvas não são apagadas. A limpeza pode ser concluída na próxima abertura se o navegador encerrar antes de terminar."
    },
    "uiKeepcookiesbywebsite78b44": {
-      "message": "Preservar cookies por site"
+      "message": "Cookies por site"
    },
    "uiCookiesforthewebsitesin80c36": {
-      "message": "Esta lista protege somente cookies. Para cache e armazenamento local, use as abas correspondentes. Preservar cookies não garante todos os logins."
+      "message": "Escolha quais sites preservar ou limpar. Esta lista afeta somente cookies. Preservar cookies não garante todos os logins."
    },
    "uiCookiesareprotectedforthe852f6": {
-      "message": "Cookies são protegidos para o domínio registrável inteiro: uma exceção para accounts.exemplo.com também preserva cookies de exemplo.com e seus subdomínios."
+      "message": "Cookies são tratados para o domínio registrável inteiro: accounts.exemplo.com também abrange exemplo.com e seus subdomínios, tanto para preservar como para limpar."
    },
    "uiDomainorURL10cc7": {
       "message": "Domínio ou URL"
@@ -473,13 +473,13 @@
       "message": "Nenhum domínio nesta lista."
    },
    "uiAddinganexceptiondoesnot95152": {
-      "message": "Adicionar uma exceção não ativa a exclusão de cookies. Essa opção é controlada em Geral."
+      "message": "Adicionar sites ou mudar o modo não ativa a exclusão de cookies. Essa opção é controlada em Geral."
    },
    "uiImportfrombookmarksab35d": {
       "message": "Importar dos favoritos"
    },
    "uiImportdomainsfromafolder684b6": {
-      "message": "Importe os domínios de uma pasta para a lista de exceções escolhida abaixo. Os favoritos não serão modificados."
+      "message": "Importe os domínios de uma pasta para o tipo e o modo escolhidos abaixo. Os favoritos não serão modificados."
    },
    "uiChooseabookmarksfolder55714": {
       "message": "Escolher pasta de favoritos"
@@ -704,7 +704,7 @@
       "message": "O serviço de limpeza não respondeu."
    },
    "uiExceptionremoved098bd": {
-      "message": "Exceção removida."
+      "message": "Domínio removido da lista."
    },
    "uiBookmarkaccesswasnotgrantedc3dab": {
       "message": "Acesso aos favoritos não concedido. Você ainda pode adicionar domínios manualmente."
@@ -872,28 +872,28 @@
       "message": "{count} regras importadas. Regras existentes foram mescladas."
    },
    "uiKeepCacheBySite": {
-      "message": "Preservar cache por site"
+      "message": "Cache por site"
    },
    "uiKeepCacheBySiteDescription": {
-      "message": "Os sites desta lista terão o cache preservado durante a limpeza. Esta lista não protege cookies nem armazenamento local."
+      "message": "Escolha quais sites preservar ou limpar no cache. Esta lista não afeta cookies nem armazenamento local."
    },
    "uiKeepLocalStorageBySite": {
-      "message": "Preservar armazenamento local por site"
+      "message": "Armazenamento local por site"
    },
    "uiKeepLocalStorageBySiteDescription": {
-      "message": "Os sites desta lista terão o localStorage preservado durante a limpeza. Esta lista não protege cookies nem cache."
+      "message": "Escolha quais sites preservar ou limpar no localStorage. Esta lista não afeta cookies nem cache."
    },
    "uiExactCleanupScope": {
-      "message": "A exceção vale para o endereço informado em HTTP e HTTPS. Outros subdomínios e portas precisam ser adicionados separadamente."
+      "message": "O filtro vale para o endereço informado em HTTP e HTTPS. Outros subdomínios e portas precisam ser adicionados separadamente."
    },
    "uiCleanupExceptionDoesNotEnable": {
-      "message": "Adicionar uma exceção não ativa a exclusão desse tipo de dado. Essa opção é controlada em Geral."
+      "message": "Adicionar sites ou mudar o modo não ativa a exclusão desse tipo de dado. Essa opção é controlada em Geral."
    },
    "uiCleanupImportTarget": {
       "message": "Lista de destino"
    },
    "uiDomainAddedToExceptions": {
-      "message": "Domínio adicionado às exceções."
+      "message": "Domínio adicionado à lista."
    },
    "uiLocalStorageShort": {
       "message": "Arm. Local"
@@ -966,5 +966,41 @@
   },
   "uiModulesRetry": {
     "message": "Tentar novamente"
+  },
+  "uiCleanupListMode": {
+    "message": "Modo da lista"
+  },
+  "uiCleanupExclude": {
+    "message": "Excluir da limpeza — preservar a lista"
+  },
+  "uiCleanupInclude": {
+    "message": "Incluir na limpeza — limpar somente a lista"
+  },
+  "uiCleanupExcludeHelp": {
+    "message": "Os sites desta lista serão preservados. Os demais poderão ser limpos quando este tipo estiver ligado em Geral."
+  },
+  "uiCleanupIncludeHelp": {
+    "message": "Somente os sites desta lista serão limpos, quando este tipo estiver ligado em Geral. Os demais serão preservados."
+  },
+  "uiCleanupIncludeEmpty": {
+    "message": "Lista de inclusão vazia: nenhum dado deste tipo será apagado. Adicione sites ou importe dos favoritos."
+  },
+  "uiCleanupModeSaved": {
+    "message": "Modo da lista salvo automaticamente."
+  },
+  "uiCleanupNoTargets": {
+    "message": "Nenhum site para limpar: as listas de inclusão dos tipos selecionados estão vazias."
+  },
+  "uiCleanupConfirm": {
+    "message": "Limpar os dados selecionados agora, respeitando o modo e a lista de cada tipo? Apagar cookies pode desconectar contas."
+  },
+  "uiCleanupGlobalNotice": {
+    "message": "As listas de sites afetam somente cookies, cache e armazenamento local. Histórico e formulários continuam sendo limpos globalmente."
+  },
+  "uiCleanupRetry": {
+    "message": "Tentar novamente"
+  },
+  "uiCleanupListReady": {
+    "message": "Lista carregada."
   }
 }
