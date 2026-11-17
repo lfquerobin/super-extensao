@@ -279,5 +279,9 @@
   "Bottom Left": "Inferior esquerda",
   "Bottom Centre": "Inferior centro",
   "Bottom Right": "Inferior direita",
-  "Unable to update IP information. Check your connection and try again later.": "Não foi possível atualizar as informações de IP. Confira sua conexão e tente novamente mais tarde."
+  "Unable to update IP information. Check your connection and try again later.": "Não foi possível atualizar as informações de IP. Confira sua conexão e tente novamente mais tarde.",
+  "Widgets": "Widgets",
+  "Background": "Fundo",
+  "Settings": "Configurações",
+  "Unavailable widget": "Widget indisponível"
 }

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-3.0-only; adapted from Tabliss 2.6.0 */
 .PositionInput .grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

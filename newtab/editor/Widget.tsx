@@ -1,13 +1,8 @@
-import { UiEditorCard, UiField, UiInput, UiSelect } from "../../ui";
-import { t } from "../../locales/ui";
+/* SPDX-License-Identifier: GPL-3.0-only
+ * Editor adapted from Tabliss 2.6.0, Joël Shepherd and contributors. */
+import { WidgetState } from "../engine/model";
 import React from "react";
-import { setWidgetDisplay } from "../../db/action";
-import { WidgetState } from "../../db/state";
-import { useToggle } from "../../hooks";
-import { getConfig } from "../../plugins";
-import { DownIcon, Icon, IconButton, RemoveIcon, UpIcon } from "../shared";
-import PluginContainer from "../shared/Plugin";
-import ToggleSection from "../shared/ToggleSection";
+import { useEditor, ToggleSection, PluginSettings } from "./runtime";
 import "./Widget.sass";
 import WidgetDisplay from "./WidgetDisplay";
 
@@ -24,44 +19,61 @@ const Widget: React.FC<Props> = ({
   onMoveUp,
   onRemove,
 }) => {
-  const [isOpen, toggleIsOpen] = useToggle(onRemove === undefined);
+  const {
+    t,
+    catalog,
+    Icon,
+    IconButton,
+    actions: { setWidgetDisplay },
+    ui: { UiEditorCard, UiField, UiInput, UiSelect },
+  } = useEditor();
+  const [isOpen, setIsOpen] = React.useState(false);
+  const toggleIsOpen = () => setIsOpen((open) => !open);
 
-  const { description, name, settingsComponent } = getConfig(plugin.key);
+  const config = catalog.find(plugin.key);
+  const { description, name, settingsComponent } = config ?? {
+    name: plugin.key,
+    description: t("Unavailable widget"),
+  };
 
   const setDisplay = setWidgetDisplay.bind(null, plugin.id);
 
   return (
-    <UiEditorCard title={name} description={!isOpen ? description : undefined} actions={<>
-        <IconButton onClick={onRemove} title={t("Remove widget")}>
-          <RemoveIcon />
-        </IconButton>
-
-        <IconButton
-          onClick={toggleIsOpen}
-          title={t(isOpen ? "Close widget settings" : "Edit widget settings")}
-        >
-          <Icon name="settings" />
-        </IconButton>
-
-        {onMoveDown && (
-          <IconButton onClick={onMoveDown} title={t("Move widget down")}>
-            <DownIcon />
+    <UiEditorCard
+      title={name}
+      description={!isOpen ? description : undefined}
+      actions={
+        <>
+          <IconButton onClick={onRemove} title={t("Remove widget")}>
+            <Icon name="trash-2" />
           </IconButton>
-        )}
 
-        {onMoveUp && (
-          <IconButton onClick={onMoveUp} title={t("Move widget up")}>
-            <UpIcon />
+          <IconButton
+            onClick={toggleIsOpen}
+            title={t(isOpen ? "Close widget settings" : "Edit widget settings")}
+          >
+            <Icon name="settings" />
           </IconButton>
-        )}
 
-      </>}>
+          {onMoveDown && (
+            <IconButton onClick={onMoveDown} title={t("Move widget down")}>
+              <Icon name="arrow-down" />
+            </IconButton>
+          )}
 
+          {onMoveUp && (
+            <IconButton onClick={onMoveUp} title={t("Move widget up")}>
+              <Icon name="arrow-up" />
+            </IconButton>
+          )}
+        </>
+      }
+    >
       {isOpen && (
         <div>
           {settingsComponent && (
             <div className="settings">
-              <PluginContainer id={plugin.id} component={settingsComponent} />
+              <PluginSettings item={plugin} />
             </div>
           )}
 
@@ -72,9 +84,10 @@ const Widget: React.FC<Props> = ({
           <ToggleSection name={t("Font Settings")}>
             <>
               <UiField>
-                {t("Font")}<UiInput
+                {t("Font")}
+                <UiInput
                   type="text"
-                  value={plugin.display.fontFamily}
+                  value={plugin.display.fontFamily ?? ""}
                   onChange={(event) =>
                     setDisplay({ fontFamily: event.target.value })
                   }
@@ -82,8 +95,9 @@ const Widget: React.FC<Props> = ({
               </UiField>
 
               <UiField>
-                {t("Weight")}<UiSelect
-                  value={plugin.display.fontWeight}
+                {t("Weight")}
+                <UiSelect
+                  value={plugin.display.fontWeight ?? ""}
                   onChange={(event) =>
                     setDisplay({
                       fontWeight: event.target.value
@@ -103,7 +117,8 @@ const Widget: React.FC<Props> = ({
               </UiField>
 
               <UiField>
-                {t("Colour")}<UiInput
+                {t("Colour")}
+                <UiInput
                   type="color"
                   value={plugin.display.colour ?? "#ffffff"}
                   onChange={(event) =>

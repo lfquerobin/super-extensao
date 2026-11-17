@@ -4,7 +4,7 @@
 
 Extensão pessoal para Helium e navegadores Chromium, com Nova guia, sincronização de favoritos, VPN no navegador, limpeza ao sair, controle de autoplay e proteção da última aba.
 
-**Versão instalada: 1.7.44.** Documentação revisada em 17 de novembro de 2026. Temas escuro, claro e sistema; idiomas PT-BR e inglês compartilhados entre os módulos. Requer Chromium 116 ou superior, conforme o manifest.
+**Versão instalada: 1.7.45.** Documentação revisada em 17 de novembro de 2026. Temas escuro, claro e sistema; idiomas PT-BR e inglês compartilhados entre os módulos. Requer Chromium 116 ou superior, conforme o manifest.
 
 Para investigar uma falha da VPN, abra `chrome://extensions`, localize a Super Extensão e inspecione o **service worker**. Na aba Console, reproduza a tentativa e execute `getVpnDiagnostics()`. Os últimos 50 eventos registram somente horário, etapa, resultado e código conhecido, sem credenciais ou dados da conta; falhas novas também aparecem como avisos `[Super VPN]`. Esse histórico é temporário e reinicia com o worker. `getLogs()` é o registro legado, dependente de debug, e pode estar vazio.
 
@@ -17,7 +17,7 @@ Para investigar uma falha da VPN, abra `chrome://extensions`, localize a Super E
 | Núcleo Google Drive | Reconciliação, escrita condicional, criptografia, backup e retomada pelo diário | Ampliar a validação real relatada pelo usuário, medir grandes importações e suportar pastas sobrepostas |
 | VPN | Interface, regras, controlador de proxy, estado/recuperação, credenciais temporárias, transporte HTTP, catálogo/seleção, WebRTC e coordenação de login próprios | Revisão minuciosa e validação real; contratos do serviço e adaptadores Chromium/Proton permanecem |
 | Limpeza, Autoplay e Abas | Controles locais e testes automatizados | Validar fechamento nativo e recuperação no Helium |
-| Nova guia | Núcleo próprio de estado/configuração/persistência, importação/exportação, composição do dashboard e sessões dos widgets | Extrair editor/catálogo/provedores e validar dados existentes no navegador real |
+| Nova guia | Núcleo próprio de estado/configuração/persistência, importação/exportação, dashboard, editor, catálogo e sessões dos plugins | Extrair componentes/provedores, controles e inicialização e validar dados existentes no navegador real |
 
 O roteiro com prioridades e critérios de conclusão fica em [PROXIMOS-PASSOS.md](PROXIMOS-PASSOS.md). A cobertura e as limitações dos testes ficam em [docs/validacao.md](docs/validacao.md).
 
@@ -109,6 +109,8 @@ O ícone acompanha a aba:
 O sinal fica no canto superior direito, preservando o badge de limpeza pausada. Na 1.7.1, ele é reaplicado após navegação/recarregamento e ativação da aba, mesmo quando a cor continua igual; perda de controle do proxy restaura o ícone normal. Ele representa o roteamento configurado, sem medir tráfego ou verificar externamente o IP. Páginas internas não usam o túnel. Veja [uso e integração](docs/proton-vpn.md) e [interface, indicador e limites](docs/vpn-interface.md).
 
 ### Nova guia
+
+Na **1.7.45**, o editor completo (fundos, widgets, aparência, idioma/fuso e importação/exportação/reset) usa `newtab/editor`; registro, nomes, descrições, disponibilidade por plataforma e ordenação do catálogo usam `newtab/engine/catalog.ts`. A lista acompanha o idioma atual. Os componentes funcionais dos widgets/provedores ainda são adaptadores do Tabliss, assim como os controles visuais compartilhados, ícones e seletor de fuso. Os painéis de cada plugin recebem sessões próprias, com descarte de gravações tardias; fechar o editor invalida importações e confirmações de reset pendentes. IDs, formatos JSON e imagens existentes são preservados.
 
 Na **1.7.44**, a composição do dashboard, agrupamento/ordenação visual e o ciclo de montagem/descarte dos widgets usam `newtab/dashboard` e o núcleo próprio. Sessões descartadas ignoram gravações tardias e liberam seus indicadores de carregamento; um provedor ausente não derruba os demais widgets. Editor, catálogo, componentes e provedores continuam adaptados do Tabliss. Layout, IDs e armazenamento existentes são preservados.
 

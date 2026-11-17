@@ -1,32 +1,28 @@
-import { UiEditorCard, UiField, UiInput, UiSelect } from "../../ui";
-import { t } from "../../locales/ui";
+/* SPDX-License-Identifier: GPL-3.0-only
+ * Editor adapted from Tabliss 2.6.0, Joël Shepherd and contributors. */
+import { BackgroundDisplay } from "../engine/model";
 import React from "react";
-import { FormattedMessage } from "react-intl";
-import { setBackground } from "../../db/action";
-import { BackgroundDisplay, db } from "../../db/state";
-import { useKey } from "../../lib/db/react";
-import { backgroundConfigs, getConfig } from "../../plugins";
-import Plugin from "../shared/Plugin";
-import ToggleSection from "../shared/ToggleSection";
+import { useEditor, useKey, ToggleSection, PluginSettings } from "./runtime";
 
 const Background: React.FC = () => {
-  const [data, setData] = useKey(db, "background");
+  const {
+    t,
+    db,
+    catalog,
+    actions: { setBackground, setBackgroundDisplay: updateDisplay },
+    ui: { UiEditorCard, UiField, UiInput, UiSelect },
+  } = useEditor();
+  const [data] = useKey(db, "background");
 
-  const plugin = getConfig(data.key);
+  const plugin = catalog.find(data.key);
 
   const setBackgroundDisplay = (display: BackgroundDisplay): void => {
-    setData({ ...data, display: { ...data.display, ...display } });
+    updateDisplay(data.id, display);
   };
 
   return (
     <div>
-      <h2>
-        <FormattedMessage
-          id="background"
-          defaultMessage="Background"
-          description="Background title"
-        />
-      </h2>
+      <h2>{t("Background")}</h2>
 
       <UiField>
         <UiSelect
@@ -34,7 +30,8 @@ const Background: React.FC = () => {
           onChange={(event) => setBackground(event.target.value)}
           className="primary"
         >
-          {backgroundConfigs.map((plugin) => (
+          {!plugin && <option value={data.key}>{data.key}</option>}
+          {catalog.list("background").map((plugin) => (
             <option key={plugin.key} value={plugin.key}>
               {plugin.name}
             </option>
@@ -44,10 +41,9 @@ const Background: React.FC = () => {
 
       {plugin && (
         <UiEditorCard as="div" title={plugin.name}>
-
           {plugin.settingsComponent && (
             <div className="settings">
-              <Plugin id={data.id} component={plugin.settingsComponent} />
+              <PluginSettings item={data} background />
             </div>
           )}
 
@@ -55,14 +51,15 @@ const Background: React.FC = () => {
             <ToggleSection name={t("Display Settings")}>
               <>
                 <UiField>
-                  {t("Blur ")}<br />
+                  {t("Blur ")}
+                  <br />
                   <UiInput
                     type="range"
                     list="blur-markers"
                     min="0"
                     max="50"
                     step="2"
-                    value={data.display.blur}
+                    value={data.display.blur ?? 0}
                     onChange={(event) =>
                       setBackgroundDisplay({
                         blur: Number(event.target.value),
@@ -76,14 +73,15 @@ const Background: React.FC = () => {
                 </UiField>
 
                 <UiField>
-                  {t("Luminosity ")}<br />
+                  {t("Luminosity ")}
+                  <br />
                   <UiInput
                     type="range"
                     list="luminosity-markers"
                     min="-1"
                     max="1"
                     step="0.1"
-                    value={data.display.luminosity}
+                    value={data.display.luminosity ?? 0}
                     onChange={(event) =>
                       setBackgroundDisplay({
                         luminosity: Number(event.target.value),

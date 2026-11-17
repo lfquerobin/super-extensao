@@ -1,7 +1,8 @@
-import { UiField, UiInput } from "../../ui";
-import { t } from "../../locales/ui";
+/* SPDX-License-Identifier: GPL-3.0-only
+ * Editor adapted from Tabliss 2.6.0, Joël Shepherd and contributors. */
+import { WidgetDisplay as WidgetDisplayType } from "../engine/model";
 import React from "react";
-import { WidgetDisplay as WidgetDisplayType } from "../../db/state";
+import { useEditor } from "./runtime";
 import PositionInput from "./PositionInput";
 import "./WidgetDisplay.css";
 
@@ -11,6 +12,10 @@ type Props = {
 };
 
 const WidgetDisplay: React.FC<Props> = ({ display, onChange }) => {
+  const {
+    t,
+    ui: { UiField, UiInput },
+  } = useEditor();
   return (
     <div className="WidgetDisplay">
       <PositionInput
@@ -19,10 +24,11 @@ const WidgetDisplay: React.FC<Props> = ({ display, onChange }) => {
       />
 
       <UiField>
-        {t("Size")}<br />
+        {t("Size")}
+        <br />
         <UiInput
           type="range"
-          value={display.fontSize}
+          value={display.fontSize ?? 24}
           min="2"
           max="100"
           step="2"

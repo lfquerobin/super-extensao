@@ -52,7 +52,7 @@ const config = {
       },
       {
         test: /\.(ts|tsx)$/,
-        include: [path.resolve("./src"), path.resolve("../../newtab/engine"), path.resolve("../../newtab/dashboard")],
+        include: [path.resolve("./src"), path.resolve("../../newtab/engine"), path.resolve("../../newtab/dashboard"), path.resolve("../../newtab/editor")],
         loader: "ts-loader",
       },
     ],

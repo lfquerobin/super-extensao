@@ -1,6 +1,6 @@
 # Próximos passos da Super Extensão
 
-Revisado em **17 de novembro de 2026**, referência **1.7.44**. A página de bloqueio permite voltar ao endereço interceptado após confirmação da VPN e novo clique, com revalidação de estado e sem repetir POST. Consulta/cache de conta, política Free/pago e resolução das configurações de recursos usam núcleos próprios desde a 1.7.25. Endpoints, formatos e fachadas de compatibilidade permanecem. A conexão Proton pessoal ainda precisa ser repetida após a correção da previsão de rede da 1.7.24. Evidências, limites, confirmações do usuário e validações ainda pendentes estão separados em [docs/validacao.md](docs/validacao.md).
+Revisado em **17 de novembro de 2026**, referência **1.7.45**. A página de bloqueio permite voltar ao endereço interceptado após confirmação da VPN e novo clique, com revalidação de estado e sem repetir POST. Consulta/cache de conta, política Free/pago e resolução das configurações de recursos usam núcleos próprios desde a 1.7.25. Endpoints, formatos e fachadas de compatibilidade permanecem. A conexão Proton pessoal ainda precisa ser repetida após a correção da previsão de rede da 1.7.24. Evidências, limites, confirmações do usuário e validações ainda pendentes estão separados em [docs/validacao.md](docs/validacao.md).
 
 ## Estado e prioridade
 
@@ -122,15 +122,17 @@ A extração dos módulos funcionais está implementada: regras/PAC, controlador
 
 ### Extração da Nova guia
 
-**Etapa atual — 1.7.44:** composição do dashboard e sessões dos widgets extraídas. Próxima implementação: editor e catálogo; depois, componentes/provedores restantes. A validação da configuração existente no perfil pessoal da Nova guia continua pendente; a confirmação de dois navegadores refere-se à sincronização de favoritos.
+**Etapa atual — 1.7.45:** composição do dashboard, sessões, editor e catálogo extraídos. Próxima implementação: componentes/provedores restantes; depois, controles, inicialização e entrada de build próprios. A validação da configuração existente no perfil pessoal da Nova guia continua pendente; a confirmação de dois navegadores refere-se à sincronização de favoritos.
 
 - [x] Etapa 1 na 1.7.18: banco reativo, modelo/defaults, ações, importação/exportação, fila de persistência e migração passam ao núcleo próprio `newtab/engine`. Caminhos de armazenamento e imagens existentes são preservados.
 - [x] Validar importação antes de limpar o estado; ordenar escritas e preservar a origem legada até confirmar a persistência.
 - [ ] Conferir os dados existentes, editor, importação/exportação, imagens e várias abas no navegador real.
 - [x] Extrair a composição do dashboard e o ciclo de montagem/descarte dos widgets (1.7.44), incluindo guardas de gravações tardias e liberação dos indicadores de carregamento.
-- [ ] Extrair o editor, o catálogo e os provedores restantes, mantendo formatos, dados e licenças.
+- [x] Extrair editor e catálogo (1.7.45), mantendo IDs, nomes, traduções, formatos e o salvamento automático.
+- [ ] Extrair componentes dos widgets e provedores restantes, mantendo formatos, dados e licenças.
+- [ ] Extrair controles do overlay, inicialização e entrada de build própria.
 
-O Tabliss ainda fornece editor, catálogo, controles do overlay e componentes funcionais de widgets/provedores; não foi removido integralmente. [Arquitetura e limites](docs/newtab-engine.md).
+O Tabliss ainda fornece controles do overlay, inicialização, componentes funcionais dos widgets/provedores e adaptadores visuais (incluindo ícones e fuso). O build ainda parte da aplicação adaptada; não foi removido integralmente. [Arquitetura e limites](docs/newtab-engine.md).
 
 ### Validação dos módulos locais
 

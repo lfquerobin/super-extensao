@@ -1,5 +1,13 @@
 # Validação da Super Extensão
 
+## Editor e catálogo próprios — 1.7.45 (17/11/2026)
+
+Editor de fundos/widgets, aparência/fontes/posições, idioma/fuso e importação/exportação/reset extraído para `newtab/editor`. Catálogo próprio registra IDs e metadados, preserva disponibilidade por plataforma e ordena os nomes pelo idioma atual. A implementação dos widgets/provedores permanece no adaptador.
+
+**568 testes Node aprovados**, sem falhas ou ignorados. Os cinco cenários novos exercitam registro de 5 fundos/15 widgets Chromium, JS exclusivo web, idioma/ordenação dinâmica, validação de escolhas, edição tardia de fundo, preservação de plugins desconhecidos, editor React em StrictMode, adicionar/reordenar/configurar/remover, atualização de idioma, troca de fundo, Escape e descarte de listeners/loaders. Também cobrem fechamento durante leitura de arquivo e confirmação de reset, exportação compatível com revogação da URL, recusa de importação inválida sem perda, importação válida e reset cancelado. A suíte existente continua exercitando o bundle de produção e a persistência/importação/migração.
+
+Build de produção, checagens TypeScript, `check:ui`, `check:integrity` e whitespace aprovados. Não houve nova execução nativa: a inicialização Chromium foi bloqueada por restrição de sockets na etapa 1.7.44. Editor com os dados existentes no perfil pessoal e integrações online dos provedores continuam pendentes; os testes novos usam DOM simulado e implementações fictícias dos painéis dos plugins, sem contas reais.
+
 ## Dashboard próprio e sessões — 1.7.44 (17/11/2026)
 
 Extraídos composição, agrupamento, ordem, tema/foco e montagem/descarte dos widgets para `newtab/dashboard` e `newtab/engine`. Os componentes/provedores existentes são injetados por um adaptador, sem troca das chaves de configuração/cache.

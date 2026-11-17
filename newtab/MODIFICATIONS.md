@@ -1,5 +1,9 @@
 # Tabliss 2.6.0 na Super Extensão
 
+## Editor e catálogo — Super Extensão 1.7.45
+
+O editor foi transferido a `newtab/editor`, com contexto de serviços explícito, ações próprias, modelos compatíveis e sessões próprias para os painéis de plugins. O catálogo passa a registrar IDs, nomes/descrições, suporte a backdrop e disponibilidade no destino web em `newtab/engine/catalog.ts`; o fornecedor fornece somente o mapa de componentes. As entradas antigas são fachadas. Posições, aparência, dados/imagens e JSON continuam compatíveis. Extraídas as folhas de estilo com atribuição; o componente inativo Persist foi removido. Widget desconhecido continua removível; um fundo desconhecido pode ser substituído. Importação/confirmação de reset pendentes não são aplicadas após fechar o editor. Componentes/provedores internos e adaptadores visuais ainda permanecem na árvore Tabliss; não há declaração de independência completa.
+
 ## Dashboard e sessões — Super Extensão 1.7.44
 
 Composição, agrupamento, estilo dos widgets e projeção reativa do dashboard passam a `newtab/dashboard` e `newtab/engine/dashboard.ts`. `plugin-session.ts` controla cada instância montada: descarta gravações tardias e libera carregamentos pendentes no descarte, inclusive em foco/remoção e remonta StrictMode. Os antigos componentes de composição foram removidos; o caminho Dashboard original é um adaptador para bancos, catálogo, overlay e apresentação de erros. Estilos foram preservados com atribuição GPL. Editor, catálogo, controles do overlay, componentes dos widgets e suas rotinas internas de timers/rede continuam adaptados do Tabliss.

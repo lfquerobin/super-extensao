@@ -18,16 +18,21 @@ export interface PluginApi {
   setCache(value: any): void;
   loader: { push(): void; pop(): void };
 }
-export interface DashboardPorts {
+export interface PluginPorts {
   db: DB.Database<State>;
   cache: DB.Database<Record<string, unknown>>;
-  resolve(key: string): React.ComponentType<PluginApi>;
+  resolve(key: string): React.ComponentType<PluginApi> | undefined;
   pushLoader(): void;
   popLoader(): void;
-  Overlay: React.ComponentType;
   Failure: React.ComponentType<FallbackProps>;
 }
-function useValue<T, K extends DB.Key<T>>(db: DB.Database<T>, key: K): T[K] {
+export interface DashboardPorts extends PluginPorts {
+  Overlay: React.ComponentType;
+}
+export function useValue<T, K extends DB.Key<T>>(
+  db: DB.Database<T>,
+  key: K
+): T[K] {
   const subscribe = React.useCallback(
     (notify: () => void) =>
       DB.listen(db, ([changed]) => {
@@ -44,7 +49,7 @@ function Instance({
 }: {
   item: BackgroundState | WidgetState;
   background: boolean;
-  ports: DashboardPorts;
+  ports: PluginPorts;
 }) {
   const { db, cache, pushLoader, popLoader } = ports;
   const { id, key } = item;
@@ -70,6 +75,7 @@ function Instance({
   }, [db, cache, id, key, background, pushLoader, popLoader]);
   if (!session) return null;
   const Component = ports.resolve(key);
+  if (!Component) return null;
   return (
     <Component
       data={data}
@@ -80,14 +86,14 @@ function Instance({
     />
   );
 }
-function Provider({
+export function PluginProvider({
   item,
   background = false,
   ports,
 }: {
   item: BackgroundState | WidgetState;
   background?: boolean;
-  ports: DashboardPorts;
+  ports: PluginPorts;
 }) {
   return (
     <ErrorBoundary
@@ -115,7 +121,7 @@ export default function Dashboard(ports: DashboardPorts) {
   return (
     <div className={`Dashboard fullscreen ${theme}`}>
       <div className="Background">
-        <Provider item={background} background ports={ports} />
+        <PluginProvider item={background} background ports={ports} />
       </div>
       <div className="Widgets fullscreen">
         <div className="container">
@@ -135,7 +141,7 @@ export default function Dashboard(ports: DashboardPorts) {
                       fontWeight: item.display.fontWeight,
                     }}
                   >
-                    <Provider item={item} ports={ports} />
+                    <PluginProvider item={item} ports={ports} />
                   </div>
                 ))}
               </div>

@@ -1,26 +1,21 @@
-import { UiField, UiSelect } from "../../ui";
-import { t } from "../../locales/ui";
+/* SPDX-License-Identifier: GPL-3.0-only
+ * Editor adapted from Tabliss 2.6.0, Joël Shepherd and contributors. */
 import React from "react";
-import { FormattedMessage } from "react-intl";
-import { addWidget, removeWidget, reorderWidget } from "../../db/action";
-import { selectWidgets } from "../../db/select";
-import { db } from "../../db/state";
-import { useSelector } from "../../lib/db/react";
-import { widgetConfigs } from "../../plugins";
+import { useEditor, useWidgets } from "./runtime";
 import Widget from "./Widget";
 
 const Widgets: React.FC = () => {
-  const widgets = useSelector(db, selectWidgets);
+  const {
+    t,
+    catalog,
+    actions: { addWidget, removeWidget, reorderWidget },
+    ui: { UiField, UiSelect },
+  } = useEditor();
+  const widgets = useWidgets();
 
   return (
     <div>
-      <h2>
-        <FormattedMessage
-          id="widgets"
-          defaultMessage="Widgets"
-          description="Widgets title"
-        />
-      </h2>
+      <h2>{t("Widgets")}</h2>
 
       <UiField>
         <UiSelect
@@ -29,8 +24,9 @@ const Widgets: React.FC = () => {
           className="primary"
         >
           <option disabled value="">
-            {t("Add a new widget")}</option>
-          {widgetConfigs.map((plugin) => (
+            {t("Add a new widget")}
+          </option>
+          {catalog.list("widget").map((plugin) => (
             <option key={plugin.key} value={plugin.key}>
               {plugin.name}
             </option>
