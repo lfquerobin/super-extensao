@@ -1,5 +1,9 @@
 # Validação da Super Extensão
 
+## Transparência dos ícones — 1.7.47 (17/11/2026)
+
+Removido o fundo sólido do gerador de ícones. Conferidos os 30 PNGs (host, VPN e fontes VPN): dimensões corretas, canal alpha, cantos transparentes e pixels semitransparentes nas bordas. As cópias equivalentes possuem os mesmos bytes. `check:ui`, `check:integrity` e whitespace passaram. Não foi repetida a suíte funcional por ser uma correção exclusivamente visual nos ativos e no script de geração. A conferência da barra real no perfil pessoal permanece pendente.
+
 ## Identidade visual — 1.7.46 (17/11/2026)
 
 Aplicada a paleta #121015/grafite/branco suave nos tokens compartilhados, interfaces e páginas auxiliares. A marca S/escudo substitui os ícones do host e da integração VPN. SVG recortado nos limites do caminho, PNGs em todos os tamanhos e fontes de reconstrução sincronizados. As variantes de status da VPN continuam sobrepondo seus sinais sem alterar a lógica de conexão.
