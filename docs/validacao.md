@@ -1,5 +1,13 @@
 # Validação da Super Extensão
 
+## Identidade visual — 1.7.46 (17/11/2026)
+
+Aplicada a paleta #121015/grafite/branco suave nos tokens compartilhados, interfaces e páginas auxiliares. A marca S/escudo substitui os ícones do host e da integração VPN. SVG recortado nos limites do caminho, PNGs em todos os tamanhos e fontes de reconstrução sincronizados. As variantes de status da VPN continuam sobrepondo seus sinais sem alterar a lógica de conexão.
+
+**568 testes aprovados**, sem falhas ou ignorados, incluindo temas claro/escuro, componentes compartilhados, página de proteção e indicadores VPN. O contrato de prevenção de injeção na página de proteção foi atualizado para aceitar somente a imagem local conhecida da marca e continuar recusando imagens/atributos derivados de mensagens do serviço. Builds da Nova guia, worker/interface VPN e painéis passaram; checagens TypeScript, `check:ui`, `check:integrity` (66 arquivos) e whitespace aprovadas.
+
+Símbolo rasterizado inspecionado em 16/32/48/128 px; contraste calculado para texto, texto secundário e destaque sobre as três superfícies: mínimo 7,34:1 no escuro e 5,61:1 no claro. SVG válido e PNGs opacos com fundo #121015, mantendo as proporções. A revisão de ativos não é teste de geometria das telas reais. Não houve nova execução nativa nesta rodada, devido à restrição de sockets já registrada; a conferência visual completa no perfil pessoal permanece pendente. [Arquivos e reprodução](identidade-visual.md).
+
 ## Editor e catálogo próprios — 1.7.45 (17/11/2026)
 
 Editor de fundos/widgets, aparência/fontes/posições, idioma/fuso e importação/exportação/reset extraído para `newtab/editor`. Catálogo próprio registra IDs e metadados, preserva disponibilidade por plataforma e ordena os nomes pelo idioma atual. A implementação dos widgets/provedores permanece no adaptador.

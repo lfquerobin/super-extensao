@@ -1,5 +1,9 @@
 # Tabliss 2.6.0 na Super Extensão
 
+## Identidade visual — Super Extensão 1.7.46
+
+A marca do editor e do botão principal usa o SVG S/escudo do host. A paleta compartilhada adota #121015 e tons grafite, incluindo o fundo da Nova guia antes de carregar. O gradiente padrão sem cores salvas passa a #121015 nas duas pontas; cores/imagens explicitamente salvas permanecem. Tema claro continua disponível. O vetor não contém título ou margem de prancheta; os PNGs mantêm as proporções em um quadrado.
+
 ## Editor e catálogo — Super Extensão 1.7.45
 
 O editor foi transferido a `newtab/editor`, com contexto de serviços explícito, ações próprias, modelos compatíveis e sessões próprias para os painéis de plugins. O catálogo passa a registrar IDs, nomes/descrições, suporte a backdrop e disponibilidade no destino web em `newtab/engine/catalog.ts`; o fornecedor fornece somente o mapa de componentes. As entradas antigas são fachadas. Posições, aparência, dados/imagens e JSON continuam compatíveis. Extraídas as folhas de estilo com atribuição; o componente inativo Persist foi removido. Widget desconhecido continua removível; um fundo desconhecido pode ser substituído. Importação/confirmação de reset pendentes não são aplicadas após fechar o editor. Componentes/provedores internos e adaptadores visuais ainda permanecem na árvore Tabliss; não há declaração de independência completa.

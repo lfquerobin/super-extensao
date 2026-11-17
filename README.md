@@ -4,9 +4,11 @@
 
 Extensão pessoal para Helium e navegadores Chromium, com Nova guia, sincronização de favoritos, VPN no navegador, limpeza ao sair, controle de autoplay e proteção da última aba.
 
-**Versão instalada: 1.7.45.** Documentação revisada em 17 de novembro de 2026. Temas escuro, claro e sistema; idiomas PT-BR e inglês compartilhados entre os módulos. Requer Chromium 116 ou superior, conforme o manifest.
+**Versão instalada: 1.7.46.** Documentação revisada em 17 de novembro de 2026. Temas escuro, claro e sistema; idiomas PT-BR e inglês compartilhados entre os módulos. Requer Chromium 116 ou superior, conforme o manifest.
 
 Para investigar uma falha da VPN, abra `chrome://extensions`, localize a Super Extensão e inspecione o **service worker**. Na aba Console, reproduza a tentativa e execute `getVpnDiagnostics()`. Os últimos 50 eventos registram somente horário, etapa, resultado e código conhecido, sem credenciais ou dados da conta; falhas novas também aparecem como avisos `[Super VPN]`. Esse histórico é temporário e reinicia com o worker. `getLogs()` é o registro legado, dependente de debug, e pode estar vazio.
+
+Na **1.7.46**, a identidade visual usa **#121015** como base escura, superfícies grafite e destaques em branco suave. O símbolo S/escudo substitui a marca anterior no popup, Nova guia/editor, aba de reserva, favicons, notificações e ícones da VPN. O SVG é recortado nos limites do desenho, sem título nem margem de prancheta; ícones quadrados mantêm as proporções e fundo sólido para legibilidade na barra do navegador. [Paleta, arquivos e reconstrução](docs/identidade-visual.md).
 
 ## Estado atual
 
@@ -147,7 +149,7 @@ Limpeza, autoplay e proteção de abas são locais. Sincronização, VPN e widge
 
 ## Desenvolvimento e testes
 
-Node.js 20 ou superior. Para instalar as dependências da suíte:
+Node.js 20.9 ou superior. Para instalar as dependências da suíte:
 
 ```sh
 npm ci
@@ -162,6 +164,7 @@ npm run check:integrity
 
 | Alteração | Comando |
 | --- | --- |
+| Ícones PNG a partir do SVG da marca | `npm run build:icons` |
 | Templates estáticos e controles DOM do popup | `npm run build:ui` |
 | Todas as interfaces, após instalar as três dependências de origem | `npm run build:interfaces` |
 | Conferir artefatos estáticos | `npm run check:ui` |

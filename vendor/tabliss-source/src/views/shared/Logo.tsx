@@ -5,7 +5,7 @@ import { t } from "../../locales/ui";
 
 const Logo: React.FC = () => (
   <h1 className="Logo super-brand">
-    <img src="../icons/icon48.png" alt="" width={40} height={40} />
+    <img className="brand-mark" src="../icons/super-icon.svg" alt="" width={40} height={40} />
     <div><strong>Super Extensão</strong><span>{t("Your new tab, your way.")}</span></div>
   </h1>
 );

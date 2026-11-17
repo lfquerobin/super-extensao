@@ -11,7 +11,7 @@ export type Props = API<Data>;
 
 export const defaultData: Data = {
   angle: 0,
-  from: "#3498db",
-  to: "#9b59b6",
+  from: "#121015",
+  to: "#121015",
   type: "linear-gradient",
 };

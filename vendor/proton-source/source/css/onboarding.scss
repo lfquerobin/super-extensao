@@ -227,3 +227,10 @@ h5,
 		}
 	}
 }
+
+/* Super Extensão host identity; service-login branding remains service-owned. */
+body {background:var(--bg);color:var(--text);font-family:var(--ui-font);}
+a {color:var(--accent);}
+.button {background:var(--accent-bg);color:var(--accent);border:1px solid var(--line);}
+.button:hover {background:var(--raised);}
+.install-dot {background:var(--raised);color:var(--text);}

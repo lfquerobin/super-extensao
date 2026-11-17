@@ -98,7 +98,7 @@ export function mountProtection(
   const t = (key) => words[key]?.[locale === "en" ? 1 : 0] || key;
   const find = (id) => root.querySelector("#" + id);
   root.innerHTML =
-    '<p class="brand" id="brand"></p><h1 id="title"></h1><p id="help"></p><p id="reason" class="muted"></p><p id="notice" role="status"></p><p id="error" class="error" role="alert"></p><p id="destination" class="muted" hidden></p><div class="actions"><button type="button" class="ui-button ui-button-primary" id="return" hidden></button><button type="button" class="ui-button ui-button-primary" id="retry"></button><button type="button" class="ui-button" id="refresh"></button><a class="ui-button" id="open" target="_blank" rel="noopener"></a></div><div class="actions"><button type="button" class="ui-button ui-button-danger" id="release"></button></div><p class="muted" id="note"></p>';
+    '<img class="brand-mark" src="icons/super-icon.svg" width="32" height="40" alt=""><p class="brand" id="brand"></p><h1 id="title"></h1><p id="help"></p><p id="reason" class="muted"></p><p id="notice" role="status"></p><p id="error" class="error" role="alert"></p><p id="destination" class="muted" hidden></p><div class="actions"><button type="button" class="ui-button ui-button-primary" id="return" hidden></button><button type="button" class="ui-button ui-button-primary" id="retry"></button><button type="button" class="ui-button" id="refresh"></button><a class="ui-button" id="open" target="_blank" rel="noopener"></a></div><div class="actions"><button type="button" class="ui-button ui-button-danger" id="release"></button></div><p class="muted" id="note"></p>';
   find("open").href = chrome.runtime.getURL("popup.html") + "#vpn";
   function render() {
     if (disposed) return;

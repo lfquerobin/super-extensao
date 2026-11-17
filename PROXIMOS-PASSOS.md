@@ -1,6 +1,6 @@
 # Próximos passos da Super Extensão
 
-Revisado em **17 de novembro de 2026**, referência **1.7.45**. A página de bloqueio permite voltar ao endereço interceptado após confirmação da VPN e novo clique, com revalidação de estado e sem repetir POST. Consulta/cache de conta, política Free/pago e resolução das configurações de recursos usam núcleos próprios desde a 1.7.25. Endpoints, formatos e fachadas de compatibilidade permanecem. A conexão Proton pessoal ainda precisa ser repetida após a correção da previsão de rede da 1.7.24. Evidências, limites, confirmações do usuário e validações ainda pendentes estão separados em [docs/validacao.md](docs/validacao.md).
+Revisado em **17 de novembro de 2026**, referência **1.7.46**. A página de bloqueio permite voltar ao endereço interceptado após confirmação da VPN e novo clique, com revalidação de estado e sem repetir POST. Consulta/cache de conta, política Free/pago e resolução das configurações de recursos usam núcleos próprios desde a 1.7.25. Endpoints, formatos e fachadas de compatibilidade permanecem. A conexão Proton pessoal ainda precisa ser repetida após a correção da previsão de rede da 1.7.24. Evidências, limites, confirmações do usuário e validações ainda pendentes estão separados em [docs/validacao.md](docs/validacao.md).
 
 ## Estado e prioridade
 
@@ -104,6 +104,8 @@ Detalhes, limites e caminhos dos backups: [docs/sync-engine.md](docs/sync-engine
 A extração dos módulos funcionais está implementada: regras/PAC, controlador de proxy, máquina de estados, restauração, recuperação, gerações, alarmes, credenciais temporárias, transporte HTTP, catálogo/seleção de servidores, WebRTC, coordenação do login e persistência/rotação de tokens são próprios. O serviço Proton, sua página oficial, formatos/endpoints, traduções e utilitários de compatibilidade permanecem; isso não equivale à remoção de todo código do fornecedor. A revisão minuciosa do código gerou correções na 1.7.13; validação com tráfego real continua pendente. Veja [auditoria-vpn.md](docs/auditoria-vpn.md). O indicador descreve o roteamento do endereço da aba; não é medição de pacotes nem prova externa do IP.
 
 ## 3. Interface e configurações gerais
+
+- [x] Aplicar a identidade S/escudo e base #121015 em todas as superfícies da extensão, com logo vetorial recortada e ícones regeneráveis (1.7.46).
 
 - [x] Tema e idioma compartilhados, com seletores no cabeçalho.
 - [x] Menus fixos e componentes comuns para botões, campos, cartões, avisos e switches.

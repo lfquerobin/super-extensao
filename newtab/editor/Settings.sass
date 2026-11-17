@@ -4,7 +4,7 @@
         margin: 2rem 0
 
         svg
-            fill: #3498db
+            fill: var(--accent)
             width: 100%
 
     h2, h3, h4
@@ -86,11 +86,11 @@
             cursor: default
 
         &--primary
-            background-color: #3498db
+            background-color: var(--accent)
             &:hover
-                background: darken(#3498db, 10%)
+                background: var(--accent-bg)
             &:active
-                background: darken(#3498db, 20%)
+                background: var(--raised)
 
         &--secondary
             background: darken(#bdc3c7, 20%)
@@ -120,9 +120,9 @@
         background-color: #bdc3c7 !important
 
     &.button--primary
-        background-color: #3498db !important
+        background-color: var(--accent) !important
         color: white
         padding: 0.5em
 
         &:hover
-            background-color: darken(#3498db, 20%) !important
+            background-color: var(--raised) !important
