@@ -1,8 +1,8 @@
 @import url("../ui-theme.css");
 html,body {background:var(--bg);}
 :root {--newtab-controls-inset:var(--space-3);--newtab-controls-height:calc(var(--button-height) + var(--space-2) + 2px);}
-#super-settings {position:fixed;top:var(--newtab-controls-inset);right:var(--newtab-controls-inset);min-height:var(--newtab-controls-height);z-index:10;display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);backdrop-filter:blur(12px);color:var(--text);font:500 12px/1.4 system-ui,sans-serif;cursor:pointer;box-shadow:0 4px 20px #0002;}
-#super-settings:hover {background:var(--raised);}
+#super-settings {position:fixed;top:var(--newtab-controls-inset);right:var(--newtab-controls-inset);min-height:var(--newtab-controls-height);z-index:10;display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:color-mix(in srgb,var(--bg) 61%,transparent);backdrop-filter:blur(12px);color:var(--text);font:500 12px/1.4 system-ui,sans-serif;cursor:pointer;box-shadow:0 4px 20px #0002;}
+#super-settings:hover,#super-settings:focus-visible {background:color-mix(in srgb,var(--bg) 85%,transparent);}
 #super-settings img {display:block;}
 @media(max-width:600px) {#super-settings span {display:none;}}
 

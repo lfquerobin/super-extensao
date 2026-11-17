@@ -1,4 +1,4 @@
-# Identidade visual — 1.7.47
+# Identidade visual — 1.7.48
 
 A identidade aprovada usa o símbolo S integrado ao escudo, sem título no ícone, e base quase preta com leve fundo violeta.
 
@@ -50,3 +50,7 @@ Builds da Nova guia e VPN e suíte existente executados; resultados em [validaca
 ## Correção 1.7.47
 
 Removido o preenchimento do canvas e a chamada `flatten` do gerador. Os 30 PNGs do host e das duas árvores VPN foram regenerados com fundo transparente. A cor #121015 permanece na interface. Conferidos tamanhos, igualdade das cópias, pixels transparentes e semitransparentes nas bordas em todas as variantes; nenhum fundo ou contorno novo foi acrescentado ao símbolo. As sobreposições coloridas do indicador VPN continuam sendo desenhadas sobre o PNG de base.
+
+## Transparência do controle da Nova guia — 1.7.48
+
+Restaurado o fundo translúcido do botão Super Extensão: 61% da cor base do tema em repouso, 85% ao passar o mouse ou focar pelo teclado, mantendo `backdrop-filter: blur(12px)`. A transparência pertence ao fundo, preservando texto/logo totalmente legíveis. Nenhuma imagem ou configuração do dashboard foi substituída.

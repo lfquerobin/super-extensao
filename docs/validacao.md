@@ -1,5 +1,9 @@
 # Validação da Super Extensão
 
+## Transparência do botão Nova guia — 1.7.48 (17/11/2026)
+
+Restaurada a composição translúcida do botão Super Extensão, usando 61% da cor base do tema e 85% em hover/foco, com blur de 12px. Conferência direcionada dos componentes compartilhados, `check:ui`, `check:integrity` e whitespace aprovados. Alteração exclusivamente CSS; não houve nova execução em navegador nativo.
+
 ## Transparência dos ícones — 1.7.47 (17/11/2026)
 
 Removido o fundo sólido do gerador de ícones. Conferidos os 30 PNGs (host, VPN e fontes VPN): dimensões corretas, canal alpha, cantos transparentes e pixels semitransparentes nas bordas. As cópias equivalentes possuem os mesmos bytes. `check:ui`, `check:integrity` e whitespace passaram. Não foi repetida a suíte funcional por ser uma correção exclusivamente visual nos ativos e no script de geração. A conferência da barra real no perfil pessoal permanece pendente.
