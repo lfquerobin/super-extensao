@@ -12,14 +12,14 @@
   --success: #8cdbb6;
   --warning: #ffd59c;
   --danger: #ffb7b7;
-  /* Open select menus keep a dark palette in either interface theme. */
-  --select-menu-bg: #1b181f;
-  --select-menu-text: #eeeaf2;
-  --select-menu-line: #3b3443;
-  --select-menu-raised: #25212b;
-  --select-menu-active: #302936;
-  --select-menu-accent: #e8e5ec;
-  --select-menu-muted: #b5aebf;
+  /* Menu colors follow the chosen interface theme. */
+  --select-menu-bg: var(--surface);
+  --select-menu-text: var(--text);
+  --select-menu-line: var(--line);
+  --select-menu-raised: var(--raised);
+  --select-menu-active: var(--accent-bg);
+  --select-menu-accent: var(--accent);
+  --select-menu-muted: var(--muted);
   --shadow: 0 6px 24px #0002;
   --ui-font: system-ui, "Segoe UI", sans-serif;
   --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%23b5aebf' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
@@ -53,3 +53,23 @@
 .brand-mark {display:block;flex-shrink:0;object-fit:contain;}
 :root[data-theme="light"] .brand-mark,
 :root[data-super-theme="light"] .brand-mark {filter:brightness(0);}
+
+/* Decorative scrim behind the browser's top-layer picker. Kept in the global
+   theme sheet so panel scoping does not create duplicate overlays. */
+@supports (appearance: base-select) and selector(body:has(select:open)) {
+  body:has(select:not([multiple]):not([size]):open)::after,
+  dialog[open]:has(select:not([multiple]):not([size]):open)::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 2147483646;
+    background: #0008;
+    pointer-events: none;
+  }
+  @media (forced-colors: active) {
+    body:has(select:not([multiple]):not([size]):open)::after,
+    dialog[open]:has(select:not([multiple]):not([size]):open)::after {
+      content: none;
+    }
+  }
+}

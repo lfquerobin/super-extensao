@@ -1,5 +1,11 @@
 # Validação da Super Extensão
 
+## Entorno do seletor e borda da Nova guia — 1.7.51 (17/11/2026)
+
+Restauradas as cores do tema nas opções e removido o hint de esquema escuro obrigatório. Implementado scrim decorativo #0008 no documento/diálogo enquanto `select:open` corresponde, com `pointer-events: none`, guardas de suporte e desativação em cores forçadas. A folha é global para não gerar uma segunda camada quando o CSS de sincronização é escopado. O botão da logo recebeu `appearance: none` e `filter: none`, retirando o brilho genérico de hover que diferenciava sua borda/superfície da barra esquerda.
+
+**36 verificações direcionadas passaram** (componentes em claro/escuro e interface VPN), incluindo seleção de modo e salvamento de regras. Painéis recompilados, `check:ui`, `check:integrity` e whitespace aprovados. Conferidos os aliases de cores, ausência de scrim duplicado nos painéis e os atributos decorativos da camada. Não foi executado teste nativo nesta rodada; DOM simulado não verifica `:open`, pintura de pseudo-elementos/camada superior ou a aparência real da borda. Conferência visual e descarte do efeito por Escape/clique externo no perfil pessoal permanecem pendentes.
+
 ## Controles unificados e menus escuros — 1.7.50 (17/11/2026)
 
 Unificados fundo/blur/borda/sombra/opacidade da barra esquerda e do botão direito na Nova guia. Tokens compartilhados: 50% em repouso/100% em hover ou foco, blur 12px, raio 12px, superfície translúcida com 61%/85% da cor base. As listas dos seletores usam paleta escura dedicada nos dois temas; o campo fechado continua seguindo o tema da interface. Mantido fallback nativo e cores forçadas do sistema.

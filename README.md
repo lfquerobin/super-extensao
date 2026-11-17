@@ -4,7 +4,7 @@
 
 Extensão pessoal para Helium e navegadores Chromium, com Nova guia, sincronização de favoritos, VPN no navegador, limpeza ao sair, controle de autoplay e proteção da última aba.
 
-**Versão instalada: 1.7.50.** Documentação revisada em 17 de novembro de 2026. Temas escuro, claro e sistema; idiomas PT-BR e inglês compartilhados entre os módulos. Requer Chromium 116 ou superior, conforme o manifest.
+**Versão instalada: 1.7.51.** Documentação revisada em 17 de novembro de 2026. Temas escuro, claro e sistema; idiomas PT-BR e inglês compartilhados entre os módulos. Requer Chromium 116 ou superior, conforme o manifest.
 
 Para investigar uma falha da VPN, abra `chrome://extensions`, localize a Super Extensão e inspecione o **service worker**. Na aba Console, reproduza a tentativa e execute `getVpnDiagnostics()`. Os últimos 50 eventos registram somente horário, etapa, resultado e código conhecido, sem credenciais ou dados da conta; falhas novas também aparecem como avisos `[Super VPN]`. Esse histórico é temporário e reinicia com o worker. `getLogs()` é o registro legado, dependente de debug, e pode estar vazio.
 
@@ -12,7 +12,9 @@ Na **1.7.46**, a identidade visual usa **#121015** como base escura, superfície
 
 Na **1.7.49**, as listas dos seletores usam a paleta compartilhada, opções espaçadas, cantos arredondados e visto na seleção em navegadores com seletor personalizável. Teclado, formulário e mudança de valor continuam sob o controle nativo; navegadores antigos mantêm o seletor convencional.
 
-Na **1.7.50**, os dois controles superiores da Nova guia compartilham fundo, blur, borda, sombra e opacidade (50% em repouso e 100% no hover/foco). As listas abertas dos seletores usam sempre fundo escuro e texto claro, inclusive quando a interface está no tema claro.
+Na **1.7.50**, os dois controles superiores da Nova guia compartilham fundo, blur, borda, sombra e opacidade (50% em repouso e 100% no hover/foco).
+
+Na **1.7.51**, a interface atrás das opções escurece enquanto um seletor está aberto; fechar a lista remove o efeito. As opções voltam a acompanhar o tema escolhido. O botão da logo na Nova guia deixa de herdar o brilho de hover dos botões comuns, preservando a borda/superfície compartilhada com a barra esquerda.
 
 ## Estado atual
 

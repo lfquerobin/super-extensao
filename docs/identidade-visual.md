@@ -1,4 +1,4 @@
-# Identidade visual — 1.7.50
+# Identidade visual — 1.7.51
 
 A identidade aprovada usa o símbolo S integrado ao escudo, sem título no ícone, e base quase preta com leve fundo violeta.
 
@@ -60,3 +60,9 @@ Restaurado o fundo translúcido do botão Super Extensão: 61% da cor base do te
 A barra esquerda e o botão Super Extensão da direita compartilham os tokens `--newtab-controls-*`: mesmo fundo base com 61% de cor em repouso e 85% no estado ativo, blur de 12px, raio de 12px, borda e sombra. Ambos têm opacidade global de 50% em repouso e 100% no hover/foco, seguindo o comportamento anterior da barra esquerda. Ambos usam transição de opacidade de 150ms quando movimento reduzido não está ativo. Altura/recuo também continuam compartilhados; o conteúdo e as ações dos dois controles permanecem distintos.
 
 As listas dos seletores têm paleta própria escura (`--select-menu-*`) nos temas claro/escuro: fundo #1B181F, texto #EEEAF2, seleção #302936 e destaque #E8E5EC. O campo fechado acompanha o tema normal. O hint nativo `color-scheme: dark` atende também o fallback de menus antigos; navegadores sem suporte ao picker personalizável podem manter a aparência específica do sistema. Cores forçadas continuam usando as cores de seleção do sistema.
+
+## Entorno do seletor e borda da logo — 1.7.51
+
+A paleta fixa escura dos menus da 1.7.50 foi substituída por aliases dos tokens do tema atual, conforme a correção de intenção do usuário: escurecer a interface atrás da lista, não forçar outra cor nas opções. Um scrim preto com alpha 0x88 aparece somente enquanto `select:open` corresponder; ele não intercepta cliques nem recebe foco. A lista do navegador permanece na camada superior. O efeito atende também seletores dentro de diálogos abertos e é desativado em cores forçadas.
+
+No botão Super Extensão da Nova guia, `appearance: none` e `filter: none` neutralizam a aparência nativa e o brilho genérico de hover herdado de `.ui-button`, que afetava também a borda e o fundo. A barra esquerda conserva seu comportamento; ambos continuam consumindo os mesmos tokens de borda/radius/sombra/transparência.

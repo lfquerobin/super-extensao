@@ -178,3 +178,14 @@ Contrato do motor: [Chrome — seletor personalizável, disponível desde Chromi
 ### Fundo escuro dos menus — 1.7.50
 
 Opções, optgroups e `::picker(select)` consomem os tokens `--select-menu-*` declarados em `ui-theme.css`, sem sobrescrita no tema claro. Assim a lista aberta permanece escura com texto claro. O seletor fechado conserva suas cores e dimensões do tema; `color-scheme: dark` informa a preferência aos menus nativos de fallback. `Highlight`/`HighlightText` continuam prevalecendo para estados de seleção em cores forçadas. Nenhum evento, valor, armazenamento ou comportamento de autenticação/rede foi alterado.
+
+
+### Escurecimento atrás da lista — 1.7.51
+
+Substitui o fundo forçado escuro da 1.7.50. Os tokens `--select-menu-*` passam a apontar para a paleta normal da interface, e o hint `color-scheme: dark` dos seletores foi removido. A lista aberta respeita o tema escolhido.
+
+Em `ui-theme.css` (folha global, não duplicada no CSS de painéis), `body:has(select:open)::after` desenha um scrim #0008 sobre a interface enquanto a lista está aberta. A regra real exclui `multiple` e `size` explícito; `dialog[open]:has(select:open)::after` cobre o conteúdo de um diálogo ativo. O picker nativo personalizável fica na camada superior, acima desse scrim. Pseudo-elementos decorativos usam `pointer-events: none`, sem elemento focalizável, listeners ou estado JavaScript. A seleção, Escape e clique externo continuam com o navegador. A opacidade é removida automaticamente quando `:open` deixa de corresponder.
+
+O efeito depende de suporte a `appearance: base-select` e `:has(select:open)` e é desativado em cores forçadas. Em navegadores antigos sem suporte, o seletor permanece funcional sem escurecimento. O escurecimento é limitado ao documento da extensão, não altera sites/abas ou o restante da janela do navegador. Contrato de estado: [select e pseudo-classe :open](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/select).
+
+Conferir no navegador real fechamento por Escape/clique externo, seleção por teclado e funcionamento em diálogos e perto das bordas do popup. O DOM simulado não comprova a composição da camada superior ou a pintura de pseudo-elementos.
