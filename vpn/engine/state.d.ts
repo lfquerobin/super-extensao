@@ -39,6 +39,7 @@ export interface StatePorts<S extends StateServer, C extends CredentialPair> {
     privacyWarning?(error: unknown): void;
     hasProxy(): Promise<boolean>;
     clearProxy(): Promise<unknown>;
+    recoverServer?(server: S, current: () => boolean): Promise<S | undefined>;
     probe(server: S, current: () => boolean): Promise<void>;
     probeInterval(): number;
     activity(): Promise<unknown>;

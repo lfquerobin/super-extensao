@@ -44,6 +44,8 @@ export async function mountVpn(root, engine, preferences, browser = globalThis.c
     saved: false,
     splitSaving: false,
     splitError: "",
+    reconnectDraft: undefined,
+    reconnectStatus: {},
   };
   let hydrated = false;
   let disposed = false,
@@ -91,6 +93,15 @@ export async function mountVpn(root, engine, preferences, browser = globalThis.c
     model.dirty = false;
     model.saved = false;
   };
+  const reconnectSave = createAutoSave({
+    write: async value => {
+      model.snapshot.features = await engine.setToggle('reconnectFastest', value);
+    },
+    onState(state) {
+      model.reconnectStatus = state;
+      render();
+    },
+  });
   const autoSave = createAutoSave({
     write: config => engine.saveSplit(config),
     onState(state) {
@@ -304,6 +315,7 @@ export async function mountVpn(root, engine, preferences, browser = globalThis.c
   async function navigate(page) {
     if (!pages.includes(page)) return;
     await autoSave.flush();
+    await reconnectSave.flush();
     if (disposed || model.dirty) return;
     initialScroll = undefined;
     model.page = page;
@@ -368,6 +380,7 @@ export async function mountVpn(root, engine, preferences, browser = globalThis.c
       void saveRules();
       return;
     }
+    if (action === "retry-reconnect") { void reconnectSave.retry(); return; }
     if (action === "retry-rules") { void saveRules(); return; }
     if (action === "confirm-signout") {
       await autoSave.flush();
@@ -460,6 +473,11 @@ export async function mountVpn(root, engine, preferences, browser = globalThis.c
     }
     if (field === "subdomains") model.subdomains = event.target.checked;
     const feature = event.target.dataset.feature;
+    if (feature === 'reconnectFastest') {
+      model.reconnectDraft = event.target.checked;
+      void reconnectSave.set(model.reconnectDraft);
+      return;
+    }
     if (feature)
       void run(async () => {
         model.snapshot.features = await engine.setToggle(

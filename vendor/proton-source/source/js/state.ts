@@ -1,3 +1,5 @@
+import { storage } from "./tools/storage";
+import { bestCandidate, filterByChoice } from "../../../../vpn/engine/selection";
 import { verifyTunnel } from "../../../../vpn/engine/tunnel-probe";
 import { createConnectionDiagnostics } from "../../../../vpn/engine/diagnostics";
 import { usesVpn } from "../../../../vpn/engine/routing";
@@ -267,12 +269,19 @@ async function probeServer(
 	server: ProxyServer,
 	current: () => boolean,
 ): Promise<void> {
-	const { country, coordinates } = await getCountryAndCoordinates();
-	if (!current()) return;
-	const stay = await shouldStayOnLogical(server.id, country, coordinates);
+	// Catalog/API failures do not prove that a working proxy has failed.
+	let location: Awaited<ReturnType<typeof getCountryAndCoordinates>>;
+	let stay: boolean;
+	try {
+		location = await getCountryAndCoordinates();
+		if (!current()) return;
+		stay = await shouldStayOnLogical(server.id, location.country, location.coordinates);
+	} catch (error) { handleError(error); return; }
+	const {country, coordinates} = location;
 	if (!current() || stay) return;
 	const choice = await getLastChoice();
-	if (!current() || !permitsAutomaticSwitch(choice)) return;
+	if (!current()) return;
+	if (!permitsAutomaticSwitch(choice)) return;
 	const credentials = await getCredentials(true);
 	if (!current() || !credentials) return;
 	const alternative = await getAlternativeServer(server.id, {
@@ -286,6 +295,24 @@ async function probeServer(
 			alternative.server,
 			server.splitTunneling,
 		);
+}
+
+async function recoverFastest(server: ProxyServer, current: () => boolean): Promise<ProxyServer | undefined> {
+	if (!(await storage.getItem<{value: boolean}>("reconnect-fastest"))?.value || !current()) return;
+	const [user, logicals, {country, coordinates}] = await Promise.all([
+		getUser(), getSortedLogicals(), getCountryAndCoordinates(),
+	]);
+	if (!current() || !user) return;
+	const tier = getUserMaxTier(user);
+	const candidates = filterByChoice(logicals, {
+		requiredFeatures: server.secureCore ? Feature.SECURE_CORE : 0,
+		excludedFeatures: server.secureCore ? 0 : Feature.SECURE_CORE,
+	}).filter(item => String(item.ID) !== String(server.id));
+	const logical = bestCandidate(candidates, tier, item => isLogicalUp(item, country, coordinates));
+	const endpoint = logical && pickServerInLogical(logical);
+	if (!logical || !endpoint?.Domain || !current()) return;
+	assertServerAccess(user, logical);
+	return proxyServerFor(logical, endpoint, server.splitTunneling);
 }
 
 const diagnostics = createConnectionDiagnostics(entry => console.warn("[Super VPN]", entry));
@@ -330,6 +357,7 @@ const machine = new ConnectionMachine<ProxyServer, Credentials>({
 	privacyWarning: () => emitPrivacyWarning(),
 	hasProxy: () => hasProxy(),
 	clearProxy: () => clearProxy(),
+	recoverServer: (server, current) => recoverFastest(server, current).catch(error => { handleError(error); return undefined; }),
 	probe: probeServer,
 	probeInterval: () => getLogicalCheckUpRefreshInterval(),
 	activity: () => updateLastActivityTime(),
@@ -548,27 +576,28 @@ export async function connectLogical(
 	const user = await getUser();
 	if (!connectionLifecycle.isCurrent(generation)) return;
 	assertServerAccess(user, logical);
+	await connect({server: proxyServerFor(logical, server, splitTunneling)});
+}
+
+function proxyServerFor(logical: Logical, server: Server, splitTunneling?: SplitTunnelingConfig): ProxyServer {
 	const secureCoreLogical = (logical.Features & Feature.SECURE_CORE) !== 0;
 	const label = server.Label || "";
-
-	await connect({
-		server: {
-			id: logical.ID,
-			name: logical.Name,
-			exitIp: server.ExitIP,
-			entryCountry: logical.EntryCountry,
-			exitCountry: logical.ExitCountry,
-			exitCity: logical.Translations?.City || logical.City,
-			exitEnglishCity: logical.City,
-			secureCore: secureCoreLogical,
-			proxyHost: proxyHost || server.Domain,
-			proxyPort: secureCoreLogical
-				? proxySecureCorePort || proxyPort
-				: proxyPort +
-					(!singleProxyPort && /^\d+$/.test(label) ? parseInt(label, 10) : 0),
-			splitTunneling,
-		},
-	});
+	return {
+		id: logical.ID,
+		name: logical.Name,
+		exitIp: server.ExitIP,
+		entryCountry: logical.EntryCountry,
+		exitCountry: logical.ExitCountry,
+		exitCity: logical.Translations?.City || logical.City,
+		exitEnglishCity: logical.City,
+		secureCore: secureCoreLogical,
+		proxyHost: proxyHost || server.Domain,
+		proxyPort: secureCoreLogical
+			? proxySecureCorePort || proxyPort
+			: proxyPort +
+				(!singleProxyPort && /^\d+$/.test(label) ? parseInt(label, 10) : 0),
+		splitTunneling,
+	};
 }
 
 export async function checkAutoConnect(): Promise<void> {

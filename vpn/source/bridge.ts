@@ -37,6 +37,7 @@ import type { StoredWebsiteFilterList } from "@vpn-engine/vpn/WebsiteFilter";
 
 type ToggleName =
   | "secureCore"
+  | "reconnectFastest"
   | "autoConnect"
   | "notification"
   | "preventWebrtcLeak"
@@ -46,6 +47,7 @@ export function createEngine(initialConnection?: () => Promise<any>) {
   let features: AllFeatures;
   let context: Awaited<ReturnType<typeof getUserContext>>;
   let logicals: Logical[] = [];
+  let reconnectFastest = false;
   let connected = false;
   let connectionRevision = 0;
   let latestConnection: any;
@@ -67,31 +69,34 @@ export function createEngine(initialConnection?: () => Promise<any>) {
     allowed: logical.Tier <= getUserMaxTier(user),
   });
   const featureSummary = () =>
-    Object.fromEntries(
-      (
-        [
-          "secureCore",
-          "autoConnect",
-          "notification",
-          "preventWebrtcLeak",
-          "recents",
-        ] as ToggleName[]
-      ).map((key) => {
-        const item = features[key];
-        return [
-          key,
-          {
-            enabled: item.config.value,
-            available: item.feature.isAvailable(),
-            controllable:
-              Boolean(user) &&
-              item.feature.isControllable() &&
-              (key !== "secureCore" || getUserMaxTier(user) > 0),
-            message: item.feature.getControlMessage(),
-          },
-        ];
-      }),
-    );
+    ({
+      reconnectFastest: {enabled: reconnectFastest, available: true, controllable: Boolean(user)},
+      ...Object.fromEntries(
+        (
+          [
+            "secureCore",
+            "autoConnect",
+            "notification",
+            "preventWebrtcLeak",
+            "recents",
+          ] as Exclude<ToggleName, "reconnectFastest">[]
+        ).map((key) => {
+          const item = features[key];
+          return [
+            key,
+            {
+              enabled: item.config.value,
+              available: item.feature.isAvailable(),
+              controllable:
+                Boolean(user) &&
+                item.feature.isControllable() &&
+                (key !== "secureCore" || getUserMaxTier(user) > 0),
+              message: item.feature.getControlMessage(),
+            },
+          ];
+        }),
+      ),
+    });
   return {
     async readConnection() {
       const revision = connectionRevision;
@@ -133,6 +138,8 @@ export function createEngine(initialConnection?: () => Promise<any>) {
         loadAllFeatures(),
         getLastChoices(),
       ]);
+      current();
+      reconnectFastest = (await storage.getItem<{value: boolean}>("reconnect-fastest"))?.value === true;
       current();
       features = loadedFeatures;
       const local = {
@@ -260,6 +267,11 @@ export function createEngine(initialConnection?: () => Promise<any>) {
     },
     async setToggle(name: ToggleName, value: boolean) {
       checkAccess();
+      if (name === "reconnectFastest") {
+        await storage.setItem("reconnect-fastest", {value});
+        reconnectFastest = value;
+        return featureSummary();
+      }
       const item = features[name];
       if (
         !item?.feature.isAvailable() ||

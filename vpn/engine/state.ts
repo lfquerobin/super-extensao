@@ -45,6 +45,7 @@ export interface StatePorts<S extends StateServer, C extends CredentialPair> {
   privacyWarning?(error: unknown): void;
   hasProxy(): Promise<boolean>;
   clearProxy(): Promise<unknown>;
+  recoverServer?(server: S, current: () => boolean): Promise<S | undefined>;
   probe(server: S, current: () => boolean): Promise<void>;
   probeInterval(): number;
   activity(): Promise<unknown>;
@@ -382,6 +383,21 @@ export class ConnectionMachine<
         if (this.cleanupNeeded === state) await this.clearDisconnected(state);
         return;
       }
+      // Choose only after a failure, before applying the proxy. Keep the same
+      // generation so disconnect/logout cancels delayed catalog replies.
+      const recovering = !!(state.data.blocked && state.data.error);
+      if (recovering && state.data.server && this.ports.recoverServer) {
+        const server = await this.ports.recoverServer(state.data.server, current);
+        if (!current()) return;
+        if (server) {
+          state.data.server = server;
+          this.lastProbe = this.now();
+          this.persistence = this.persistence.catch(() => undefined)
+            .then(() => this.ports.saveServer(server));
+          await this.persistence;
+          if (!current()) return;
+        }
+      }
       if (state.data.blocked && state.data.error) {
         delete state.data.error;
         state.data.starting = true;
@@ -495,6 +511,11 @@ export class ConnectionMachine<
   networkFailed(error: unknown, warning?: unknown): void {
     const state = this.state;
     if (state?.name === "on") {
+      // A burst of failed requests must not keep postponing the next retry.
+      if (state.data.blocked && state.data.error && this.connectingAt === undefined) {
+        this.ports.failed(error);
+        return;
+      }
       this.ports.diagnostic?.(this.stage, "failed", error);
       state.data.error = warning ?? this.ports.networkWarning();
       if (this.ports.hold) {

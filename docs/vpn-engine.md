@@ -237,3 +237,10 @@ O runner reproduzível scripts/check-vpn-account-native.cjs usa o worker de prod
 ### Autenticação durante restauração inicial — 1.7.31
 
 `vpn/engine/proxy-auth.ts` reconhece o endpoint exato do proxy fixo ou PAC inline controlado por esta extensão. O adaptador `vpn/authHandler.ts` consulta essa propriedade quando o estado da conexão ainda não reconhece o desafio; cancela o pedido próprio sem buscar credenciais, evitando entregar esse caso ao diálogo de senha do navegador. A autorização de envio de credenciais continua exigindo o servidor e a porta ativos. O teste nativo de proxy 407 e seus limites estão em [vpn-validacao-pc.md](vpn-validacao-pc.md).
+
+
+### Recuperação após quedas
+
+Em **VPN / Recursos**, a opção **Reconectar ao mais rápido quando cair** salva automaticamente a preferência (desligada por padrão). Após uma falha, o motor espera o intervalo de recuperação e tenta o servidor alternativo com a melhor classificação disponível do Proton, respeitando o plano, Secure Core e as regras de tunelamento dividido. O país de saída pode mudar. Se não houver alternativa ou o catálogo estiver indisponível, tenta novamente o servidor atual. Uma desconexão explícita ou logout cancela a recuperação pendente.
+
+Erros repetidos de requisições durante o bloqueio não reiniciam o prazo de recuperação. Falhas ao consultar localização ou disponibilidade no serviço não são consideradas prova de queda de um túnel ativo. A navegação que usa VPN continua bloqueada até a aplicação e a verificação da nova conexão terminarem. A interface indica gravação em andamento e falhas; uma preferência cuja gravação falhou é mantida para nova tentativa.

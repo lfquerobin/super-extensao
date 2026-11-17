@@ -98,6 +98,7 @@ const snapshot = () => ({
     [
       "secureCore",
       "autoConnect",
+      "reconnectFastest",
       "notification",
       "preventWebrtcLeak",
       "recents",
@@ -1240,4 +1241,26 @@ test('connected VPN can select fastest again without an explicit disconnect or a
     ui.broadcast('changeState', {state:'connecting'});
     assert.equal(ui.w.document.querySelector('.vpn-status-card [data-action="fastest"]'), null);
   } finally {await ui.close();}
+});
+
+
+test('fastest recovery preference serializes edits, retains failure and retries autosave', async()=>{
+  const ui=await boot();await ui.app.navigate('features');
+  let release;const writes=[];let fail=true;
+  ui.engine.setToggle=async(name,value)=>{
+    writes.push(value);
+    if(writes.length===1) await new Promise(resolve=>{release=resolve;});
+    if(fail) throw Error('storage failed');
+    return {...snapshot().features,[name]:{enabled:value,available:true,controllable:true}};
+  };
+  const change=value=>{const input=ui.w.document.querySelector('[data-feature="reconnectFastest"]');input.checked=value;input.dispatchEvent(new ui.w.Event('change',{bubbles:true}));};
+  change(true);await tick();change(false);change(true);await tick();
+  assert.deepEqual(writes,[true]);assert.match(ui.w.document.body.textContent,/Salvando/);
+  release();await tick();await tick();assert.deepEqual(writes,[true,true]);
+  assert.equal(ui.w.document.querySelector('[data-feature="reconnectFastest"]').checked,true);
+  assert.ok(ui.w.document.querySelector('[data-action="retry-reconnect"]'));
+  fail=false;await ui.click('retry-reconnect');
+  assert.deepEqual(writes,[true,true,true]);
+  assert.equal(ui.w.document.querySelector('[data-action="retry-reconnect"]'),null);
+  await ui.close();
 });

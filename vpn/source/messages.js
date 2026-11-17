@@ -1,5 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 export const messages = {
+  reconnectFastest: {"pt-BR": "Reconectar ao mais rápido quando cair", en: "Reconnect to fastest after a drop"},
+  reconnectFastestHelp: {"pt-BR": "Após uma falha, tenta outro servidor disponível com a melhor classificação do Proton para seu plano. Mantém Secure Core e as regras de sites; o país pode mudar. Desligado: tenta o servidor atual. Salvo automaticamente.", en: "After a failure, tries another available server with the best Proton ranking for your plan. Preserves Secure Core and website rules; the country may change. When off, retries the current server. Saved automatically."},
   blockDirectOnFailure: {"pt-BR": "Bloquear também sites que não usam VPN quando ela cair", en: "Also block sites that bypass the VPN when it drops"},
   blockDirectOnFailureHelp: {"pt-BR": "Desligado: sites fora da VPN continuam pela conexão normal durante uma falha. No modo de exclusão, são os sites da lista; no modo de inclusão, são os sites fora dela. Sites que usam VPN continuam bloqueados até a conexão ser confirmada. As alterações são salvas automaticamente.", en: "When off, sites that bypass the VPN keep using your regular connection during a failure: listed sites in exclusion mode, unlisted sites in inclusion mode. VPN sites stay blocked until the connection is verified. Changes are saved automatically."},
   connectFastest: {"pt-BR": "Conectar ao mais rápido", en: "Connect to fastest"},

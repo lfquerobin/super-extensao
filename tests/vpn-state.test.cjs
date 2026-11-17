@@ -286,3 +286,41 @@ test('a late guard failure from an older attempt does not overwrite a recovered 
  gate.reject(Error('old guard error'));await tick();
  assert.equal(f.machine.peek().data.error,undefined);assert.equal(phases(f).at(-1),'connected');
 });
+
+
+test('repeated failures do not postpone automatic recovery indefinitely', async () => {
+  const f=fixture();f.ports.hold=async()=>{};f.ports.resume=async()=>true;
+  await connect(f);f.machine.networkFailed(Error('drop'));
+  f.advance(19000);f.machine.networkFailed(Error('another failed request'));
+  f.advance(1000);await f.machine.refresh();
+  assert.equal(f.machine.peek().proxyEnabled,true);
+});
+
+test('recovery selects an alternative only after failure and preserves its rules', async () => {
+  const f=fixture();f.ports.hold=async()=>{};f.ports.resume=async()=>true;
+  let selections=0;
+  f.ports.recoverServer=async(value,current)=>{selections++;assert.equal(current(),true);return {...value,name:'fastest'};};
+  await connect(f);assert.equal(selections,0);
+  f.machine.networkFailed(Error('drop'));await f.machine.refresh();assert.equal(selections,0);
+  f.advance(20000);await f.machine.refresh();
+  assert.equal(selections,1);assert.equal(f.machine.peek().proxyEnabled,true);
+  assert.equal(f.machine.peek().data.server.name,'fastest');assert.equal(f.saved.name,'fastest');
+  await f.machine.refresh();assert.equal(selections,1);
+});
+
+test('disabled or unavailable alternative retries the current server',async()=>{
+  const f=fixture();f.ports.hold=async()=>{};f.ports.resume=async()=>true;
+  f.ports.recoverServer=async()=>undefined;
+  await connect(f);f.machine.networkFailed(Error('drop'));await f.machine.retryConnection();
+  assert.equal(f.machine.peek().proxyEnabled,true);assert.equal(f.saved.name,'a');
+});
+
+test('disconnect cancels a delayed fastest-server selection without saving or applying it',async()=>{
+  const f=fixture(),gate=deferred();f.ports.hold=async()=>{};f.ports.resume=async()=>true;
+  f.ports.recoverServer=()=>gate.promise;
+  await connect(f);f.machine.networkFailed(Error('drop'));
+  const retry=f.machine.retryConnection();await tick();f.machine.disconnect();await retry;
+  gate.resolve(server('late'));await tick();await tick();
+  assert.equal(f.machine.peek().name,'off');assert.equal(f.saved,undefined);
+  assert.ok(!f.events.some(([kind,name])=>kind==='apply'&&name==='late'));
+});
