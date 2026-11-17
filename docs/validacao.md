@@ -1,5 +1,11 @@
 # Validação da Super Extensão
 
+## Controles unificados e menus escuros — 1.7.50 (17/11/2026)
+
+Unificados fundo/blur/borda/sombra/opacidade da barra esquerda e do botão direito na Nova guia. Tokens compartilhados: 50% em repouso/100% em hover ou foco, blur 12px, raio 12px, superfície translúcida com 61%/85% da cor base. As listas dos seletores usam paleta escura dedicada nos dois temas; o campo fechado continua seguindo o tema da interface. Mantido fallback nativo e cores forçadas do sistema.
+
+**36 verificações direcionadas passaram** (componentes compartilhados claro/escuro e interface VPN). Nova guia e painéis recompilados; `check:ui`, `check:integrity` e whitespace aprovados. A validação DOM não mede transparência composta, blur nem o picker nativo; conferência visual final no Helium/perfil pessoal continua pendente.
+
 ## Listas dos seletores — 1.7.49 (17/11/2026)
 
 Aplicado estilo compartilhado às opções e ao picker nativo personalizável, com fallback sem JavaScript para motores antigos e tratamento de cores forçadas. Menus com borda/radius/sombra, opções espaçadas, hover/foco do tema e visto nativo de seleção. Multiselect/listbox explícito não foi alterado. O botão translúcido da Nova guia permanece na versão final, herdado da 1.7.48.

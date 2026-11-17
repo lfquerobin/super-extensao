@@ -173,3 +173,8 @@ A ativação usa `@supports (appearance: base-select)` e `::picker(select)`; nã
 As listas são limitadas a 288px e ao viewport, com rolagem; a posição é gerenciada pelo navegador. O picker fica na camada superior do documento, mas não sai da área do popup do navegador. `base-select` também deixa de dimensionar o controle pela opção mais longa, por isso são preservadas as larguras/min-width/max-width existentes dos campos e cabeçalhos. Não foram adicionados botões internos ou `<selectedcontent>` nem alterados valores, eventos ou salvamento automático.
 
 Contrato do motor: [Chrome — seletor personalizável, disponível desde Chromium 135](https://developer.chrome.com/blog/a-customizable-select) e [guia de estilo](https://developer.chrome.com/docs/modern-web-guidance/guides/forms/branded-select-styling). O manifest conserva Chromium 116 como mínimo, com fallback visual nos motores anteriores. A validação automatizada não mede o picker nativo do SO; conferir abertura perto das bordas do popup, teclado, idiomas e listas longas no perfil pessoal.
+
+
+### Fundo escuro dos menus — 1.7.50
+
+Opções, optgroups e `::picker(select)` consomem os tokens `--select-menu-*` declarados em `ui-theme.css`, sem sobrescrita no tema claro. Assim a lista aberta permanece escura com texto claro. O seletor fechado conserva suas cores e dimensões do tema; `color-scheme: dark` informa a preferência aos menus nativos de fallback. `Highlight`/`HighlightText` continuam prevalecendo para estados de seleção em cores forçadas. Nenhum evento, valor, armazenamento ou comportamento de autenticação/rede foi alterado.

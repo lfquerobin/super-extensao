@@ -1,4 +1,4 @@
-# Identidade visual — 1.7.48
+# Identidade visual — 1.7.50
 
 A identidade aprovada usa o símbolo S integrado ao escudo, sem título no ícone, e base quase preta com leve fundo violeta.
 
@@ -54,3 +54,9 @@ Removido o preenchimento do canvas e a chamada `flatten` do gerador. Os 30 PNGs 
 ## Transparência do controle da Nova guia — 1.7.48
 
 Restaurado o fundo translúcido do botão Super Extensão: 61% da cor base do tema em repouso, 85% ao passar o mouse ou focar pelo teclado, mantendo `backdrop-filter: blur(12px)`. A transparência pertence ao fundo, preservando texto/logo totalmente legíveis. Nenhuma imagem ou configuração do dashboard foi substituída.
+
+## Controles superiores e listas escuras — 1.7.50
+
+A barra esquerda e o botão Super Extensão da direita compartilham os tokens `--newtab-controls-*`: mesmo fundo base com 61% de cor em repouso e 85% no estado ativo, blur de 12px, raio de 12px, borda e sombra. Ambos têm opacidade global de 50% em repouso e 100% no hover/foco, seguindo o comportamento anterior da barra esquerda. Ambos usam transição de opacidade de 150ms quando movimento reduzido não está ativo. Altura/recuo também continuam compartilhados; o conteúdo e as ações dos dois controles permanecem distintos.
+
+As listas dos seletores têm paleta própria escura (`--select-menu-*`) nos temas claro/escuro: fundo #1B181F, texto #EEEAF2, seleção #302936 e destaque #E8E5EC. O campo fechado acompanha o tema normal. O hint nativo `color-scheme: dark` atende também o fallback de menus antigos; navegadores sem suporte ao picker personalizável podem manter a aparência específica do sistema. Cores forçadas continuam usando as cores de seleção do sistema.

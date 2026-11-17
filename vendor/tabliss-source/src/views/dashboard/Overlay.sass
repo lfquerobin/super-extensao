@@ -8,14 +8,16 @@
     margin: 0
     padding: var(--space-1)
     border: 1px solid var(--line)
-    border-radius: var(--card-radius)
-    background: var(--surface)
+    border-radius: var(--newtab-controls-radius, var(--card-radius))
+    background: var(--newtab-controls-background, var(--surface))
     color: var(--text)
     box-shadow: var(--shadow)
-    opacity: 0.5
+    opacity: var(--newtab-controls-opacity, 0.5)
+    backdrop-filter: blur(var(--newtab-controls-blur, 12px))
 
     &:hover, &:focus-within
-        opacity: 1
+        opacity: var(--newtab-controls-active-opacity, 1)
+        background: var(--newtab-controls-hover-background, var(--raised))
 
     .ui-button, .overlay-loading
         width: var(--button-height)

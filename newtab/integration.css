@@ -1,8 +1,11 @@
 @import url("../ui-theme.css");
 html,body {background:var(--bg);}
-:root {--newtab-controls-inset:var(--space-3);--newtab-controls-height:calc(var(--button-height) + var(--space-2) + 2px);}
-#super-settings {position:fixed;top:var(--newtab-controls-inset);right:var(--newtab-controls-inset);min-height:var(--newtab-controls-height);z-index:10;display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:color-mix(in srgb,var(--bg) 61%,transparent);backdrop-filter:blur(12px);color:var(--text);font:500 12px/1.4 system-ui,sans-serif;cursor:pointer;box-shadow:0 4px 20px #0002;}
-#super-settings:hover,#super-settings:focus-visible {background:color-mix(in srgb,var(--bg) 85%,transparent);}
+:root {--newtab-controls-inset:var(--space-3);--newtab-controls-height:calc(var(--button-height) + var(--space-2) + 2px);--newtab-controls-background:color-mix(in srgb,var(--bg) 61%,transparent);--newtab-controls-hover-background:color-mix(in srgb,var(--bg) 85%,transparent);--newtab-controls-blur:12px;--newtab-controls-radius:12px;--newtab-controls-opacity:.5;--newtab-controls-active-opacity:1;}
+#super-settings {position:fixed;top:var(--newtab-controls-inset);right:var(--newtab-controls-inset);min-height:var(--newtab-controls-height);z-index:10;display:flex;align-items:center;gap:8px;padding:8px 12px;color:var(--text);font:500 12px/1.4 system-ui,sans-serif;cursor:pointer;}
+/* Both top controls share one glass surface and interaction treatment. */
+.Overlay,#super-settings {border:1px solid var(--line);border-radius:var(--newtab-controls-radius);background:var(--newtab-controls-background);backdrop-filter:blur(var(--newtab-controls-blur));box-shadow:var(--shadow);opacity:var(--newtab-controls-opacity);}
+.Overlay:hover,.Overlay:focus-within,#super-settings:hover,#super-settings:focus-visible {background:var(--newtab-controls-hover-background);opacity:var(--newtab-controls-active-opacity);}
+@media(prefers-reduced-motion:no-preference){.Overlay,#super-settings {transition:opacity .15s ease-out;}}
 #super-settings img {display:block;}
 @media(max-width:600px) {#super-settings span {display:none;}}
 
