@@ -1,5 +1,17 @@
 # Validação da Super Extensão
 
+## Dashboard próprio e sessões — 1.7.44 (17/11/2026)
+
+Extraídos composição, agrupamento, ordem, tema/foco e montagem/descarte dos widgets para `newtab/dashboard` e `newtab/engine`. Os componentes/provedores existentes são injetados por um adaptador, sem troca das chaves de configuração/cache.
+
+**563 testes Node passaram**, sem falhas ou ignorados. Os três novos cenários verificam snapshot estável em edições de dados, ordem/posição/tema/foco, descarte de gravações tardias, balanceamento do loader, montagem React em StrictMode, propagação reativa sem remontagem desnecessária, ocultação/retorno, isolamento de provedor ausente, recuperação após troca de tipo e remoção de observadores no unmount. A suíte também executa o bundle recompilado da Nova guia com armazenamento simulado.
+
+A compilação de produção passou. A tentativa de rodar `CHROMIUM_PATH=/usr/bin/chromium node scripts/check-newtab-native.cjs` foi impedida na inicialização do Chromium por `socket() failed: Operation not permitted`; nenhum cenário nativo desta versão foi executado. Os resultados históricos em navegador não são uma aprovação automática da 1.7.44; a conferência do perfil pessoal continua pendente.
+
+### Sincronização entre dois navegadores — confirmação do usuário
+
+Em 17/11/2026, o usuário confirmou que a sincronização entre dois navegadores está validada. A confirmação encerra essa pendência de convergência do roteiro. Não foram fornecidos navegador/versão, quantidade de favoritos ou resultados separados para concorrência, interrupções e reinícios; esses detalhes não são inferidos. Essa confirmação se refere à sincronização de favoritos, não à Nova guia.
+
 ## Espaçamento dos campos — 1.7.43
 
 A classe local `.field` deixava o seletor em bloco e anulava o espaço do componente compartilhado. Foi removida a sobrescrita, preservando o grid de `.ui-field` e seu token de 6 px. No Edge 157.0.4341.60, a medição do HTML/CSS reais confirmou 6 px entre título e controle nos três seletores de limpeza, no campo de domínio e nos dois seletores de Favoritos. Captura inspecionada. `check:ui`, `check:integrity` e `git diff --check` passaram; não houve alteração na persistência ou nas regras de limpeza.

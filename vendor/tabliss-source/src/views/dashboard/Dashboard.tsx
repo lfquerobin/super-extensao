@@ -1,27 +1,23 @@
+/* Super Extensão: compatibility adapter for the own dashboard runtime. */
 import React from "react";
-import { db } from "../../db/state";
-import { useValue } from "../../lib/db/react";
-import Background from "./Background";
-import "./Dashboard.sass";
+import Dashboard from "../../../../../newtab/dashboard/Dashboard";
+import { UiContext } from "../../contexts/ui";
+import { db, cache } from "../../db/state";
+import { getConfig } from "../../plugins";
+import Crashed from "../shared/Crashed";
 import Overlay from "./Overlay";
-import Widgets from "./Widgets";
-
-const Dashboard: React.FC = () => {
-  const background = useValue(db, "background");
-  const theme = (background.display.luminosity ?? 0) > 0 ? "light" : "dark";
-
-  // Set init theme for pre settings load (see `target/<target>/index.html`)
-  React.useEffect(() => {
-    localStorage.setItem("theme", theme);
-  }, [theme]);
-
+const resolve = (key: string) => getConfig(key).dashboardComponent;
+export default function DashboardAdapter() {
+  const { pushLoader, popLoader } = React.useContext(UiContext);
   return (
-    <div className={`Dashboard fullscreen ${theme}`}>
-      <Background />
-      <Widgets />
-      <Overlay />
-    </div>
+    <Dashboard
+      db={db}
+      cache={cache}
+      resolve={resolve}
+      pushLoader={pushLoader}
+      popLoader={popLoader}
+      Overlay={Overlay}
+      Failure={Crashed}
+    />
   );
-};
-
-export default React.memo(Dashboard);
+}

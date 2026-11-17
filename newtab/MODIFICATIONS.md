@@ -1,5 +1,9 @@
 # Tabliss 2.6.0 na Super Extensão
 
+## Dashboard e sessões — Super Extensão 1.7.44
+
+Composição, agrupamento, estilo dos widgets e projeção reativa do dashboard passam a `newtab/dashboard` e `newtab/engine/dashboard.ts`. `plugin-session.ts` controla cada instância montada: descarta gravações tardias e libera carregamentos pendentes no descarte, inclusive em foco/remoção e remonta StrictMode. Os antigos componentes de composição foram removidos; o caminho Dashboard original é um adaptador para bancos, catálogo, overlay e apresentação de erros. Estilos foram preservados com atribuição GPL. Editor, catálogo, controles do overlay, componentes dos widgets e suas rotinas internas de timers/rede continuam adaptados do Tabliss.
+
 ## Primeira extração do núcleo — Super Extensão 1.7.18
 
 Estado reativo, defaults, ações de configuração, validação/conversão v2/v3, importação/exportação, fila de persistência e coordenação de migração usam `newtab/engine`. Os módulos nos caminhos antigos são fachadas para esse núcleo. O adaptador de plataforma preserva `tabliss/config`, IndexedDB/cache e preferências compartilhadas. Importação inválida não limpa mais o estado antes de ser validada; gravações são ordenadas e a origem legada só é removida após confirmação. Dashboard/editor e widgets/provedores ainda usam Tabliss. [Escopo e limites](../docs/newtab-engine.md).

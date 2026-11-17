@@ -26,6 +26,7 @@ const config = {
   mode: isProduction ? "production" : "development",
   resolve: {
     extensions: [".js", ".jsx", ".ts", ".tsx"],
+    modules: ["node_modules", path.resolve("node_modules")],
   },
   module: {
     rules: [
@@ -51,7 +52,7 @@ const config = {
       },
       {
         test: /\.(ts|tsx)$/,
-        include: [path.resolve("./src"),path.resolve("../../newtab/engine")],
+        include: [path.resolve("./src"), path.resolve("../../newtab/engine"), path.resolve("../../newtab/dashboard")],
         loader: "ts-loader",
       },
     ],

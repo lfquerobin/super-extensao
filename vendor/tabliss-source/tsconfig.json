@@ -1,5 +1,10 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "react": ["node_modules/@types/react"],
+      "react-error-boundary": ["node_modules/react-error-boundary"]
+    },
     "esModuleInterop": true,
     "jsx": "react",
     "lib": ["esnext", "dom"],

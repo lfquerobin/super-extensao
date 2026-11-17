@@ -1,13 +1,13 @@
 # Próximos passos da Super Extensão
 
-Revisado em **15 de novembro de 2026**, referência **1.7.42**. A página de bloqueio permite voltar ao endereço interceptado após confirmação da VPN e novo clique, com revalidação de estado e sem repetir POST. Consulta/cache de conta, política Free/pago e resolução das configurações de recursos usam núcleos próprios desde a 1.7.25. Endpoints, formatos e fachadas de compatibilidade permanecem. A conexão Proton pessoal ainda precisa ser repetida após a correção da previsão de rede da 1.7.24. Evidências, limites, confirmações do usuário e validações ainda pendentes estão separados em [docs/validacao.md](docs/validacao.md).
+Revisado em **17 de novembro de 2026**, referência **1.7.44**. A página de bloqueio permite voltar ao endereço interceptado após confirmação da VPN e novo clique, com revalidação de estado e sem repetir POST. Consulta/cache de conta, política Free/pago e resolução das configurações de recursos usam núcleos próprios desde a 1.7.25. Endpoints, formatos e fachadas de compatibilidade permanecem. A conexão Proton pessoal ainda precisa ser repetida após a correção da previsão de rede da 1.7.24. Evidências, limites, confirmações do usuário e validações ainda pendentes estão separados em [docs/validacao.md](docs/validacao.md).
 
 ## Estado e prioridade
 
 | Prioridade | Frente | Estado atual | Próxima entrega |
 | --- | --- | --- | --- |
-| 1 | Google Drive/favoritos | Núcleo próprio integrado; sincronização confirmada pelo usuário na 1.6.2 | Dois navegadores reais, falhas/reinícios, grandes volumes e restauração de backups por interface |
-| 2 | Validação em navegador | Testes de execução, recuperação, transporte e interface; interface conferida parcialmente no Helium isolado | Conferir Google Drive com dois perfis de teste e tráfego real da VPN |
+| 1 | Google Drive/favoritos | Núcleo próprio integrado; sincronização confirmada pelo usuário na 1.6.2 | Dois navegadores confirmados pelo usuário em 17/11; faltam falhas/reinícios, grandes volumes e restauração de backups por interface |
+| 2 | Validação em navegador | Testes de execução, recuperação, transporte e interface; interface conferida parcialmente no Helium isolado | Ampliar falhas/reinícios no Google Drive e tráfego real da VPN; convergência entre dois navegadores já confirmada |
 | 3 | Demais sincronizações | Git e perfis de abas continuam no legado; demais serviços desativados | Migrar o conector Git e definir propriedade de pastas sobrepostas |
 | 4 | Motor próprio da VPN | 1.7.19: runner nativo aprovado; conta, troca EUA/Canadá, recuperação pela página local e inclusão/exclusão com medições externas no Helium; regras originais restauradas | Medir queda e transições com captura autorizada pelo Windows, ampliar IPv6/DNS, testar suspensão/reinício completo, liberação/cancelamento e recursos de terceiros; ver docs/vpn-validacao-pc.md |
 | Contínua | Interface e manutenção | 1.7.41: limpeza com inclusão/exclusão por tipo, gravação automática e seis módulos opcionais | Validar contas reais e reduzir ferramentas legadas ainda sinalizadas pelo npm audit. Ver docs/sync-migration.md |
@@ -37,7 +37,7 @@ A primeira execução no novo worker aproveita o perfil salvo; não exige recria
 
 - [x] Registrar a confirmação do usuário de que a sincronização Google Drive funcionou após a atualização 1.6.2.
 - [ ] Validar detalhadamente OAuth, bloqueios, `If-Match`, gravação e leitura com dados fictícios; o relato de sucesso não certifica cada cenário.
-- [ ] Conferir convergência entre dois navegadores reais, inclusive edição concorrente e mudança de ordem.
+- [x] Convergência entre dois navegadores reais validada pelo usuário em 17/11/2026. Não foram fornecidos detalhes separados sobre edição concorrente e mudança de ordem; falhas/reinícios continuam pendentes.
 - [ ] Interromper o worker/processo durante uma execução de teste e conferir a retomada real.
 - [ ] Medir tempo e armazenamento com grandes importações; otimizar sem perder recuperação por operação.
 - [ ] Criar uma tela para consultar e restaurar os backups internos; hoje eles ficam no armazenamento da extensão.
@@ -122,15 +122,15 @@ A extração dos módulos funcionais está implementada: regras/PAC, controlador
 
 ### Extração da Nova guia
 
-**Próxima ação combinada:** o usuário fará a validação da 1.7.18 quando estiver em casa, seguindo o [checklist](docs/newtab-engine.md#próxima-ação-combinada-testes-em-casa--pendente). Aguardamos o relato para registrar a evidência e retomar a próxima etapa. Esta atualização é somente documental; não executa testes nem altera a implementação.
+**Etapa atual — 1.7.44:** composição do dashboard e sessões dos widgets extraídas. Próxima implementação: editor e catálogo; depois, componentes/provedores restantes. A validação da configuração existente no perfil pessoal da Nova guia continua pendente; a confirmação de dois navegadores refere-se à sincronização de favoritos.
 
 - [x] Etapa 1 na 1.7.18: banco reativo, modelo/defaults, ações, importação/exportação, fila de persistência e migração passam ao núcleo próprio `newtab/engine`. Caminhos de armazenamento e imagens existentes são preservados.
 - [x] Validar importação antes de limpar o estado; ordenar escritas e preservar a origem legada até confirmar a persistência.
 - [ ] Conferir os dados existentes, editor, importação/exportação, imagens e várias abas no navegador real.
-- [ ] Extrair a orquestração do dashboard e o ciclo de vida dos widgets.
+- [x] Extrair a composição do dashboard e o ciclo de montagem/descarte dos widgets (1.7.44), incluindo guardas de gravações tardias e liberação dos indicadores de carregamento.
 - [ ] Extrair o editor, o catálogo e os provedores restantes, mantendo formatos, dados e licenças.
 
-O Tabliss ainda fornece interface e componentes funcionais de widgets/provedores; não foi removido integralmente. [Arquitetura e limites](docs/newtab-engine.md).
+O Tabliss ainda fornece editor, catálogo, controles do overlay e componentes funcionais de widgets/provedores; não foi removido integralmente. [Arquitetura e limites](docs/newtab-engine.md).
 
 ### Validação dos módulos locais
 

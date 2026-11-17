@@ -1,4 +1,4 @@
-# Núcleo próprio da Nova guia — etapa 1, versão 1.7.18
+# Núcleo próprio da Nova guia — etapa 2, versão 1.7.44
 
 A primeira extração do Tabliss está integrada ao fluxo normal da Nova guia. Não é apenas uma cópia em outro diretório: o armazenamento, as ações e a validação usam implementações próprias em `newtab/engine`, sem importar Tabliss, React ou serviços online. As fachadas nos caminhos antigos mantêm os componentes atuais funcionando com o novo núcleo.
 
@@ -16,9 +16,19 @@ Na rodada Windows da **1.7.19**, o bundle real passou pelo editor, widgets, imag
 | Adaptadores de storage da extensão e IndexedDB | `newtab/engine/browser-storage.ts` |
 | Coordenação da migração legada e dados associados | `newtab/engine/migration.ts`; acesso à antiga base fica na fachada de plataforma |
 | Ligação React e ciclo de vida do documento | Adaptadores existentes em `vendor/tabliss-source/src/lib/db` e `src/db` |
-| Dashboard visual, editor, catálogo/componentes dos widgets e provedores | Ainda na camada Tabliss adaptada |
+| Composição, tema, posições, ordem e foco do dashboard | `newtab/dashboard/Dashboard.tsx` e `newtab/engine/dashboard.ts` |
+| Montagem/descarte de instâncias, guardas de escrita e carregamentos | `newtab/engine/plugin-session.ts`, ligado pelo dashboard próprio |
+| Editor, catálogo/componentes dos widgets, provedores e controles do overlay | Ainda na camada Tabliss adaptada, injetados pelo adaptador `src/views/dashboard/Dashboard.tsx` |
 
-O build continua partindo da aplicação React adaptada, mas agora inclui o núcleo próprio. Isso **não conclui a retirada de todo o Tabliss**. A próxima extração deve tratar a orquestração do dashboard e o ciclo de vida dos widgets; depois, editor e provedores, preservando IDs/formatos e a biblioteca visual compartilhada. React é uma dependência de interface, não algo que precise ser removido para a extração funcional.
+O build continua partindo da aplicação React adaptada, mas agora inclui o núcleo próprio. Isso **não conclui a retirada de todo o Tabliss**. A composição e o ciclo de montagem/descarte agora são próprios. As próximas extrações tratam editor, catálogo e provedores, preservando IDs/formatos e a biblioteca visual compartilhada. React é uma dependência de interface, não algo que precise ser removido para a extração funcional.
+
+## Dashboard e sessões — 1.7.44
+
+A projeção agrupa os widgets por posição, preserva a ordem e mantém o mesmo snapshot em alterações apenas de dados/cache. O dashboard próprio observa os bancos existentes e monta fundo, slots, widgets e overlay. O adaptador injeta o catálogo e a apresentação de erros/controles; o núcleo não importa arquivos do fornecedor. O build resolve React pela árvore já instalada do Tabliss, sem segunda cópia.
+
+Cada instância recebe setters e loader de uma sessão própria. Remover/trocar o widget ou fundo invalida gravações; desmontar ao entrar em foco ou fechar o documento descarta a sessão e libera seus carregamentos pendentes sem contagem negativa. Respostas antigas não voltam a gravar após reutilizar o ID de uma sessão descartada. O limite de erro também inclui a resolução do catálogo, isolando provedores ausentes. Configuração/aparência não desmontam componentes cuja identidade e posição permaneçam iguais. Mudar de posição pode remontar o componente, como antes.
+
+Isso não transfere as rotinas internas de cada widget/provedor: timers, requisições, URLs de objetos e efeitos continuam sob seus componentes React e seus cleanups existentes. A sessão bloqueia gravações tardias, mas não cancela genericamente todo transporte de rede. Editor e seu `useApi` ainda usam a compatibilidade existente.
 
 ## Compatibilidade e correções
 
@@ -34,11 +44,11 @@ O build continua partindo da aplicação React adaptada, mas agora inclui o núc
 
 A fila é local a cada documento. Não implementa transação atômica entre `storage.set` e `remove`, merge de conflitos entre dispositivos, diário de retomada após encerrar o processo nem garantia de conclusão de escrita durante o fechamento do navegador. O flush de saída é uma tentativa, não confirmação durável de tudo. Essas limitações não devem ser confundidas com o núcleo de sincronização de favoritos ou com a proteção da VPN.
 
-## Próxima ação combinada: testes em casa — pendente
+## Checklist do perfil pessoal — pendente
 
-Em 12 de novembro de 2026, o usuário pediu apenas atualização documental e informou que executará os testes quando chegar em casa. Não há nova aprovação de uso real nem execução agendada. Nesta atualização não foram alterados código, versão instalada ou dados, e não foram executados novos testes.
+A solicitação histórica de 12/11 previa testes em casa. Em 17/11, o usuário autorizou a etapa 2, implementada na 1.7.44. Os cenários nativos da 1.7.19 permanecem como evidência histórica; os dados existentes no perfil pessoal ainda precisam ser conferidos.
 
-Roteiro manual para a 1.7.18:
+Roteiro manual para a 1.7.44:
 
 - [ ] Confirmar a versão instalada e registrar navegador/versão e commit dos arquivos carregados.
 - [ ] Abrir a Nova guia com a configuração existente e conferir fundos, widgets, textos/notas, posições e aparência.
@@ -49,7 +59,7 @@ Roteiro manual para a 1.7.18:
 - [ ] Reiniciar o navegador e conferir configurações, notas e imagens novamente. A exportação JSON não inclui as imagens locais.
 - [ ] Registrar o resultado de cada cenário e eventuais mensagens de erro, sem compartilhar configurações privadas ou chaves de serviços.
 
-Os 418 testes automatizados abaixo são evidência da implementação anterior. A conferência manual acima continua pendente até o usuário relatar os resultados; só então atualizar o registro de evidências e decidir a próxima etapa da extração.
+Os 418 testes abaixo são evidência histórica da etapa 1. A evidência da etapa 2 fica em [validacao.md](validacao.md); a conferência do perfil pessoal segue pendente.
 
 ## Evidência e reprodução
 
