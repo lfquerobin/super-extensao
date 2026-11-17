@@ -162,3 +162,14 @@ Rótulos e campos preservam associações, IDs, atributos ARIA, estados desabili
 Os testes de contrato cobrem semântica HTML, formulários, conteúdo escapado, estados desabilitados, referências e valores/eventos controlados no Vue, valores controlados no React e correspondência dos artefatos estáticos. Os testes existentes cobrem navegação, idiomas, perfis, rascunhos, autorização, backup, regras e estados da VPN. O teste de logs aceita LF e CRLF, respeitando a exportação nativa do Windows.
 
 Veja [validacao.md](validacao.md) para resultados e limites da conferência no navegador. Testes DOM não comprovam geometria nem autenticação ou tráfego real.
+
+
+## Listas dos seletores — 1.7.49
+
+O catálogo continua produzindo `<select>`/`<option>` nativos. A personalização visual é feita em `ui-components.css` e recompilada nos painéis: superfície do tema, borda/sombra discreta, cantos arredondados, opções com altura mínima de 36px, destaque grafite em hover/foco e visto na seleção. O visto é mantido pelo navegador; a seta própria existente evita duplicação da seta do motor.
+
+A ativação usa `@supports (appearance: base-select)` e `::picker(select)`; não há substituição por um dropdown JavaScript. Isso atende controles HTML/DOM, Vue e React que já consomem a folha compartilhada. Seletores `multiple` ou com `size` explícito continuam convencionais. Navegadores sem suporte mantêm o controle nativo e recebem apenas as cores base das opções. Em cores forçadas, seleção/hover/foco usam Highlight/HighlightText do sistema.
+
+As listas são limitadas a 288px e ao viewport, com rolagem; a posição é gerenciada pelo navegador. O picker fica na camada superior do documento, mas não sai da área do popup do navegador. `base-select` também deixa de dimensionar o controle pela opção mais longa, por isso são preservadas as larguras/min-width/max-width existentes dos campos e cabeçalhos. Não foram adicionados botões internos ou `<selectedcontent>` nem alterados valores, eventos ou salvamento automático.
+
+Contrato do motor: [Chrome — seletor personalizável, disponível desde Chromium 135](https://developer.chrome.com/blog/a-customizable-select) e [guia de estilo](https://developer.chrome.com/docs/modern-web-guidance/guides/forms/branded-select-styling). O manifest conserva Chromium 116 como mínimo, com fallback visual nos motores anteriores. A validação automatizada não mede o picker nativo do SO; conferir abertura perto das bordas do popup, teclado, idiomas e listas longas no perfil pessoal.

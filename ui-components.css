@@ -518,3 +518,82 @@ select:not([multiple]):not([size]) {
 .ui-wizard-body {padding: var(--card-padding);}
 .ui-wizard-step > .headline {margin-bottom: var(--space-3);}
 .ui-wizard-step .form-buttons {margin-top: var(--space-4);}
+
+/* Branded native pickers. Older engines retain the existing native control.
+   https://developer.chrome.com/blog/a-customizable-select */
+select:not([multiple]):not([size]) option,
+select:not([multiple]):not([size]) optgroup {
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+@supports (appearance: base-select) {
+  select:not([multiple]):not([size]),
+  select:not([multiple]):not([size])::picker(select) {
+    appearance: base-select;
+  }
+  /* Keep the shared arrow instead of drawing a second native arrow. */
+  select:not([multiple]):not([size])::picker-icon {display: none;}
+  select:not([multiple]):not([size])::picker(select) {
+    box-sizing: border-box;
+    margin-block: var(--space-1);
+    padding: var(--space-1);
+    border: 1px solid var(--line);
+    border-radius: var(--card-radius);
+    background: var(--surface);
+    color: var(--text);
+    font: var(--font-control)/1.5 var(--ui-font);
+    box-shadow: 0 12px 32px #0005;
+    max-inline-size: calc(100dvw - 16px);
+    max-block-size: min(288px, calc(100dvh - 16px));
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+  select:not([multiple]):not([size]) option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-block-size: 36px;
+    min-inline-size: 0;
+    padding: var(--space-2) var(--space-3);
+    border: 0;
+    border-radius: var(--control-radius);
+    background: transparent;
+    color: var(--text);
+    white-space: normal;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+  }
+  select:not([multiple]):not([size]) option:checked {
+    background: var(--accent-bg);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  select:not([multiple]):not([size]) option:not(:disabled):is(:hover,:focus) {
+    background: var(--raised);
+    color: var(--text);
+    outline: var(--focus-width) solid var(--accent);
+    outline-offset: calc(-1 * var(--focus-width));
+  }
+  select:not([multiple]):not([size]) option::checkmark {
+    order: 1;
+    flex-shrink: 0;
+    margin-inline-start: auto;
+    color: currentColor;
+  }
+  select:not([multiple]):not([size]) option:disabled {
+    color: var(--muted);
+    opacity: .65;
+    cursor: default;
+  }
+  select:not([multiple]):not([size]) optgroup {
+    padding: var(--space-1);
+    font-weight: 600;
+  }
+  @media (forced-colors: active) {
+    select:not([multiple]):not([size]) option:is(:checked,:hover,:focus) {
+      background: Highlight;
+      color: HighlightText;
+    }
+  }
+}

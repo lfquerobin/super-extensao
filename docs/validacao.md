@@ -1,5 +1,11 @@
 # Validação da Super Extensão
 
+## Listas dos seletores — 1.7.49 (17/11/2026)
+
+Aplicado estilo compartilhado às opções e ao picker nativo personalizável, com fallback sem JavaScript para motores antigos e tratamento de cores forçadas. Menus com borda/radius/sombra, opções espaçadas, hover/foco do tema e visto nativo de seleção. Multiselect/listbox explícito não foi alterado. O botão translúcido da Nova guia permanece na versão final, herdado da 1.7.48.
+
+**36 verificações direcionadas passaram** (componentes compartilhados em claro/escuro e interface VPN, incluindo regras de inclusão/exclusão e salvamento automático). Painéis recompilados, `check:ui`, `check:integrity` e whitespace aprovados. Não foi executado novo teste nativo: DOM simulado não desenha `::picker(select)` nem comprova clipping, seleção por teclado e apresentação real. Conferir esses estados no Helium/Chromium do perfil pessoal, incluindo o fallback e cores forçadas. [Compatibilidade e limites](ui-components.md#listas-dos-seletores--1749).
+
 ## Transparência do botão Nova guia — 1.7.48 (17/11/2026)
 
 Restaurada a composição translúcida do botão Super Extensão, usando 61% da cor base do tema e 85% em hover/foco, com blur de 12px. Conferência direcionada dos componentes compartilhados, `check:ui`, `check:integrity` e whitespace aprovados. Alteração exclusivamente CSS; não houve nova execução em navegador nativo.
