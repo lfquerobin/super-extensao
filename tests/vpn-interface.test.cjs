@@ -173,7 +173,7 @@ async function boot(initial = snapshot(), options = {}) {
     disconnect: async () => calls.push(["disconnect"]),
     signOut: async () => calls.push(["signout"]),
     checkConnection: async () => calls.push(["check"]),
-    retryConnection: async () => calls.push(["retry-connection"]),
+    retryConnection: async (mode) => calls.push(["retry-connection", mode]),
     setToggle: async (name, value) => {
       calls.push(["toggle", name, value]);
       return {
@@ -1055,6 +1055,14 @@ test('a failed connection shows the timeout, retries on request and never releas
   assert.match(ui.w.document.body.textContent,/CA-FREE#23/);
   await ui.click('retry-connection');
   assert.equal(ui.calls.filter(call=>call[0]==='retry-connection').length,1);
+  const fastest = ui.w.document.querySelector('.vpn-status-card [data-action="retry-fastest"]');
+  assert.equal(fastest.textContent, 'Conectar ao mais rápido');
+  assert.ok(fastest.classList.contains('ui-button-primary'));
+  await ui.click('retry-fastest');
+  assert.deepEqual(ui.calls.filter(call => call[0] === 'retry-connection'), [
+    ['retry-connection', undefined],
+    ['retry-connection', 'fastest'],
+  ]);
   assert.ok(!ui.calls.some(call=>call[0]==='disconnect'));
   assert.equal(ui.w.document.querySelector('.vpn-status-card').dataset.status,'blocked');
   ui.broadcast('changeState',{state:'connected',server:{name:'CA-FREE#23'}});

@@ -42,10 +42,14 @@ export async function getProtectionStatus() {
 		reason: reason && reasons.has(reason) ? reason : "VpnTrafficBlocked",
 	};
 }
-export async function retryProtection() {
+export async function retryProtection(mode?: "fastest") {
 	// Never reconstruct an old intent after explicit disconnect/logout.
 	if (getCurrentState().name !== "on")
 		throw new Error("VpnRecoveryUnavailable");
-	await requestConnectionRecovery();
+	if (mode === "fastest") {
+		const status = await getProtectionStatus();
+		if (!status.retryAvailable || !status.signedIn) return status;
+	}
+	await requestConnectionRecovery(mode);
 	return getProtectionStatus();
 }

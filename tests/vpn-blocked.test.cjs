@@ -7,10 +7,10 @@ const blocked={status:'blocked',retryAvailable:true,signedIn:true,reason:'VpnTra
 function fixture(hash = ''){
  const dom=new JSDOM(fs.readFileSync(path.join(root,'vpn-blocked.html'),'utf8'),{url:'https://extension.test/vpn-blocked.html'+hash}),w=dom.window;
  const exports={};const file=path.join(root,'vpn/source/blocked.js');
- const messages={VpnTrafficBlocked:{'pt-BR':'Rede pausada',en:'Network paused'}};
+ const messages={VpnTrafficBlocked:{'pt-BR':'Rede pausada',en:'Network paused'},connectFastest:{'pt-BR':'Conectar ao mais rápido',en:'Connect to fastest'},VpnNoRecoveryServer:{'pt-BR':'Nenhum outro servidor compatível está disponível.',en:'No other compatible server is available.'}};
  vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports,URL,chrome:{runtime:{getURL:p=>'chrome-extension://test/'+p}},require:id=>id.includes('confirmation')?require('../ui/confirmation.js'):({messages})});
  let reply=async()=>blocked,locale,theme,disposed=0,poll;const calls=[],navigations=[];
- const request=async type=>{calls.push(type);return reply(type);};
+ const request=async (type, mode)=>{calls.push(type);return reply(type, mode);};
  const app=exports.mountProtection(w.document.querySelector('main'),request,{locale:{watch(fn){locale=fn;fn('pt-BR');return ()=>disposed++;}},bindTheme(node){theme=node;return ()=>disposed++;}},{setInterval(fn){poll=fn;return 1;},clearInterval(){disposed++;}},url=>navigations.push(url));
  const $=id=>id==='confirm'?w.document.querySelector('[data-confirm=accept]'):id==='cancel'?w.document.querySelector('[data-confirm=cancel]'):w.document.getElementById(id);
  return {w,app,$,calls,navigations,setReply:fn=>{reply=fn;},locale:value=>locale(value),poll:()=>poll(),dispose:()=>{app.dispose();w.close();},get disposed(){return disposed;},get theme(){return theme;}};
@@ -79,6 +79,37 @@ test('manual blocking pages and unsafe destinations have no return action even w
 test('reconnect keeps blocking when recovery is still waiting and only a confirmed snapshot reports success',async()=>{
  const f=fixture();try{await tick();f.$('retry').click();await tick();assert.ok(f.calls.includes('retryProtection'));assert.equal(f.$('protection').dataset.status,'blocked');assert.match(f.$('notice').textContent,/bloqueio permanece/);
  f.setReply(async()=>({...blocked,status:'connected',retryAvailable:false}));f.poll();await tick();assert.equal(f.$('protection').dataset.status,'connected');assert.equal(f.$('release').hidden,true);assert.equal(f.calls.includes('disconnect'),false);}finally{f.dispose();}
+});
+test('the blocked page can explicitly pick the fastest alternative while keeping the guard active', async () => {
+ const f = fixture();
+ try {
+  await tick();
+  const fastest = f.$('connectFastest');
+  assert.equal(fastest.hidden, false);
+  assert.equal(fastest.textContent, 'Conectar ao mais rápido');
+  const modes = [];
+  f.setReply(async (type, mode) => {
+   if (type === 'retryProtection') modes.push(mode);
+   return blocked;
+  });
+  fastest.click();
+  await tick();
+  assert.deepEqual(modes, ['fastest']);
+  assert.equal(f.$('protection').dataset.status, 'blocked');
+  assert.ok(!f.calls.includes('disconnect'));
+  f.setReply(async (type) => {
+   if (type === 'retryProtection') throw Error('VpnNoRecoveryServer');
+   return blocked;
+  });
+  fastest.click();
+  await tick();
+  assert.match(f.$('notice').textContent, /Nenhum outro servidor compatível/);
+  f.setReply(async () => ({...blocked, signedIn: false}));
+  await f.app.refresh();
+  assert.equal(fastest.hidden, true);
+ } finally {
+  f.dispose();
+ }
 });
 test('releasing requires a separate confirmation and waits for guard readback',async()=>{
  const f=fixture();try{await tick();f.$('release').click();assert.ok(f.w.document.querySelector('dialog[open]'));assert.equal(f.calls.includes('disconnect'),false);f.$('cancel').click();await tick();assert.equal(f.calls.includes('disconnect'),false);

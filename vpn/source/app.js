@@ -407,7 +407,9 @@ export async function mountVpn(root, engine, preferences, browser = globalThis.c
     }
     if (disposed) return;
     void run(async () => {
-      if (action === "retry-connection") {
+      if (action === "retry-fastest") {
+        await engine.retryConnection("fastest");
+      } else if (action === "retry-connection") {
         await engine.retryConnection();
       }
       if (action === "login") {

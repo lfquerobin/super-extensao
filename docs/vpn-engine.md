@@ -243,4 +243,6 @@ O runner reproduzível scripts/check-vpn-account-native.cjs usa o worker de prod
 
 Em **VPN / Recursos**, a opção **Reconectar ao mais rápido quando cair** salva automaticamente a preferência (desligada por padrão). Após uma falha, o motor espera o intervalo de recuperação e tenta o servidor alternativo com a melhor classificação disponível do Proton, respeitando o plano, Secure Core e as regras de tunelamento dividido. O país de saída pode mudar. Se não houver alternativa ou o catálogo estiver indisponível, tenta novamente o servidor atual. Uma desconexão explícita ou logout cancela a recuperação pendente.
 
+**Conectar ao mais rápido** pode ser acionado no painel da VPN e na página de navegação pausada. Durante uma falha, seleciona o servidor alternativo mais bem classificado pelo Proton, mesmo com a preferência automática desligada. O bloqueio permanece ativo até a nova conexão ser verificada.
+
 Erros repetidos de requisições durante o bloqueio não reiniciam o prazo de recuperação. Falhas ao consultar localização ou disponibilidade no serviço não são consideradas prova de queda de um túnel ativo. A navegação que usa VPN continua bloqueada até a aplicação e a verificação da nova conexão terminarem. A interface indica gravação em andamento e falhas; uma preferência cuja gravação falhou é mantida para nova tentativa.

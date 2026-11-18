@@ -46,7 +46,7 @@ export const routeMessage = async <T extends BackgroundMessage>(message: {
 		case BackgroundAction.PROTECTION_STATUS:
 			return getProtectionStatus();
 		case BackgroundAction.RETRY_PROTECTION:
-			return retryProtection();
+			return retryProtection(data === "fastest" ? "fastest" : undefined);
 		case BackgroundAction.BEGIN_LOGIN:
 			return loginFlow.begin(data as LoginOptions);
 		case BackgroundAction.SET_WEBRTC: {

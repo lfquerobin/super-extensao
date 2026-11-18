@@ -297,8 +297,9 @@ async function probeServer(
 		);
 }
 
-async function recoverFastest(server: ProxyServer, current: () => boolean): Promise<ProxyServer | undefined> {
-	if (!(await storage.getItem<{value: boolean}>("reconnect-fastest"))?.value || !current()) return;
+async function recoverFastest(server: ProxyServer, current: () => boolean, manual = false): Promise<ProxyServer | undefined> {
+	if (!manual && !(await storage.getItem<{value: boolean}>("reconnect-fastest"))?.value) return;
+	if (!current()) return;
 	const [user, logicals, {country, coordinates}] = await Promise.all([
 		getUser(), getSortedLogicals(), getCountryAndCoordinates(),
 	]);
@@ -562,8 +563,20 @@ export function waitForReadyState(): Promise<void> {
 export function reportNetworkFailure(error: unknown, warning?: ApiError): void {
 	machine.networkFailed(error, warning);
 }
-export function requestConnectionRecovery(): Promise<void> {
-	return machine.retryConnection();
+export async function requestConnectionRecovery(mode?: "fastest"): Promise<void> {
+	if (mode !== "fastest") return machine.retryConnection();
+
+	const state = getCurrentState();
+	const server = state.data.server;
+	const isCurrent = connectionLifecycle.guard();
+	const stillRecovering = () => isCurrent() && !state.proxyEnabled;
+	if (state.name !== "on" || !server || !stillRecovering()) return;
+
+	const alternative = await recoverFastest(server, stillRecovering, true);
+	if (!stillRecovering()) return;
+	if (!alternative) throw new Error("VpnNoRecoveryServer");
+
+	await machine.connect({server: alternative}, server.name);
 }
 
 export async function connectLogical(

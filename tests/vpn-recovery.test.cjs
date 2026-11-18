@@ -12,9 +12,16 @@ function load(file,mocks={}) {
 }
 const selection=load('vpn/engine/selection.ts');
 function fixture({enabled=true,catalog=[],locationError,healthError}={}) {
- let ports;const errors=[];
- load('vendor/proton-source/source/js/state.ts',{
-  '../../../../vpn/engine/state':{ConnectionMachine:class {constructor(value){ports=value;this.lifecycle={};}}},
+ let ports;
+ const errors = [], connections = [];
+ let current = true;
+ const active = {name: 'on', proxyEnabled: false, data: {get server() { return server; }}};
+ const state = load('vendor/proton-source/source/js/state.ts',{
+  '../../../../vpn/engine/state':{ConnectionMachine:class {
+   constructor(value) { ports = value; this.lifecycle = {guard: () => () => current}; }
+   get() { ports.changed(active); }
+   async connect(data, priorName) { connections.push({data, priorName}); }
+  }},
   '../../../../vpn/engine/selection':selection,
   '../../../../vpn/engine/diagnostics':{createConnectionDiagnostics:()=>({})},
   './log/log':{bind:()=>()=>{}},
@@ -29,7 +36,7 @@ function fixture({enabled=true,catalog=[],locationError,healthError}={}) {
   './config':{proxyPort:443,singleProxyPort:true},
   './tools/sentry':{handleError:error=>errors.push(error)},
  });
- return {ports,errors};
+ return {ports, errors, connections, state, cancel: () => { current = false; }};
 }
 const candidate=(ID,Score,Features=0,Tier=0)=>({ID,Score,Name:ID,Features,Tier,Status:1,EntryCountry:'BR',ExitCountry:'BR',Servers:[{Domain:ID+'.test',Status:1}]});
 const server={id:'old',name:'old',secureCore:false,splitTunneling:{mode:'include',value:['example.org']}};
@@ -58,4 +65,25 @@ test('location and health API errors do not interrupt a working tunnel',async()=
  for(const error of [{locationError:Error('location timeout')},{healthError:Error('status timeout')}]) {
   const f=fixture(error);await f.ports.probe(server,()=>true);assert.equal(f.errors.length,1);
  }
+});
+
+test('manual fastest recovery selects another eligible server with the preference off', async () => {
+ const f = fixture({enabled: false, catalog: [candidate('old', 0), candidate('alternative', 2)]});
+ await f.state.requestConnectionRecovery('fastest');
+ assert.equal(f.connections.length, 1);
+ assert.equal(f.connections[0].data.server.id, 'alternative');
+ assert.equal(f.connections[0].data.server.splitTunneling, server.splitTunneling);
+ assert.equal(f.connections[0].priorName, 'old');
+});
+
+test('manual fastest recovery keeps the current intent when no alternative exists or the action is cancelled', async () => {
+ const none = fixture({enabled: false, catalog: [candidate('old', 0)]});
+ await assert.rejects(none.state.requestConnectionRecovery('fastest'), /VpnNoRecoveryServer/);
+ assert.equal(none.connections.length, 0);
+
+ const cancelled = fixture({enabled: false, catalog: [candidate('alternative', 2)]});
+ const operation = cancelled.state.requestConnectionRecovery('fastest');
+ cancelled.cancel();
+ await operation;
+ assert.equal(cancelled.connections.length, 0);
 });

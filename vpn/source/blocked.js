@@ -95,10 +95,10 @@ export function mountProtection(
     notice = "",
     error = "",
     confirm = false;
-  const t = (key) => words[key]?.[locale === "en" ? 1 : 0] || key;
+  const t = (key) => words[key]?.[locale === "en" ? 1 : 0] || messages[key]?.[locale] || key;
   const find = (id) => root.querySelector("#" + id);
   root.innerHTML =
-    '<img class="brand-mark" src="icons/super-icon.svg" width="32" height="40" alt=""><p class="brand" id="brand"></p><h1 id="title"></h1><p id="help"></p><p id="reason" class="muted"></p><p id="notice" role="status"></p><p id="error" class="error" role="alert"></p><p id="destination" class="muted" hidden></p><div class="actions"><button type="button" class="ui-button ui-button-primary" id="return" hidden></button><button type="button" class="ui-button ui-button-primary" id="retry"></button><button type="button" class="ui-button" id="refresh"></button><a class="ui-button" id="open" target="_blank" rel="noopener"></a></div><div class="actions"><button type="button" class="ui-button ui-button-danger" id="release"></button></div><p class="muted" id="note"></p>';
+    '<img class="brand-mark" src="icons/super-icon.svg" width="32" height="40" alt=""><p class="brand" id="brand"></p><h1 id="title"></h1><p id="help"></p><p id="reason" class="muted"></p><p id="notice" role="status"></p><p id="error" class="error" role="alert"></p><p id="destination" class="muted" hidden></p><div class="actions"><button type="button" class="ui-button ui-button-primary" id="return" hidden></button><button type="button" class="ui-button ui-button-primary" id="connectFastest" hidden></button><button type="button" class="ui-button" id="retry" hidden></button><button type="button" class="ui-button" id="refresh"></button><a class="ui-button" id="open" target="_blank" rel="noopener"></a></div><div class="actions"><button type="button" class="ui-button ui-button-danger" id="release"></button></div><p class="muted" id="note"></p>';
   find("open").href = chrome.runtime.getURL("popup.html") + "#vpn";
   function render() {
     if (disposed) return;
@@ -107,6 +107,7 @@ export function mountProtection(
     for (const id of [
       "brand",
       "retry",
+      "connectFastest",
       "refresh",
       "return",
       "open",
@@ -129,6 +130,8 @@ export function mountProtection(
       : "";
     find("retry").hidden = status !== "blocked" || !snapshot.retryAvailable;
     find("retry").disabled = busy || checking;
+    find("connectFastest").hidden = find("retry").hidden || !snapshot.signedIn;
+    find("connectFastest").disabled = busy || checking;
     find("return").hidden = !target || status !== "connected";
     find("return").disabled = busy || checking;
     find("destination").hidden = !target;
@@ -181,7 +184,7 @@ export function mountProtection(
       }
     }
   }
-  async function act(type) {
+  async function act(type, mode) {
     if (disposed || busy) return;
     // Invalidate any observer predating this explicit action.
     revision++;
@@ -192,7 +195,7 @@ export function mountProtection(
     notice = type === "retryProtection" ? "retrying" : "";
     render();
     try {
-      const result = await request(type);
+      const result = await request(type, mode);
       if (disposed) return;
       if (type === "retryProtection") {
         accept(result);
@@ -203,7 +206,11 @@ export function mountProtection(
     } catch (failure) {
       if (!disposed) {
         snapshot = undefined;
-        error = failure?.message || "failed";
+        if (mode === "fastest") {
+          notice = messages[failure?.message]?.[locale] ? failure.message : "failed";
+        } else {
+          error = failure?.message || "failed";
+        }
       }
     } finally {
       if (!disposed) {
@@ -245,6 +252,9 @@ export function mountProtection(
     }
   }
   find("retry").addEventListener("click", () => void act("retryProtection"));
+  find("connectFastest").addEventListener("click", () => {
+    if (!find("connectFastest").hidden) void act("retryProtection", "fastest");
+  });
   find("return").addEventListener("click", () => void returnToPage());
   find("refresh").addEventListener("click", () => void refresh());
   find("release").addEventListener("click", async () => {

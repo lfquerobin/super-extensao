@@ -259,8 +259,8 @@ export function createEngine(initialConnection?: () => Promise<any>) {
       user = undefined;
       connected = false;
     },
-    async retryConnection() {
-      await request("retryProtection");
+    async retryConnection(mode?: "fastest") {
+      await request("retryProtection", mode);
     },
     async checkConnection(time: number) {
       await request("connecting", { connectionAttemptTime: time });
