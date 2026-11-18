@@ -68,7 +68,7 @@ Revisado em 11 de novembro de 2026. As telas usam um catálogo comum de componen
 | `ui/vue.js` | Componentes funcionais `Ui*` para Vue, sem elemento adicional |
 | `ui/vue-validated.js` | Controles `Sync*` HTML nativos; estruturas de diálogo, árvore e assistente são reexportadas de `ui/vue-structures.js` |
 | `ui/vue.css` | Aparência dos controles validados, separada do layout das telas |
-| `vendor/tabliss-source/src/ui/index.tsx` | Componentes React do editor, fundos, widgets e controles auxiliares |
+| `newtab/src/ui/index.tsx` | Componentes React do editor, fundos, widgets e controles auxiliares |
 | `ui/templates/` | Fontes das páginas estáticas; popup separado em seções e rodapé |
 | `ui-components.css` | Aparência e espaçamento dos componentes comuns |
 | CSS de cada módulo | Composição específica, como grupos de países e editor de widgets |

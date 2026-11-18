@@ -118,6 +118,8 @@ O sinal fica no canto superior direito, preservando o badge de limpeza pausada. 
 
 ### Nova guia
 
+Na **1.7.55**, a Nova guia passou a usar seu próprio pacote e build. A inicialização, os controles do dashboard, os widgets e os provedores ficam em `newtab/`. Os widgets adaptados mantêm a atribuição Tabliss e a licença GPL-3.0. As chaves e formatos usados para abrir layouts e imagens existentes são preservados.
+
 Na **1.7.48**, o botão Super Extensão da Nova guia volta a ter fundo translúcido e desfoque, com maior opacidade ao passar o mouse ou focar pelo teclado, mantendo a nova paleta e logo.
 
 Na **1.7.45**, o editor completo (fundos, widgets, aparência, idioma/fuso e importação/exportação/reset) usa `newtab/editor`; registro, nomes, descrições, disponibilidade por plataforma e ordenação do catálogo usam `newtab/engine/catalog.ts`. A lista acompanha o idioma atual. Os componentes funcionais dos widgets/provedores ainda são adaptadores do Tabliss, assim como os controles visuais compartilhados, ícones e seletor de fuso. Os painéis de cada plugin recebem sessões próprias, com descarte de gravações tardias; fechar o editor invalida importações e confirmações de reset pendentes. IDs, formatos JSON e imagens existentes são preservados.

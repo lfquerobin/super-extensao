@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const path=require('node:path'),fs=require('node:fs');const load=require('./helpers/load-ts.cjs');const {IDBFactory}=require('../vendor/floccus-source/node_modules/fake-indexeddb');
+const path=require('node:path'),fs=require('node:fs');const load=require('./helpers/load-ts.cjs');const {IDBFactory}=require('../newtab/node_modules/fake-indexeddb');
 const root=path.resolve(__dirname,'..'),cache=new Map();const core=name=>load(path.join(root,'newtab/engine',name+'.ts'),{structuredClone,crypto:require('node:crypto').webcrypto}, {},cache);
 const DB=core('database'),{defaults}=core('model'),{settings,widgets}=core('settings'),{decode}=core('formats'),{connect}=core('persistence'),{extensionPort,indexeddb,indexedDBPort}=core('browser-storage'),Events=core('events'),{migrateLegacy}=core('migration');
 const plain=v=>JSON.parse(JSON.stringify(v));const tick=()=>new Promise(r=>setImmediate(r));
@@ -67,18 +67,18 @@ test('legacy cache unavailability is tolerated without migration but cannot eras
  const f=setup();let removed=false;const session={subscribers:new Set(),flush:async()=>{},dispose(){}};await migrateLegacy(f.db,f.cache,f.actions.importStore,session,undefined,{read:async()=>undefined,remove:async()=>{removed=true;}});assert.equal(removed,false);
  await assert.rejects(migrateLegacy(f.db,f.cache,f.actions.importStore,session,undefined,{read:async()=>dump(),readCache:async()=>({note:'image'}),remove:async()=>{removed=true;}}),/Cannot migrate cached images/);assert.equal(removed,false);
 });
-test('public Tabliss compatibility modules invoke the own store and accept its exported format',()=>{
- const fixture=setup();const facade=load(path.join(root,'vendor/tabliss-source/src/db/action.ts'),{structuredClone,crypto:require('node:crypto').webcrypto},{'./state':{db:fixture.db,cache:fixture.cache}});facade.importStore(dump());assert.equal(JSON.parse(facade.exportStore())['data/note'].notes[0].contents,'Preserve this');facade.toggleFocus();assert.equal(DB.get(fixture.db,'focus'),true);
+test('new tab settings bridge uses the own store and preserves the legacy export format',()=>{
+ const fixture=setup();const facade=load(path.join(root,'newtab/src/db/action.ts'),{structuredClone,crypto:require('node:crypto').webcrypto},{'./state':{db:fixture.db,cache:fixture.cache}});facade.importStore(dump());assert.equal(JSON.parse(facade.exportStore())['data/note'].notes[0].contents,'Preserve this');facade.toggleFocus();assert.equal(DB.get(fixture.db,'focus'),true);
 });
 test('concurrent initializers share one legacy migration and a new layout wins over a delayed cache read',async()=>{
  const f=setup(),gate=deferred();let reads=0,loads=0,removed=0;const session={subscribers:new Set(),flush:async()=>{},dispose(){}};
  const ports={read:async()=>{reads++;return dump();},readCache:()=>gate.promise,remove:async()=>{removed++;}};
  const one=migrateLegacy(f.db,f.cache,value=>{loads++;f.actions.importStore(value);},session,session,ports),two=migrateLegacy(f.db,f.cache,f.actions.importStore,session,session,ports);assert.equal(one,two);await tick();f.actions.setBackground('background/colour');gate.resolve({});await one;assert.equal(reads,1);assert.equal(loads,0);assert.equal(removed,0);assert.equal(DB.get(f.db,'background').key,'background/colour');
 });
-test('the production dashboard reads the old configuration and updates shared language through the own storage adapter',async()=>{
+test('the independent production bundle restores a saved widget and keeps overlay and shared language working',async()=>{
  const {JSDOM,VirtualConsole}=require('jsdom'),errors=[];const console=new VirtualConsole();console.on('jsdomError',error=>errors.push(error.message));
  const dom=new JSDOM('<div id="root"></div>',{url:'https://extension.test/newtab/index.html',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:console}),w=dom.window;
- const listeners=new Set(),values={};for(const[key,value]of Object.entries({...dump(),background:{id:'colour',key:'background/colour',display:{blur:0,luminosity:0}},'widget/note':null}))if(key!=='version')values['tabliss/config/'+key]=value;
+ const listeners=new Set(),values={};for(const[key,value]of Object.entries({...dump(),background:{id:'colour',key:'background/colour',display:{blur:0,luminosity:0}}}))if(key!=='version')values['tabliss/config/'+key]=value;
  const area={get:async key=>typeof key==='string'?{[key]:values[key]}:{...values},set:async updates=>{Object.assign(values,updates);for(const fn of listeners)fn(Object.fromEntries(Object.entries(updates).map(([key,newValue])=>[key,{newValue}])),'sync');},remove:async keys=>{for(const key of keys)delete values[key];}};
  w.browser={storage:{sync:area,local:{get:async()=>({}),set:async()=>{},remove:async()=>{}},onChanged:{addListener:fn=>listeners.add(fn),removeListener:fn=>listeners.delete(fn)}},i18n:{getUILanguage:()=> 'en'}};
  w.browser=Object.assign(w.eval('({})'),w.browser);w.browser.runtime={id:'test'};w.chrome=w.browser;
@@ -88,6 +88,12 @@ test('the production dashboard reads the old configuration and updates shared la
  try{
   w.eval(fs.readFileSync(path.join(root,'newtab/main.js'),'utf8'));for(let i=0;i<20&&!w.document.querySelector('.Dashboard');i++)await new Promise(resolve=>setTimeout(resolve,15));
   assert.ok(w.document.querySelector('.Dashboard'));assert.equal(w.document.querySelector('.StoreError'),null);
+  assert.equal(w.document.querySelector('.Notes [contenteditable]').innerText, 'Preserve this');
+  const settings = w.document.querySelector('.Overlay [aria-label="Customize new tab"]');
+  assert.ok(settings);
+  settings.click();
+  for(let i=0;i<20&&!w.document.querySelector('.Settings');i++)await new Promise(resolve=>setTimeout(resolve,15));
+  assert.ok(w.document.querySelector('.Settings'));
   localeWatch('pt-BR');await new Promise(resolve=>setTimeout(resolve,25));assert.equal(values['tabliss/config/locale'],'pt-BR');assert.deepEqual(errors,[]);
   w.dispatchEvent(new w.Event('beforeunload'));w.dispatchEvent(new w.PageTransitionEvent('pagehide',{persisted:false}));
  }finally{w.close();}
@@ -105,8 +111,8 @@ test('invalid global and per-clock time zones are rejected before replacing sett
 
 test('damaged persisted time zones fall back to a valid date so the dashboard can still open', () => {
  const {zonedTime}=core('time'),absolute=new Date('2026-11-15T12:00:00Z');
- const {utcToZonedTime}=require('../vendor/tabliss-source/node_modules/date-fns-tz');
- const {format}=require('../vendor/tabliss-source/node_modules/date-fns');
+ const {utcToZonedTime}=require('../newtab/node_modules/date-fns-tz');
+ const {format}=require('../newtab/node_modules/date-fns');
  for(const zone of ['Invalid/Zone',{},null,'']) {
   const result=zonedTime(absolute,zone,utcToZonedTime); assert.equal(result,absolute); assert.doesNotThrow(()=>format(result,'HH:mm:ss'));
  }

@@ -1,5 +1,9 @@
 # Tabliss 2.6.0 na Super Extensão
 
+## Extração final — Super Extensão 1.7.55
+
+A Nova guia usa o código e o lockfile deste diretório, com inicialização Chromium e build mantidos pela Super Extensão. Os widgets, fundos e componentes adaptados preservam a atribuição do Tabliss 2.6.0 e os avisos GPL-3.0. Os namespaces de armazenamento, o cache, os IDs dos plugins e os formatos de configuração foram preservados.
+
 ## Identidade visual — Super Extensão 1.7.46
 
 A marca do editor e do botão principal usa o SVG S/escudo do host. A paleta compartilhada adota #121015 e tons grafite, incluindo o fundo da Nova guia antes de carregar. O gradiente padrão sem cores salvas passa a #121015 nas duas pontas; cores/imagens explicitamente salvas permanecem. Tema claro continua disponível. O vetor não contém título ou margem de prancheta; os PNGs mantêm as proporções em um quadrado.
@@ -30,11 +34,11 @@ Separados os campos de idioma e fuso horário por 12 px, usando o agrupamento co
 
 ## Componentização — Super Extensão 1.6.8
 
-O editor, as configurações dos fundos/widgets e seus controles auxiliares usam `vendor/tabliss-source/src/ui/index.tsx`, adaptador React do catálogo em `ui/catalog.json`. O painel de chaves Unsplash/GIPHY usa os componentes compartilhados de campo, descrição, ações e aviso. Valores controlados, eventos, cache e armazenamento permanecem nos componentes funcionais existentes. A página `index.html` passa a ser gerada de `ui/templates/newtab.html` por `npm run build:ui`.
+O editor, as configurações dos fundos/widgets e seus controles auxiliares usam `newtab/src/ui/index.tsx`, adaptador React do catálogo em `ui/catalog.json`. O painel de chaves Unsplash/GIPHY usa os componentes compartilhados de campo, descrição, ações e aviso. Valores controlados, eventos, cache e armazenamento permanecem nos componentes funcionais existentes. A página `index.html` passa a ser gerada de `ui/templates/newtab.html` por `npm run build:ui`.
 
-Para reconstruir, use a raiz completa do projeto e `npm run build:newtab`; o catálogo compartilhado fica fora da pasta de origem Tabliss. [Arquitetura e comandos](../docs/ui-components.md). Fontes, licenças e atribuições da origem permanecem preservadas.
+Para reconstruir, use a raiz completa do projeto e `npm run build:newtab`; o catálogo de componentes compartilhados fica em `ui/`. [Arquitetura e comandos](../docs/ui-components.md). Fontes, licenças e atribuições da origem permanecem preservadas.
 
-Este diretório contém a Nova guia baseada no Tabliss 2.6.0, com núcleo próprio de configuração/persistência desde a 1.7.18 e componentes de interface/provedores ainda adaptados do original GPL-3.0. O texto da licença está em [LICENSE.txt](LICENSE.txt), os avisos das dependências em [main.js.LICENSE.txt](main.js.LICENSE.txt) e o código-fonte correspondente em [vendor/tabliss-source](../vendor/tabliss-source/).
+Este diretório contém a Nova guia baseada no Tabliss 2.6.0, com núcleo próprio de configuração/persistência desde a 1.7.18 e componentes de interface/provedores ainda adaptados do original GPL-3.0. O texto da licença está em [LICENSE.txt](LICENSE.txt), os avisos das dependências em [main.js.LICENSE.txt](main.js.LICENSE.txt) e o código-fonte correspondente em [src](src/).
 
 Origem: [joelshepherd/tabliss, tag 2.6.0](https://github.com/joelshepherd/tabliss/tree/2.6.0), commit `a273d6329cec1f0813e04fde907111e648821946`. O bundle de produção foi obtido da instalação 2.6.0 do Tabliss, ID `hipekcciheckooncpjeljhnekcoolahp`. A atribuição, os avisos e a licença do componente permanecem neste diretório e no código-fonte correspondente.
 
@@ -57,11 +61,9 @@ Os provedores e widgets online fazem suas próprias requisições aos serviços 
 
 ## Código-fonte e reconstrução
 
-O snapshot em `vendor/tabliss-source/` contém os arquivos de configuração, lockfile, código-fonte e scripts da tag original, com as alterações acima identificadas. O código do dashboard mantém a licença GPL-3.0 e os avisos originais.
+Na raiz do projeto, execute `npm run setup:newtab` seguido de `npm run build:newtab` com Node.js 20 ou superior. O build gera os bundles, estilos e avisos diretamente em `newtab/`, preservando a entrada HTML e o manifesto da extensão.
 
-Para reconstruir o dashboard, use Node.js 20 ou superior. Dentro de `vendor/tabliss-source/`, instale com `npm ci` e execute `npm run build:chromium`. O comando Chromium funciona no Windows e em shells POSIX; o pacote usa Dart Sass e dispensa a compilação nativa do antigo `node-sass`. As integrações de Unsplash e GIPHY usam as variáveis indicadas em `.env.example`; uma reconstrução para distribuição deve configurar suas próprias credenciais de cliente desses serviços.
-
-O resultado fica em `dist/chromium/`. Para instalar na Super Extensão, copie os recursos gerados para `newtab/`, mantenha a entrada HTML e os arquivos `integration.js`/`integration.css` desta integração e preserve a licença e os avisos. Não substitua o manifesto principal pelo manifesto standalone gerado para o Tabliss.
+As chaves de Unsplash e GIPHY definidas na interface continuam armazenadas no navegador. Em builds com chaves configuradas via arquivo, use `newtab/.env` conforme `newtab/.env.example`.
 
 ## Super Extensão 1.6.6 — Imagens e diagnóstico
 

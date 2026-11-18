@@ -13,6 +13,7 @@ fs.mkdirSync(extension, { recursive: true });
 for (const entry of ["newtab", "icons", "preferences.js", "modules.js", "ui-theme.css", "ui-components.css"])
   fs.cpSync(path.join(root, entry), path.join(extension, entry), {
     recursive: true,
+    filter: source => !["node_modules", "dist"].includes(path.basename(source)),
   });
 fs.writeFileSync(
   path.join(extension, "manifest.json"),

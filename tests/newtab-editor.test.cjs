@@ -34,9 +34,9 @@ test('editor validates new selections and rejects stale background edits without
   actions.removeWidget('unknown'); assert.equal(DB.get(db, 'data/unknown'), undefined);
 });
 
-const React = require('../vendor/tabliss-source/node_modules/react');
-const { act, Simulate } = require('../vendor/tabliss-source/node_modules/react-dom/test-utils');
-const { createRoot } = require('../vendor/tabliss-source/node_modules/react-dom/client');
+const React = require('../newtab/node_modules/react');
+const { act, Simulate } = require('../newtab/node_modules/react-dom/test-utils');
+const { createRoot } = require('../newtab/node_modules/react-dom/client');
 function fixture() {
   const { JSDOM } = require('jsdom');
   const dom = new JSDOM('<div id="root"></div>', { url: 'https://extension.test' }), w = dom.window;
@@ -53,7 +53,7 @@ function fixture() {
       Blob, URL: w.URL, crypto: require('node:crypto').webcrypto,
       require(name) {
         if (name === 'react') return React;
-        if (name === 'react-error-boundary') return require('../vendor/tabliss-source/node_modules/react-error-boundary');
+        if (name === 'react-error-boundary') return require('../newtab/node_modules/react-error-boundary');
         if (/\.(css|sass)$/.test(name)) return {};
         if (name.startsWith('.')) return load(path.resolve(path.dirname(file), name));
         throw Error(name);
@@ -68,7 +68,7 @@ function fixture() {
   const catalog = load(path.join(root, 'newtab/engine/catalog.ts')).createCatalog(bindings({ dashboardComponent: () => null, settingsComponent: Panel }), text => dbApi.get(db, 'locale') === 'pt-BR' ? ({ Notes: 'Anotações', Background: 'Fundo', Settings: 'Configurações', 'Add a new widget': 'Adicionar widget' }[text] || text) : text);
   const props = { db, cache: cacheDb, catalog,
     t: text => dbApi.get(db, 'locale') === 'pt-BR' ? ({ Background: 'Fundo', Settings: 'Configurações', 'Add a new widget': 'Adicionar widget' }[text] || text) : text,
-    ui: load(path.join(root, 'vendor/tabliss-source/src/ui/index.tsx')),
+    ui: load(path.join(root, 'newtab/src/ui/index.tsx')),
     toggleSettings: () => closed++, pushLoader: () => pending++, popLoader: () => pending--,
     confirm: async () => false, Logo: () => React.createElement('h1', null, 'Super Extensão'),
     TimeZoneInput: ({ timeZone, onChange }) => React.createElement('input', { className: 'time-zone', value: timeZone || '', onChange: e => onChange(e.target.value || null) }),

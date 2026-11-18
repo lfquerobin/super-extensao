@@ -33,9 +33,9 @@ test('removed or disposed providers cannot resurrect data and loaders balance af
 
 test('own React dashboard handles strict remounts, live data, focus cleanup and missing providers independently', async () => {
   const { JSDOM } = require('jsdom'), ts = require('typescript');
-  const React = require('../vendor/tabliss-source/node_modules/react');
-  const { createRoot } = require('../vendor/tabliss-source/node_modules/react-dom/client');
-  const { act } = require('../vendor/tabliss-source/node_modules/react-dom/test-utils');
+  const React = require('../newtab/node_modules/react');
+  const { createRoot } = require('../newtab/node_modules/react-dom/client');
+  const { act } = require('../newtab/node_modules/react-dom/test-utils');
   const dom = new JSDOM('<div id="root"></div>', { url: 'https://extension.test' });
   const previous = { window: global.window, document: global.document, flag: global.IS_REACT_ACT_ENVIRONMENT };
   global.window = dom.window; global.document = dom.window.document; global.IS_REACT_ACT_ENVIRONMENT = true;
@@ -56,7 +56,7 @@ test('own React dashboard handles strict remounts, live data, focus cleanup and 
   vm.runInNewContext(ts.transpileModule(fs.readFileSync(filename, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React, esModuleInterop: true, target: ts.ScriptTarget.ES2020 } }).outputText, {
     exports, localStorage: dom.window.localStorage, require(name) {
       if (name === 'react') return React;
-      if (name === 'react-error-boundary') return require('../vendor/tabliss-source/node_modules/react-error-boundary');
+      if (name === 'react-error-boundary') return require('../newtab/node_modules/react-error-boundary');
       if (name.endsWith('.sass')) return {};
       return core(path.basename(name));
     }

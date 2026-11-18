@@ -30,7 +30,7 @@ Fotografia de `npm audit` em 15/11/2026; contagens de pacotes sinalizados, não 
 | Árvore | Produção | Incluindo ferramentas de desenvolvimento |
 | --- | --- | --- |
 | Nova interface `sync` | 0 | 0 |
-| Nova guia `vendor/tabliss-source` | 0 | 58: 17 baixos, 15 moderados, 26 altos |
+| Nova guia (snapshot anterior à extração da 1.7.55) | 0 | 58: 17 baixos, 15 moderados, 26 altos |
 | Compatibilidade `vendor/floccus-source` | 6 moderados | 36: 11 baixos, 17 moderados, 8 altos |
 
 Os seis alertas de produção classificados pelo npm na compatibilidade são `@capacitor/cli`, `glob`, `minimatch`, `rimraf`, `uuid` e `xcode`, associados à cadeia de ferramentas nativas herdadas. Não são dependências Vue/Sentry. O novo compilador seleciona o código do motor necessário ao Chromium; a classificação npm não é uma análise de alcance do bundle. Os alertas de ferramentas ainda exigem uma etapa própria de manutenção e não foram ocultados com overrides ou `audit fix --force`.

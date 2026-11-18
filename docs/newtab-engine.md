@@ -1,6 +1,6 @@
-# Núcleo próprio da Nova guia — etapa 3, versão 1.7.45
+# Nova guia independente — versão 1.7.55
 
-A primeira extração do Tabliss está integrada ao fluxo normal da Nova guia. Não é apenas uma cópia em outro diretório: o armazenamento, as ações e a validação usam implementações próprias em `newtab/engine`, sem importar Tabliss, React ou serviços online. As fachadas nos caminhos antigos mantêm os componentes atuais funcionando com o novo núcleo.
+A Nova guia usa um pacote, um ponto de entrada Chromium e um build próprios. Estado, armazenamento, ações e validação ficam em `newtab/engine`. Os componentes React dos widgets, provedores, traduções e adaptadores incorporados do Tabliss são mantidos em `newtab/src`, com atribuição GPL-3.0.
 
 ## Responsabilidades
 
@@ -15,18 +15,20 @@ Na rodada Windows da **1.7.19**, o bundle real passou pelo editor, widgets, imag
 | Fila de gravação, erros e mudanças externas | `newtab/engine/persistence.ts` |
 | Adaptadores de storage da extensão e IndexedDB | `newtab/engine/browser-storage.ts` |
 | Coordenação da migração legada e dados associados | `newtab/engine/migration.ts`; acesso à antiga base fica na fachada de plataforma |
-| Ligação React e ciclo de vida do documento | Adaptadores existentes em `vendor/tabliss-source/src/lib/db` e `src/db` |
+| Ligação React e ciclo de vida do documento | `newtab/src/lib/db` e `newtab/src/db` |
 | Composição, tema, posições, ordem e foco do dashboard | `newtab/dashboard/Dashboard.tsx` e `newtab/engine/dashboard.ts` |
 | Montagem/descarte de instâncias, guardas de escrita e carregamentos | `newtab/engine/plugin-session.ts`, ligado pelo dashboard próprio |
-| Editor de fundos/widgets, aparência, sistema, importação/exportação/reset | `newtab/editor`; adaptador em `src/views/settings/Settings.tsx` injeta componentes visuais e serviços |
-| Catálogo: IDs, nomes, descrições, disponibilidade e ordenação | `newtab/engine/catalog.ts`; `src/plugins/bindings.ts` conecta somente implementações |
-| Componentes funcionais dos widgets/provedores, controles do overlay e inicialização | Ainda na camada Tabliss adaptada |
+| Editor de fundos/widgets, aparência, sistema, importação/exportação/reset | `newtab/editor`; adaptador em `newtab/src/views/settings/Settings.tsx` injeta componentes visuais e serviços |
+| Catálogo: IDs, nomes, descrições, disponibilidade e ordenação | `newtab/engine/catalog.ts`; `newtab/src/plugins/bindings.ts` conecta as implementações locais |
+| Componentes dos widgets e provedores | `newtab/src/plugins` |
+| Controles do dashboard | `newtab/src/views/dashboard/Overlay.tsx` |
+| Inicialização e build | `newtab/src/main.tsx`, `newtab/src/views/App.tsx` e `scripts/build-newtab.cjs` |
 
-O build continua partindo da aplicação React adaptada, mas agora inclui o núcleo próprio. Isso **não conclui a retirada de todo o Tabliss**. A composição e o ciclo de montagem/descarte agora são próprios. Editor e catálogo também foram extraídos na 1.7.45. As próximas extrações tratam componentes/provedores, controles e inicialização, preservando IDs/formatos e a biblioteca visual compartilhada. React é uma dependência de interface, não algo que precise ser removido para a extração funcional.
+O build resolve React e as bibliotecas dos widgets pelo lockfile de `newtab`. O pacote usa somente o destino Chromium. A extensão distribui os 5 fundos e 15 widgets desse destino. Os provedores online continuam dependendo de seus serviços externos.
 
 ## Dashboard e sessões — 1.7.44
 
-A projeção agrupa os widgets por posição, preserva a ordem e mantém o mesmo snapshot em alterações apenas de dados/cache. O dashboard próprio observa os bancos existentes e monta fundo, slots, widgets e overlay. O adaptador injeta o catálogo e a apresentação de erros/controles; o núcleo não importa arquivos do fornecedor. O build resolve React pela árvore já instalada do Tabliss, sem segunda cópia.
+A projeção agrupa os widgets por posição, preserva a ordem e mantém o mesmo snapshot em alterações apenas de dados/cache. O dashboard próprio observa os bancos existentes e monta fundo, slots, widgets e overlay. O adaptador injeta o catálogo e a apresentação de erros/controles; o núcleo não importa arquivos do fornecedor. O editor e o dashboard usam a mesma instalação do React.
 
 Cada instância recebe setters e loader de uma sessão própria. Remover/trocar o widget ou fundo invalida gravações; desmontar ao entrar em foco ou fechar o documento descarta a sessão e libera seus carregamentos pendentes sem contagem negativa. Respostas antigas não voltam a gravar após reutilizar o ID de uma sessão descartada. O limite de erro também inclui a resolução do catálogo, isolando provedores ausentes. Configuração/aparência não desmontam componentes cuja identidade e posição permaneçam iguais. Mudar de posição pode remontar o componente, como antes.
 
@@ -40,12 +42,12 @@ Isso não transfere as rotinas internas de cada widget/provedor: timers, requisi
 
 Os painéis de configuração dos plugins usam sessões próprias: fechamento, remoção e troca invalidam setters tardios e liberam os indicadores pendentes. A edição de blur/luminosidade confere o ID do fundo atual antes de alterar o banco. Fechar o editor invalida leituras de arquivo e confirmações de reset que ainda estejam aguardando resposta. Importação válida continua no JSON v3/v2; exportação continua em `tabliss.json`, sem imagens locais. Arquivo inválido produz erro e preserva o estado anterior. Campos opcionais usam valores controlados desde o início, evitando a transição uncontrolled/controlled.
 
-Ainda são injetados do adaptador os componentes visuais compartilhados, traduções, logo, ícones, confirmação, apresentação de erros e seletor de fuso. Isso não extrai as implementações internas dos widgets/provedores, nem muda sua rede/cache/timers. O overlay, os providers de contexto e a inicialização/build da aplicação adaptada continuam como próximas etapas.
+Ainda são injetados do adaptador os componentes visuais compartilhados, traduções, logo, ícones, confirmação, apresentação de erros e seletor de fuso. Isso não extrai as implementações internas dos widgets/provedores, nem muda sua rede/cache/timers. A partir da 1.7.55 esses componentes são resolvidos pelo pacote local da Nova guia.
 
 ## Compatibilidade e correções
 
 - As chaves `tabliss/config/*`, a base `tabliss/cache`, o object store `changes`, IDs e valores binários existentes são mantidos. Não há renomeação/cópia obrigatória da configuração nem solicitação de recriar o dashboard.
-- Importação/exportação continua usando JSON v3, com conversão de arquivos v2 já suportados. Não inclui imagens locais: elas permanecem no cache do dispositivo, como antes. Conversores históricos v1 permanecem no fornecedor, sem novo suporte ativo declarado nesta etapa.
+- Importação/exportação continua usando JSON v3, com conversão de arquivos v2 já suportados. Não inclui imagens locais: elas permanecem no cache do dispositivo, como antes. Conversores históricos v1 são mantidos como referência no código da Nova guia.
 - Antes de alterar o estado, a importação valida e copia o conteúdo. Arquivos desconhecidos, de versão futura, com estrutura inválida ou chaves perigosas não limpam as configurações/imagens existentes e não modificam o objeto recebido. Dados de plugins ficam em `data/<id>`; não é validação de todos os formatos internos de cada widget.
 - As alterações de uma transação em memória ficam visíveis antes das notificações, evitando que um observador leia apenas metade de uma reordenação ou troca de configuração. Reset restaura os mesmos defaults locais.
 - A persistência agrupa a última alteração por chave e serializa gravações nativas. Captura os valores antes de aguardar operações anteriores; uma falha antiga não repõe um valor que já tenha uma escrita nova enfileirada. Erros continuam visíveis no fluxo existente e alterações pendentes podem ser reenviadas por `flush` ou por uma próxima edição.
@@ -60,7 +62,7 @@ A fila é local a cada documento. Não implementa transação atômica entre `st
 
 A solicitação histórica de 12/11 previa testes em casa. Em 17/11, o usuário autorizou as etapas 2 e 3, implementadas nas versões 1.7.44 e 1.7.45. Os cenários nativos da 1.7.19 permanecem como evidência histórica; os dados existentes no perfil pessoal ainda precisam ser conferidos.
 
-Roteiro manual para a 1.7.45:
+Roteiro manual para a 1.7.55
 
 - [ ] Confirmar a versão instalada e registrar navegador/versão e commit dos arquivos carregados.
 - [ ] Abrir a Nova guia com a configuração existente e conferir fundos, widgets, textos/notas, posições e aparência.
@@ -75,6 +77,8 @@ Os 418 testes abaixo são evidência histórica da etapa 1. A evidência das eta
 
 ## Evidência e reprodução
 
+Na 1.7.55, a instalação das dependências e a compilação funcionaram sem o antigo diretório do Tabliss. Passaram 580 testes do projeto e 26 do pacote da Nova guia. O bundle foi exercitado com uma nota já salva, abertura do editor pelo dashboard e mudança de idioma. O Chromium do ambiente bloqueou a criação do socket ao iniciar; a conferência no navegador com o perfil pessoal está pendente.
+
 A suíte completa passou **418 testes**, incluindo 21 novos contratos de banco/ações, importação v2/v3 sem perda por arquivo inválido, filas/falhas/respostas antigas, isolamento e mudanças entre abas, IndexedDB com imagens binárias, migração confirmada e inicialização do bundle de produção em DOM simulado. A implementação IndexedDB é exercitada com `fake-indexeddb` já disponível no ambiente de testes do Floccus; não foi adicionada dependência de execução à Nova guia.
 
 Compilação da Nova guia, TypeScript do núcleo isolado, TypeScript da aplicação adaptada, UI e whitespace passaram. A inicialização do bundle de produção foi exercitada com armazenamento legado e troca de idioma; não equivale a teste no Helium/perfil pessoal. Ainda faltam conferir editor, importação/exportação, várias abas, imagens locais e fechamento/reinício no navegador real.
@@ -88,7 +92,8 @@ npm run setup:sync
 npm run build:newtab
 npm test
 node_modules/.bin/tsc -p newtab/tsconfig.engine.json
-vendor/tabliss-source/node_modules/.bin/tsc --noEmit -p vendor/tabliss-source/tsconfig.json
+newtab/node_modules/.bin/tsc --noEmit -p newtab/tsconfig.json
+npm test --prefix newtab
 npm run check:ui
 ```
 

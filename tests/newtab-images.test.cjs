@@ -4,10 +4,10 @@ const fs = require('node:fs'), path = require('node:path'), vm = require('node:v
 const ts = require('typescript');
 const { JSDOM } = require('jsdom');
 const root = path.resolve(__dirname, '..');
-const source = path.join(root, 'vendor/tabliss-source/src');
-const React = require('../vendor/tabliss-source/node_modules/react');
-const { act, Simulate } = require('../vendor/tabliss-source/node_modules/react-dom/test-utils');
-const { createRoot } = require('../vendor/tabliss-source/node_modules/react-dom/client');
+const source = path.join(root, 'newtab/src');
+const React = require('../newtab/node_modules/react');
+const { act, Simulate } = require('../newtab/node_modules/react-dom/test-utils');
+const { createRoot } = require('../newtab/node_modules/react-dom/client');
 const tick = () => new Promise(resolve => setImmediate(resolve));
 function fixture(options = {}) {
   const storage = { 'superNewtab:imageProviders': { ...(options.keys || {}) } }, calls = [], listeners = new Set(), cache = new Map();
