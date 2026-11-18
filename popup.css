@@ -10,8 +10,20 @@ body > header { padding:22px 22px 17px; display:flex; align-items:center; justif
 .brand-icon { width:36px; height:36px; flex-shrink:0; object-fit:contain; }
 h1 { font-size:17px; line-height:1.25; margin:0; letter-spacing:-.4px; } h2 { font-size:14px; margin:0; } p { margin:0; }
 .brand p { color:var(--muted); font-size:11px; margin-top:3px; }
-.theme-label { display:grid; flex-shrink:0; gap:3px; color:var(--muted); font-size:10px; }
-.theme-label select { padding:4px 7px; font-size:11px; }
+body > header .ui-header-controls {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(92px, 1fr);
+}
+body > header .theme-label {
+  font: var(--font-description)/1.5 var(--ui-font);
+}
+body > header .theme-label select {
+  align-items: center;
+  min-block-size: var(--button-height);
+  padding-block: 0;
+  padding-inline-start: var(--space-2);
+}
 body > main { padding:0 20px; }
 .report { margin-bottom:12px; padding:14px 16px; border:1px solid var(--line); border-radius:var(--card-radius); background:var(--surface); box-shadow:var(--shadow); }
 .eyebrow { font-size:9px; letter-spacing:1.6px; color:var(--accent); font-weight:700; margin-bottom:4px; }
@@ -99,8 +111,6 @@ body.resizing :is(#vpnPanel,#syncPanel) { pointer-events:none; }
 #vpnPanel { overflow-y:auto; }
 body > main > footer .automation {padding:0 0 14px;}
 
-.ui-header-controls .theme-label select {min-width:64px;}
-
 /* Cleanup controls belong only to cleanup sections; feedback stays available. */
 body[data-active-tab="autoplay"] > main > footer,
 body[data-active-tab="tabs"] > main > footer,
@@ -124,7 +134,6 @@ h2, .report h2 { font: var(--weight-title) var(--font-title)/1.5 var(--ui-font);
 .field { font-size: var(--font-control); color: var(--muted); font-weight: 400; }
 .scope, .message { font-size: var(--font-control); padding: var(--space-3); border-radius: var(--control-radius); background: var(--raised); margin: var(--section-gap) 0; }
 #popupStatus { min-height: 0; margin: var(--section-gap) 20px 0; text-align: left; flex-shrink: 0; }
-.theme-label .ui-control { width: auto; min-height: 36px; }
 #autoplayPermission { font-size: var(--font-control); }
 .full.ui-button { display: flex; }
 #clearNow { min-height: 44px; }
