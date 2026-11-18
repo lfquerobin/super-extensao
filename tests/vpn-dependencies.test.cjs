@@ -1,6 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),{spawnSync}=require('node:child_process'),{createRequire}=require('node:module');
-const root=path.resolve(__dirname,'..'),provider=path.join(root,'vendor/proton-source'),dependency=createRequire(path.join(provider,'package.json'));
+const root=path.resolve(__dirname,'..'),provider=path.join(root,'vpn'),dependency=createRequire(path.join(provider,'package.json'));
 const {zipSync,unzipSync,strToU8,strFromU8}=dependency('fflate');
 const {repack}=require(path.join(provider,'repack.js'));
 const mtime=Date.UTC(2026,10,12,12,30,0);
@@ -28,7 +28,7 @@ test('oversized ZIP metadata is rejected before decompression and invalid timest
  const source=path.join(dir,'source.zip'),bytes=Buffer.from(zipSync({'small.txt':strToU8('small')}));const central=bytes.indexOf(Buffer.from([0x50,0x4b,0x01,0x02]));bytes.writeUInt32LE(257*1024*1024,central+24);fs.writeFileSync(source,bytes);assert.throws(()=>repack(source,source,mtime),/limite/);assert.deepEqual(fs.readFileSync(source),bytes);assert.throws(()=>repack(source,source,NaN),/Data inválida/);
 }));
 test('updated real Sentry client remains disabled and has no reporting destination',async()=>{
- const load=require('./helpers/load-ts.cjs');const {initSentry}=load(path.join(provider,'source/js/tools/sentry.ts'),{}, {
+ const load=require('./helpers/load-ts.cjs');const {initSentry}=load(path.join(provider,'runtime/tools/sentry.ts'),{}, {
   '@sentry/browser':dependency('@sentry/browser'),'../config':{getFullAppVersion:()=> 'test',hostname:'extension.local'},'../tools/storage':{storage:{item:()=>({})}},'../tools/getErrorMessage':{getErrorAsString:e=>String(e)},'../tools/milliSeconds':{milliSeconds:{fromMinutes:n=>n*60000}},'../vpn/features/CrashReports':{CrashReports:{create:async()=>({getConfig:async()=>({value:false})})}},
  });
  const client=initSentry().getClient(),options=client.getOptions();assert.equal(options.enabled,false);assert.equal(options.dsn,undefined);assert.equal(options.sendClientReports,false);assert.ok(!options.integrations.some(i=>['Breadcrumbs','GlobalHandlers','BrowserApiErrors'].includes(i.name)));await client.close(10);

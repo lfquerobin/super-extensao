@@ -1,6 +1,6 @@
 # Próximos passos da Super Extensão
 
-Revisado em **18 de novembro de 2026**, referência **1.7.55**. A página de bloqueio permite voltar ao endereço interceptado após confirmação da VPN e novo clique, com revalidação de estado e sem repetir POST. Consulta/cache de conta, política Free/pago e resolução das configurações de recursos usam núcleos próprios desde a 1.7.25. Endpoints, formatos e fachadas de compatibilidade permanecem. A conexão Proton pessoal ainda precisa ser repetida após a correção da previsão de rede da 1.7.24. Evidências, limites, confirmações do usuário e validações ainda pendentes estão separados em [docs/validacao.md](docs/validacao.md).
+Revisado em **18 de novembro de 2026**, referência **1.7.56**. A página de bloqueio permite voltar ao endereço interceptado após confirmação da VPN e novo clique, com revalidação de estado e sem repetir POST. Consulta/cache de conta, política Free/pago e resolução das configurações de recursos usam núcleos próprios desde a 1.7.25. Endpoints, formatos e fachadas de compatibilidade permanecem. A conexão Proton pessoal ainda precisa ser repetida após a correção da previsão de rede da 1.7.24. Evidências, limites, confirmações do usuário e validações ainda pendentes estão separados em [docs/validacao.md](docs/validacao.md).
 
 ## Estado e prioridade
 
@@ -80,7 +80,7 @@ Detalhes, limites e caminhos dos backups: [docs/sync-engine.md](docs/sync-engine
 - [ ] Comportamento quando outra extensão ou política assumir o proxy.
 - [ ] Garantir visualmente que setas, bandeiras e foco cabem no popup sem rolagem horizontal.
 
-### Reescrita futura do motor
+### Extração do motor
 
 - [x] Mapear contratos de autenticação, sessão, atualização de token, autorização e recuperação em [docs/vpn-engine.md](docs/vpn-engine.md).
 - [x] Extrair regras e compilação PAC para `vpn/engine`, usadas pelo proxy e pelo indicador.
@@ -98,10 +98,11 @@ Detalhes, limites e caminhos dos backups: [docs/sync-engine.md](docs/sync-engine
 - [x] Estender contratos para o controlador, gerações, alarmes e persistência/rotação de tokens (1.7.0).
 - [x] Manter a chave/formato de sessão ao substituir persistência e renovação; invalidar fork/refresh após logout (1.7.0).
 - [x] Adicionar guardas de operações atrasadas, confirmação antes de notificar conexão e despertar por alarmes.
+- [x] Separar a inicialização MV3, o build e o pacote da VPN. Incorporar os adaptadores de protocolo a `vpn/runtime` e remover o popup upstream (1.7.56).
 - [ ] Validar em conta real a persistência e a recuperação depois dessas substituições.
 - [ ] Preservar a autorização do serviço e os avisos/licenças dos componentes ainda utilizados.
 
-A extração dos módulos funcionais está implementada: regras/PAC, controlador de proxy, máquina de estados, restauração, recuperação, gerações, alarmes, credenciais temporárias, transporte HTTP, catálogo/seleção de servidores, WebRTC, coordenação do login e persistência/rotação de tokens são próprios. O serviço Proton, sua página oficial, formatos/endpoints, traduções e utilitários de compatibilidade permanecem; isso não equivale à remoção de todo código do fornecedor. A revisão minuciosa do código gerou correções na 1.7.13; validação com tráfego real continua pendente. Veja [auditoria-vpn.md](docs/auditoria-vpn.md). O indicador descreve o roteamento do endereço da aba; não é medição de pacotes nem prova externa do IP.
+A extração dos módulos funcionais está implementada: regras/PAC, controlador de proxy, máquina de estados, restauração, recuperação, gerações, alarmes, credenciais temporárias, transporte HTTP, catálogo/seleção de servidores, WebRTC, coordenação do login e persistência/rotação de tokens são próprios. Desde a 1.7.56, a VPN é instalada e compilada pelo projeto. O serviço Proton continua fornecendo conta, autorização e servidores. Os adaptadores incorporados preservam o protocolo, as traduções e a atribuição GPL-3.0. A revisão minuciosa do código gerou correções na 1.7.13; validação com tráfego real continua pendente. Veja [auditoria-vpn.md](docs/auditoria-vpn.md). O indicador descreve o roteamento do endereço da aba; não é medição de pacotes nem prova externa do IP.
 
 ## 3. Interface e configurações gerais
 
@@ -150,7 +151,7 @@ A Nova guia é instalada e compilada pelo projeto. As implementações adaptadas
 ## 5. Manutenção
 
 - [x] Corrigir a codificação da descrição do `package.json` e revisar textos das fontes próprias/documentação desta rodada.
-- [ ] Avaliar testes DOM que dependem de dependências de compilação do Proton; manter o preparo documentado enquanto essa dependência existir.
+- [x] Mover as dependências de compilação usadas nos testes DOM para o pacote local da VPN (1.7.56).
 - [x] Registrar a confirmação de sincronização 1.6.2, identificando os detalhes não informados.
 - [ ] Ampliar as evidências reais com navegador/versão, cenário e resultado para cada teste.
 - [ ] Atualizar este roteiro ao fechar cada etapa, mantendo licenças, fontes e documentação de reconstrução.

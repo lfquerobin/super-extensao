@@ -13,11 +13,9 @@ async function buildIcons() {
       fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 }
     }).png().toBuffer();
     if ([16,32,48,128].includes(size)) fs.writeFileSync(path.join(root, `icons/icon${size}.png`), png);
-    for (const directory of ['vpn/img', 'vendor/proton-source/source/img'])
-      fs.writeFileSync(path.join(root, directory, `icon-${size}.png`), png);
+    fs.writeFileSync(path.join(root, 'vpn/img', `icon-${size}.png`), png);
   }
-  for (const directory of ['vpn/img', 'vendor/proton-source/source/img'])
-    fs.writeFileSync(path.join(root, directory, 'vpn-logo.svg'), svg);
+  fs.writeFileSync(path.join(root, 'vpn/img/vpn-logo.svg'), svg);
   console.log('Brand SVG and browser/VPN icon assets synchronized.');
 }
 if (require.main === module) buildIcons().catch(error => {console.error(error);process.exitCode=1;});

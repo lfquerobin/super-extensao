@@ -16,14 +16,14 @@ function fixture({enabled=true,catalog=[],locationError,healthError}={}) {
  const errors = [], connections = [];
  let current = true;
  const active = {name: 'on', proxyEnabled: false, data: {get server() { return server; }}};
- const state = load('vendor/proton-source/source/js/state.ts',{
-  '../../../../vpn/engine/state':{ConnectionMachine:class {
+ const state = load('vpn/runtime/state.ts',{
+  '../engine/state':{ConnectionMachine:class {
    constructor(value) { ports = value; this.lifecycle = {guard: () => () => current}; }
    get() { ports.changed(active); }
    async connect(data, priorName) { connections.push({data, priorName}); }
   }},
-  '../../../../vpn/engine/selection':selection,
-  '../../../../vpn/engine/diagnostics':{createConnectionDiagnostics:()=>({})},
+  '../engine/selection':selection,
+  '../engine/diagnostics':{createConnectionDiagnostics:()=>({})},
   './log/log':{bind:()=>()=>{}},
   './tools/storage':{storage:{getItem:async()=>({value:enabled})}},
   './account/user/getUser':{getUser:async()=>({VPN:{}})},

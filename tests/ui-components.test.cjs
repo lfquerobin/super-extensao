@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const { JSDOM, VirtualConsole } = require("jsdom");
-const postcss = require("../vendor/proton-source/node_modules/postcss");
+const postcss = require("../vpn/node_modules/postcss");
 const root = path.resolve(__dirname, "..");
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 

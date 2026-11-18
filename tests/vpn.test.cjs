@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const ts = require('typescript');
-const source = path.resolve(__dirname, '../vendor/proton-source/source/js');
+const source = path.resolve(__dirname, '../vpn/runtime');
 
 function load(file, mocks = {}, globals = {}) {
   const filename = path.join(source, file + '.ts');
@@ -78,7 +78,7 @@ test('VPN background ignores other modules and page requests to connect', async 
     '../tools/getRuntime': {getRuntime: () => runtime},
     './handleAccountFork': {handleAccountFork: async () => ({handled: true})}
   }).initMessaging();
-  const internal = {url: 'chrome-extension://test/vpn/popup.html'};
+  const internal = {url: 'chrome-extension://test/vpn/interface.html'};
   assert.equal(listener({type: 'clearNow'}, internal), undefined);
   assert.equal(listener({channel: 'super-sync', type: 'state'}, internal), undefined);
   assert.equal(listener({channel: 'super-vpn', type: 'connect'}, {url: 'https://account.proton.me/'}), undefined);
@@ -141,48 +141,6 @@ test('Free server selection keeps paid tiers restricted in the worker', () => {
   assert.doesNotThrow(() => check({VPN: {MaxTier: 2}}, {Tier: 2}));
 });
 
-test('VPN permission requests match the host manifest', () => {
-  const {proxyPermission} = load('vpn/proxyPermission');
-  const manifest = JSON.parse(fs.readFileSync(path.resolve(source, '../../../../manifest.json'), 'utf8'));
-  for (const name of proxyPermission.permissions) assert.ok(manifest.permissions.includes(name));
-  for (const origin of proxyPermission.origins) assert.ok(manifest.host_permissions.includes(origin));
-});
-
-test('sign-in handles denied permissions, retries and failures without silently closing', async () => {
-  let allowed = false, fail = false, opened = 0, closed = 0;
-  const button = {disabled: false, classList: {remove() {}, contains() {return false;}, add() {}}};
-  const paragraph = {};
-  const view = {style: {}, querySelector: q => q === 'p' ? paragraph : button};
-  const {showSigningViewAndWaitForItToBeLoaded: show} = load('components/signIn/showSigningView', {
-    '../../vpn/getServersCount': {},
-    '../../tools/translate': {c: () => ({t: ([text]) => text})},
-    '../../account/openForkTab': {openForkTab: async () => {if (fail) throw Error('offline'); opened++;}},
-    '../../tools/triggerPromise': {},
-    '../../tools/sendMessageToBackground': {sendMessageToBackground: async () => {}},
-    '../../messaging/MessageType': {PermissionGrant: {PROXY: 'proxy'}},
-    '../../intervals': {},
-    '../../tools/update': {getUpdateError: async () => undefined},
-    '../../tools/openTab': {}, '../../tools/getBrowser': {},
-    '../../tools/getErrorMessage': {getErrorAsString: e => e.message},
-    '../../tools/sentry': {handleError() {}},
-    './initializeInlineParagraph': {}
-  }, {
-    chrome: {proxy: {}}, browser: {permissions: {request: async () => allowed}},
-    window: {close() {closed++;}}
-  });
-  await show(view, {style: {}}, {style: {}}, false);
-  await button.onclick();
-  assert.equal(opened, 0); assert.equal(closed, 0); assert.equal(button.disabled, false);
-  assert.match(paragraph.textContent, /not granted/);
-  allowed = true; fail = true;
-  await button.onclick();
-  assert.equal(closed, 0); assert.match(paragraph.textContent, /offline/);
-  fail = false;
-  await show(view, {style: {}}, {style: {}}, true);
-  await button.onclick();
-  assert.equal(opened, 1); assert.equal(closed, 1);
-});
-
 test('account forks are consumed only when their state belongs to this extension', async () => {
   const calls = [];
   const {handleAccountFork} = load('vpn/handleAccountFork', {
@@ -208,7 +166,7 @@ test('Chromium auth adapter supports callback and Promise replies and preserves 
     else return Promise.resolve({type: 'official'});
   }};
   const window = {addEventListener(type, fn) {if(type === 'message') listener = fn;}, removeEventListener() {}, postMessage(data) {requests.push(data);}};
-  vm.runInNewContext(fs.readFileSync(path.resolve(source, '../../../../vpn-auth-bridge.js'), 'utf8'), {
+  vm.runInNewContext(fs.readFileSync(path.resolve(source, '../../vpn-auth-bridge.js'), 'utf8'), {
     window, location: {origin}, chrome: {runtime}, crypto: {randomUUID: () => 'id-' + ++serial}, setTimeout, clearTimeout
   });
   const message = {type: 'fork', payload: {state: 'owned', selector: 'selector', persistent: true, keyPassword: 'must-not-relay'}};
@@ -234,77 +192,6 @@ test('Chromium auth adapter supports callback and Promise replies and preserves 
   assert.equal(originalCalls.length, 2);
 });
 
-test('local recent connections are displayed for Free accounts and respect the history toggle', async () => {
-  const {locationList} = load('components/locationList', {
-    '../tools/translate': {c: () => ({t: parts => parts.join('')})},
-    './countryList': {countryList: () => '<countries>'},
-    './recentLocations': {recentLocationsSlot: choices => '<recents>' + choices.length},
-    './countryListHeader': {countryListHeader() {}},
-    '../vpn/lastChoice': {getLastChoices: async () => [{exitCountry:'NL'}]}
-  });
-  for (const tier of [0, 2]) {
-    assert.equal(await locationList({}, {tier}, {value:false}, {config:{value:true}}), '<recents>1<countries>');
-    assert.equal(await locationList({}, {tier}, {value:false}, {config:{value:false}}), '<countries>');
-  }
-});
-
-const freeListMocks = {
-  '../tools/translate': {c: () => ({t: (parts, ...values) => parts.reduce((s, part, i) => s + part + (values[i] ?? ''), '')})},
-  '../tools/locale': {getPrimaryLanguage: () => 'pt'},
-  '../config': {paidOnly: false, simplifiedUi: false},
-  '../vpn/getLogicals': {isLogicalUp: logical => logical.Enabled !== false},
-  './upgradeButton': {upgradeButton: () => '<upgrade>'},
-  '../account/upgradeAttributes': {upgradeAttributes: 'data-upgrade="1"'}
-};
-
-test('free list includes nested city servers once, excludes paid and Secure Core, and retains maintenance status', () => {
-  const {getFreeServers, freeServerList} = load('components/freeServerList', freeListMocks);
-  const free = {ID: 'free-us', Name: 'US-FREE#143', Tier: 0, Features: 0, ExitCountry: 'US', Load: 45};
-  const down = {...free, ID: 'free-jp', Name: 'JP-FREE#1', ExitCountry: 'JP', Enabled: false};
-  const countries = {US: {logicals: [free], groups: {City: {logicals: [free, {...free, ID: 'paid', Tier: 2}]}}},
-    JP: {groups: {Free: {logicals: [down, {...free, ID: 'sc', Features: 1}]}}}};
-  assert.deepEqual(plain(getFreeServers(countries)).map(l => l.ID), ['free-us', 'free-jp']);
-  for (const tier of [0, 2]) {
-    const html = freeServerList(countries, {tier});
-    assert.match(html, /<details class="free-servers country-block">/);
-    assert.match(html, /Free servers \(2\)/);
-    assert.match(html, /data-id="free-us"/);
-    assert.match(html, /country-flag/);
-    assert.match(html, /45%/);
-    assert.match(html, /class="server in-maintenance"/);
-    assert.doesNotMatch(html, /data-id="(?:paid|sc|free-jp)"|data-upgrade|<upgrade>/);
-  }
-  assert.equal(freeServerList({}, {tier: 0}), '');
-});
-
-test('free servers render by localized country name before server score', () => {
-  const {freeServerList} = load('components/freeServerList', freeListMocks);
-  const server = (ID, ExitCountry, Score) => ({
-    ID, ExitCountry, Score, Name: ID, Tier: 0, Features: 0, Load: 40
-  });
-  const countries = {
-    NL: {name: 'Países Baixos', logicals: [server('NL-FREE#1', 'NL', 1)]},
-    JP: {name: 'Japão', logicals: [server('JP-FREE#1', 'JP', 2)]},
-    US: {name: 'Estados Unidos', logicals: [server('US-FREE#1', 'US', 4), server('US-FREE#2', 'US', 3)]}
-  };
-  const html = freeServerList(countries, {tier: 0});
-  assert.deepEqual([...html.matchAll(/data-server-id="([^"]+)"/g)].map(match => match[1]),
-    ['US-FREE#2', 'US-FREE#1', 'JP-FREE#1', 'NL-FREE#1']);
-});
-
-test('free section follows fastest country only in the main non Secure Core list', () => {
-  const {countryFilteredList} = load('components/countryList', {
-    './countryBlock': {countryBlock: () => '<country>'},
-    './fastestCountry': {fastestCountry: () => '<fastest>'},
-    './freeServerList': {freeServerList: () => '<free-list>'}
-  });
-  const countries = {US: {name: 'US', logicals: [{Tier: 0}]}};
-  const render = (secureCore, withFastest) => countryFilteredList(countries, {tier: 0}, () => true, undefined, secureCore, {}, false, withFastest);
-  assert.equal(render(false, true), '<fastest><free-list><country>');
-  assert.equal(render(true, true), '<fastest><country>');
-  assert.equal(render(false, false), '<country>');
-});
-
 test('proxy ownership watcher registers exactly once and reacts when another extension takes control', async () => {
   const listeners = new Set(), disconnected = [];
   const watcher = load('vpn/initProxySettingsWatcher', {
@@ -323,4 +210,93 @@ test('proxy ownership watcher registers exactly once and reacts when another ext
   assert.match(disconnected[0], /blocked/);
   watcher.removeProxySettingsWatcher(); assert.equal(listeners.size, 0);
   watcher.initProxySettingsWatcher(); assert.equal(listeners.size, 1);
+});
+
+test('the VPN service loads the polyfill first and defers the compiled worker to the host', () => {
+  const vpn = path.resolve(source, '..');
+  const imported = [];
+  const registrations = [];
+  const engine = fs.readFileSync(path.join(vpn, 'js/background.js'), 'utf8');
+  const context = vm.createContext({
+    importScripts(...urls) {
+      imported.push(...urls);
+      vm.runInContext(engine, context, { filename: 'vpn/js/background.js' });
+    },
+    SuperModuleHost: {
+      register(id, start) { registrations.push({ id, start }); },
+    },
+  });
+  vm.runInContext(fs.readFileSync(path.join(vpn, 'js/service.js'), 'utf8'), context);
+  assert.deepEqual(imported, ['/vpn/js/browser-polyfill.min.js', '/vpn/js/background.js']);
+  assert.equal(registrations.length, 1);
+  assert.equal(registrations[0].id, 'vpn');
+  assert.equal(typeof registrations[0].start, 'function');
+});
+
+test('worker installs its listeners and restores the traffic guard before the saved proxy', async () => {
+  const events = [];
+  const pending = [];
+  let resumeRestore, stop, indicator;
+  const guard = new Promise(resolve => { resumeRestore = resolve; });
+  const mark = (name) => () => { events.push(name); };
+
+  load('worker', {
+    './notifications/privacyWarning': { emitPrivacyWarning: mark('notify') },
+    './state': {
+      connectionLifecycle: { guard: () => () => true, capture: () => 17 },
+      disconnect: async () => mark('disconnect')(),
+      getCurrentStateIfDefined: () => undefined,
+      isCurrentStateConnected: () => false,
+      privacyFault: mark('privacy-fault'),
+    },
+    './tools/nativeStorage': { nativeStorage: {
+      watchFailures: mark('storage-watch'),
+      remove: async () => mark('clear-login')(),
+    } },
+    './tools/proxy': {
+      getFixedServerConfig: () => ({ rules: { bypassList: [] } }),
+      setProxyToWaiterHost: async () => mark('temporary-proxy')(),
+    },
+    './tools/sentry': { initSentry: mark('diagnostics') },
+    './tools/setupHandleProxyRequest': { setupHandleProxyRequest: mark('requests') },
+    './tools/translate': { fetchTranslations: async () => mark('locale')() },
+    './tools/triggerPromise': { triggerPromise: promise => pending.push(promise) },
+    './vpn/connectedServer': { connectedServer: { get: async () => ({ value: true }) } },
+    './vpn/initAuthInterceptor': { initAuthInterceptor: mark('auth') },
+    './vpn/initFocusWatcher': { initFocusWatcher: mark('focus') },
+    './vpn/initIdleWatcher': { initIdleWatcher: mark('idle') },
+    './vpn/initMessaging': { initMessaging: mark('messages') },
+    './vpn/initPrivacyWatchers': { initPrivacyWatchers: mark('privacy') },
+    './vpn/initProxySettingsWatcher': { initProxySettingsWatcher: mark('proxy-watch') },
+    './vpn/initState': {
+      initState: async () => mark('restore')(),
+      initStateRecovery: mark('recovery-listener'),
+    },
+    './vpn/networkGuard': {
+      bootstrapNetworkGuard: () => guard,
+      networkBlocked: () => true,
+      networkGuard: { status: async () => ({ blocked: true }) },
+    },
+    './webrtc/privacyController': {
+      privacyController: { apply: async () => mark('clear-webrtc')() },
+    },
+    './webrtc/state': { WebRTCState: { CLEAR: 'clear' } },
+  }, {
+    SuperModuleHost: { onStop(id, handler) { assert.equal(id, 'vpn'); stop = handler; } },
+    SuperVpnIndicator: { attach(reader) { indicator = reader; } },
+  });
+
+  assert.deepEqual(events.slice(0, 6), ['diagnostics', 'recovery-listener', 'auth', 'messages', 'storage-watch', 'privacy']);
+  assert.equal(events.includes('temporary-proxy'), false);
+  assert.equal(indicator().blocked, true);
+  assert.equal(indicator().connectionRevision, 17);
+
+  resumeRestore();
+  await Promise.all(pending);
+  assert.deepEqual(events.slice(-3), ['notify', 'temporary-proxy', 'restore']);
+
+  await stop(true);
+  assert.equal(events.includes('disconnect'), false);
+  await stop(false);
+  assert.deepEqual(events.slice(-3), ['disconnect', 'clear-webrtc', 'clear-login']);
 });

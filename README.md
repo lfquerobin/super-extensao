@@ -73,6 +73,8 @@ Veja [a interface e a compatibilidade](docs/sync-interface.md) e [o escopo do no
 
 ### VPN
 
+A **1.7.56** compila a VPN pelo pacote local em `vpn/` e inicializa o worker MV3 pelo ponto de entrada da Super Extensão. Os adaptadores GPL-3.0 do Proton ficam em `vpn/runtime`. A conta, a autorização e os servidores continuam sendo do serviço Proton.
+
 Na **1.7.34**, o switch **Bloquear também sites que não usam VPN quando ela cair**, em Recursos, permite manter os sites fora da VPN acessíveis durante falhas. Começa ligado; desligado, respeita o modo de inclusão/exclusão e subdomínios. A alteração é salva e aplicada automaticamente. Sites que exigem VPN continuam bloqueados até a confirmação da conexão.
 
 A **1.7.31** compartilha os fluxos completos de importação e edição de domínios, a lista de regras do autoplay e as confirmações dos módulos. Também cancela desafios do próprio proxy durante a restauração inicial quando o endpoint ainda não pode receber credenciais. A correção desse caso passou em navegador nativo com proxy fictício local; ainda falta confirmar o cenário no perfil pessoal.

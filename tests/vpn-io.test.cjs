@@ -51,7 +51,7 @@ test('worker exceptions are sanitized and leave commands available for a later a
  assert.equal(await channel.send('disconnect',async()=>true,10),true);
 });
 function adapter(chrome) {
- const loaded=load(path.join(root,'vendor/proton-source/source/js/tools/nativeStorage.ts'),{chrome});
+ const loaded=load(path.join(root,'vpn/runtime/tools/nativeStorage.ts'),{chrome});
  loaded.storageTimeouts.read=5;loaded.storageTimeouts.write=5;loaded.storageTimeouts.managed=5;return loaded.nativeStorage;
 }
 test('shared native adapter consumes callback errors, reports faults, and supports Promise-only APIs',async()=>{
@@ -76,13 +76,13 @@ test('session logout attempts deletion and credential invalidation even when its
 });
 test('failed policy reads do not cache permissive defaults and a later request can recover',async()=>{
  let failures=1,fetches=0;
- const {getFeatureConfig}=load(path.join(root,'vendor/proton-source/source/js/vpn/features/getFeatureConfig.ts'),{fetch:async()=>{fetches++;return {ok:true,json:async()=>({test:{controllable:true}})};}},{'../../tools/storage':{Storage:{MANAGED:'managed'},storage:{selfItem:()=>({get:async()=>{if(failures-->0)throw new VpnIOError('VpnStorageReadTimedOut');return {test:{controllable:false}};}})}}});
+ const {getFeatureConfig}=load(path.join(root,'vpn/runtime/vpn/features/getFeatureConfig.ts'),{fetch:async()=>{fetches++;return {ok:true,json:async()=>({test:{controllable:true}})};}},{'../../tools/storage':{Storage:{MANAGED:'managed'},storage:{selfItem:()=>({get:async()=>{if(failures-->0)throw new VpnIOError('VpnStorageReadTimedOut');return {test:{controllable:false}};}})}}});
  await assert.rejects(getFeatureConfig('test'),code('VpnStorageReadTimedOut'));assert.equal(fetches,0);
  assert.equal((await getFeatureConfig('test')).controllable,false);assert.equal(fetches,0);
 });
 test('storage facade propagates native failures instead of presenting an empty successful cache',async()=>{
  const chrome={runtime:{},storage:{local:{get(_,done){chrome.runtime.lastError={message:'private'};done({});delete chrome.runtime.lastError;}}}};
- const {storage}=load(path.join(root,'vendor/proton-source/source/js/tools/storage.ts'),{chrome});
+ const {storage}=load(path.join(root,'vpn/runtime/tools/storage.ts'),{chrome});
  await assert.rejects(storage.item('session').load(),code('VpnStorageFailed'));
  chrome.storage.local.get=(_,done)=>done({});assert.deepEqual(Object.keys(await storage.item('session').load()),[]);
 });

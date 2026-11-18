@@ -1,6 +1,6 @@
-# Motor da VPN — núcleo próprio, 1.7.26
+# Motor da VPN — referência 1.7.56
 
-Revisado em 13 de novembro de 2026. A Super Extensão controla as regras, as gravações do proxy, a máquina de estados, a restauração, a invalidação de operações, os despertares de recuperação e a persistência/renovação de tokens por módulos próprios em `vpn/engine`. O serviço continua sendo Proton. WebRTC e a coordenação do login foram extraídos na 1.7.12; consulta/cache de conta, política de plano e resolução de configurações passam ao núcleo próprio na 1.7.25. A página oficial, os cabeçalhos/formatos/endpoints e utilitários de compatibilidade continuam em adaptadores. Isso não remove todo o código vendor nem substitui a revisão minuciosa em navegador.
+Revisado em 18 de novembro de 2026. A Super Extensão controla as regras, as gravações do proxy, a máquina de estados, a restauração, a invalidação de operações, os despertares de recuperação e a persistência/renovação de tokens por módulos próprios em `vpn/engine`. O serviço continua sendo Proton. WebRTC e a coordenação do login foram extraídos na 1.7.12; consulta/cache de conta, política de plano e resolução de configurações passam ao núcleo próprio na 1.7.25. A página oficial, os cabeçalhos/formatos/endpoints e utilitários de compatibilidade continuam em adaptadores. A partir da 1.7.56, o pacote em `vpn/` controla a compilação Chromium e o ponto de entrada `vpn/runtime/worker.ts` registra a recuperação, a autorização e a proteção. Os adaptadores de protocolo incorporados mantêm a licença GPL-3.0.
 
 ## Responsabilidades ativas
 
@@ -21,7 +21,7 @@ Revisado em 13 de novembro de 2026. A Super Extensão controla as regras, as gra
 | Conta e plano | `vpn/engine/account.ts` + `account/user/accountProfile.ts`, `getUser.ts` e `getPmUser.ts` como adaptadores | Consulta agrupada, cache, atualização em segundo plano, limite de atualização forçada, restrições Free/pago, reautenticação e descarte de respostas antigas próprios |
 | Configurações de recursos | `vpn/engine/features.ts` + `vpn/features/getFeatureConfig.ts` e `FeatureWrapper.ts` como adaptadores | Precedência entre política do dispositivo, preferência do usuário e padrão; leitura de política agrupada e falha recuperável, sem transformar erro de leitura em permissão |
 
-Os caminhos que não começam com `vpn/engine` são relativos a `vendor/proton-source/source/js/`. A interface própria permanece em `vpn/source`.
+Os caminhos que não começam com `vpn/engine` são relativos a `vpn/runtime/`. A interface própria permanece em `vpn/source`.
 
 ## Ordem das operações
 
@@ -55,7 +55,7 @@ O alarme é registrado a cada inicialização do worker e pode acordá-lo para v
 
 ## Máquina de estados própria — 1.7.4
 
-`vpn/engine/state.ts` implementa `ConnectionMachine` sem importar tipos, módulos ou globais Proton/Chromium. As portas fornecem IO e protocolo; o adaptador `vendor/proton-source/source/js/state.ts` mantém os comandos e as mensagens existentes, os desafios de autenticação e a seleção de servidores.
+`vpn/engine/state.ts` implementa `ConnectionMachine` sem importar tipos, módulos ou globais Proton/Chromium. As portas fornecem IO e protocolo; o adaptador `vpn/runtime/state.ts` mantém os comandos e as mensagens existentes, os desafios de autenticação e a seleção de servidores.
 
 - Conexão, desconexão, logout e alteração de regras invalidam operações anteriores antes de novos awaits. Cada transição cria uma identidade de estado; callbacks antigos não conseguem alterar uma conexão nova.
 - A restauração lê o servidor da sessão uma única vez e respeita comandos executados durante a leitura. A barreira de prontidão resolve após decidir o estado inicial, sem aguardar credenciais ou metadados remotos. O resumo público continua exigindo confirmação do proxy para mostrar conexão ativa.
@@ -82,19 +82,20 @@ npm run setup:sync
 npm run build:vpn
 npm test
 npm run check:ui
-node vendor/proton-source/node_modules/typescript/bin/tsc --noEmit -p vendor/proton-source/tsconfig.json
-node vendor/proton-source/node_modules/typescript/bin/tsc --noEmit -p vpn/tsconfig.interface.json
+npm run check --prefix vpn
+node vpn/node_modules/typescript/bin/tsc --noEmit -p vpn/tsconfig.interface.json
 ```
 
-Os bundles compilados ficam versionados em `vpn/js`. A compilação preserva `vpn/engine`, a interface e os avisos GPL em `vendor/proton-source` e `vpn/LICENSE`.
+Os bundles do worker e relay ficam versionados em `vpn/js`. O build usa o lockfile de `vpn/`. A origem dos adaptadores e assets consta em `vpn/MODIFICATIONS.md`. A licença GPL-3.0 permanece em `vpn/LICENSE`.
 
 Os testes de `tests/vpn-controller.test.cjs` exercitam fila e rollback, tomada por outra extensão, callbacks de erro, troca rápida, desconexão com escrita em andamento, credenciais tardias, estado real do adaptador, notificações após confirmação, desafios de autenticação e sessão/fork depois do logout. `tests/vpn-state.test.cjs` cobre restauração, prontidão sem bloqueio de rede, falhas e retomada, disputas de credenciais/regras/servidores, limpeza repetida após falha, throttling de retries e persistência ordenada. As demais suítes continuam cobrindo PAC minificado, permissões, autorização de plano, interface e indicador. São testes com APIs/transportes simulados; login real, IP, tráfego, WebRTC e recuperação nativa seguem pendentes em [validacao.md](validacao.md).
 
-## Trabalho restante
+## Validação pendente
+
+Na 1.7.56, a compilação e as checagens TypeScript do worker e da interface passaram com a instalação independente em `vpn/`. Os testes exercitaram o registro do bundle no host e a restauração do bloqueio antes do proxy salvo. O Chromium do ambiente encerrou antes de disponibilizar o DevTools, deixando o teste nativo pendente.
 
 1. Validar os novos fluxos com conta de teste no Chromium/Helium: login, IP, regras, erro de rede, logout durante conexão e retomada do worker.
-2. Revisar contratos/adaptadores e utilitários restantes; manter a autorização do plano e a compatibilidade com o serviço.
-3. Reavaliar persistência opcional e temporizadores auxiliares somente com testes de migração e evidência real.
+2. Conferir a preservação de sessão, regras por site e preferências com dados do perfil existente.
 
 ## Indicador após trocar de servidor — 1.7.8
 
@@ -151,7 +152,7 @@ As páginas enviam pedidos ao worker. Ele revalida intenção de conexão e pref
 
 O adaptador mantém `app`, `appVersion`, `t`, `plan`, `partnerId` e `independent` exigidos pela página Proton e codifica o selector no endpoint. O relay e mensagens externas aceitam apenas as origens oficiais; mensagens de conta não podem iniciar login nem alterar WebRTC. A aba oficial usa prazo de relay de 30 segundos, compatível com o limite HTTP de 20 segundos. Falhas ao abrir a aba agora são aguardadas e propagadas. Estados `f...` de versões anteriores não são reutilizados: uma aba de autorização já aberta precisa ser iniciada novamente pela extensão.
 
-A extração funcional está implementada; permanecem adapters/formatos do serviço, mensagens e utilitários legados. O serviço, infraestrutura e autorização do plano continuam sendo Proton, e as fontes/licenças mantêm-se no repositório. Não se declara remoção de todas as dependências vendor. A revisão minuciosa solicitada pelo usuário permanece pendente.
+O login usa os adaptadores de protocolo em `vpn/runtime` e a página oficial do Proton. O serviço Proton fornece a conta e autoriza o plano. As fontes e as licenças acompanham o módulo.
 
 `tests/vpn-login-privacy.test.cjs` adiciona 22 testes do núcleo e dos adaptadores reais com APIs simuladas, incluindo duplicatas, suspensão, logout durante troca, expiração, erros nativos, propriedade da preferência e pedidos de UI antigos. As verificações de origem existentes também cobrem as novas ações internas.
 

@@ -1,6 +1,6 @@
 # Dependências da VPN — 1.7.17
 
-Revisão em 12 de novembro de 2026. Escopo: `vendor/proton-source` e os artefatos VPN compilados. Os módulos de sincronização/nova guia e suas árvores de dependências não foram atualizados nesta etapa.
+Esta auditoria de 12 de novembro de 2026 refere-se à árvore anterior à extração. Desde a 1.7.56, o lockfile e as ferramentas de compilação ficam em `vpn/`. Os módulos de sincronização/nova guia e suas árvores de dependências não foram atualizados nesta etapa.
 
 ## Versões selecionadas
 

@@ -325,6 +325,45 @@ test("server picker keeps Free, paid and maintenance states, search and connecti
     await ui.close();
   }
 });
+test("free shortcuts group by localized country and keep maintenance visible without paid or Secure Core entries", async () => {
+  const initial = snapshot();
+  initial.servers = [
+    ...servers,
+    { ...servers[0], id: "nl", country: "NL", name: "NL#1", load: 1 },
+    { ...servers[0], id: "us-high", country: "US", name: "US#1", load: 80 },
+    { ...servers[0], id: "us-low", country: "US", name: "US#2", load: 15 },
+  ];
+  const ui = await boot(initial);
+  try {
+    const free = ui.w.document.querySelector("[data-free]");
+    assert.equal(free.querySelector(".vpn-count").textContent, "5");
+    for (const code of ["JP", "NL", "US"]) await openCountry(ui, "free:" + code);
+    const expanded = ui.w.document.querySelector("[data-free]");
+    const ids = [...expanded.querySelectorAll("[data-server]")].map(node => node.dataset.server);
+    assert.deepEqual(ids, ["us-low", "us-high", "free", "down", "nl"]);
+    assert.ok(expanded.querySelector('[data-server="down"]').disabled);
+    assert.equal(expanded.querySelector('[data-server="paid"], [data-server="core"]'), null);
+  } finally {
+    await ui.close();
+  }
+});
+
+test("recent connections appear on Free accounts only when enabled in preferences", async () => {
+  for (const enabled of [true, false]) {
+    const initial = snapshot();
+    initial.features.recents.enabled = enabled;
+    initial.recents = [{ connected: true, logicalId: "free", exitCountry: "JP" }];
+    const ui = await boot(initial);
+    try {
+      const recent = ui.w.document.querySelector(".vpn-recents [data-action=recent]");
+      assert.equal(Boolean(recent), enabled);
+      if (enabled) assert.equal(recent.textContent, "JP#1");
+    } finally {
+      await ui.close();
+    }
+  }
+});
+
 test('VPN autosave serializes rapid switches and waits for application before navigation', async () => {
   let release, count = 0;
   const ui = await boot(snapshot(), {saveSplit: async () => {
@@ -513,7 +552,9 @@ test("adapter retains Proton sign-in, tier checks, namespaced messages and activ
   const calls = [],
     items = new Map(),
     listeners = new Set();
-  let tier = 0;
+  let tier = 0, permissionGranted = false, loginError;
+  const permissionRequests = [];
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, "manifest.json"), "utf8"));
   const rawServers = [
     {
       ID: "free",
@@ -581,7 +622,7 @@ test("adapter retains Proton sign-in, tier checks, namespaced messages and activ
       fs.readFileSync(
         path.join(
           root,
-          "vendor/proton-source/source/js/vpn/assertServerAccess.ts",
+          "vpn/runtime/vpn/assertServerAccess.ts",
         ),
         "utf8",
       ),
@@ -590,7 +631,7 @@ test("adapter retains Proton sign-in, tier checks, namespaced messages and activ
     {
       exports: actualAccess,
       require(id) {
-        assert.equal(id, '../../../../../vpn/engine/account');
+        assert.equal(id, '../../engine/account');
         return require('./helpers/load-ts.cjs')(path.join(root, 'vpn/engine/account.ts'));
       },
     },
@@ -600,7 +641,10 @@ test("adapter retains Proton sign-in, tier checks, namespaced messages and activ
       readSession: async () => ({ uid: "private", refreshToken: "private" }),
     },
     "@vpn-engine/account/openForkTab": {
-      openForkTab: async () => calls.push(["fork"]),
+      openForkTab: async () => {
+        if (loginError) throw loginError;
+        calls.push(["fork"]);
+      },
     },
     "@vpn-engine/tools/sendMessageToBackground": {
       sendMessageToBackground: async (type, data) => {
@@ -669,7 +713,10 @@ test("adapter retains Proton sign-in, tier checks, namespaced messages and activ
     "@vpn-engine/tools/activity": { updateLastActivityTime: async () => {} },
   };
   const { createEngine } = load("bridge.ts", mocks, {
-    browser: { permissions: { request: async () => true } },
+    browser: { permissions: { request: async (options) => {
+      permissionRequests.push(plain(options));
+      return permissionGranted;
+    } } },
   });
   const engine = createEngine();
   let events = 0;
@@ -690,6 +737,16 @@ test("adapter retains Proton sign-in, tier checks, namespaced messages and activ
   assert.equal(progress[2].servers, undefined);
   assert.ok(!JSON.stringify(state).includes("never-expose"));
   assert.ok(!JSON.stringify(state).includes("never-render-this"));
+  await assert.rejects(engine.signIn(), /not granted/);
+  assert.deepEqual(permissionRequests, [{ permissions: ["proxy"] }]);
+  for (const permission of permissionRequests[0].permissions) {
+    assert.ok(manifest.permissions.includes(permission) || manifest.optional_permissions?.includes(permission));
+  }
+  assert.ok(!calls.some(([type]) => type === "proxy" || type === "fork"));
+  permissionGranted = true;
+  loginError = Error("offline");
+  await assert.rejects(engine.signIn(), /offline/);
+  loginError = undefined;
   await engine.signIn();
   assert.ok(calls.some((call) => call[0] === "proxy"));
   assert.ok(calls.some((call) => call[0] === "fork"));

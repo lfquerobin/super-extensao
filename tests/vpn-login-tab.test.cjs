@@ -12,7 +12,7 @@ function fixture(result,createError){
   if(createError)throw createError;
   return {id:42};
  },onRemoved:{addListener(){}}};
- const {openForkTab}=load(path.resolve(__dirname,'../vendor/proton-source/source/js/account/openForkTab.ts'),{setTimeout:()=>0},{
+ const {openForkTab}=load(path.resolve(__dirname,'../vpn/runtime/account/openForkTab.ts'),{setTimeout:()=>0},{
   '../config':{baseDomainURL:account},
   '../tools/getTabs':{getTabs:()=>tabs},'./getTabs':{getTabs:()=>tabs},
   '../tools/openTabs':{connectTab(){}},

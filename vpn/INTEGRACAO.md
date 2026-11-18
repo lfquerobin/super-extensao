@@ -32,7 +32,7 @@ O proxy vale para o tráfego deste navegador. Não altera a rede dos demais apli
 - Ponte Chromium na página oficial: encaminha a resposta de login à Super Extensão somente quando o estado foi gerado por ela; logins da extensão oficial mantêm o caminho original. Não encaminha senhas, chaves privadas ou tokens de sessão à página.
 - Relay de autorização apenas em `https://account.proton.me/` e `https://account.protonvpn.com/`, para mensagens de sessão `fork`, mantendo a validação do estado de autorização.
 - Telemetria e relatórios Sentry desativados. O host desenha um sinal verde/azul no canto superior direito do ícone, conforme a conexão e o endereço da aba; o badge de pausa da limpeza permanece independente.
-- Fonte GPL-3.0 do Proton mantida em `vendor/proton-source`, baseada no commit `71d7d86f164a2ee8e50ce5a389c9e5cbe0fd6883`.
+- Adaptadores GPL-3.0 incorporados a `vpn/runtime`, baseados no commit `71d7d86f164a2ee8e50ce5a389c9e5cbe0fd6883`.
 
 ## Validação
 

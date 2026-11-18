@@ -63,7 +63,7 @@ async function evaluate(call, expression) {
   });
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   const proxyPort=server.address().port;
-  const sources={auth:'vendor/proton-source/source/js/vpn/authHandler.ts',chromium:'vpn/engine/chromium.ts',controller:'vpn/engine/controller.ts',endpoint:'vpn/engine/proxy-auth.ts'};
+  const sources={auth:'vpn/runtime/vpn/authHandler.ts',chromium:'vpn/engine/chromium.ts',controller:'vpn/engine/controller.ts',endpoint:'vpn/engine/proxy-auth.ts'};
   const factories=Object.entries(sources).map(([id,file])=>JSON.stringify(id)+':function(module,exports,require){'+ts.transpileModule(fs.readFileSync(path.join(root,file),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText+'}').join(',');
   fs.writeFileSync(path.join(extension,'manifest.json'),JSON.stringify({manifest_version:3,name:'Isolated proxy authentication test',version:'1.0',permissions:['proxy','webRequest','webRequestAuthProvider'],host_permissions:['<all_urls>'],background:{service_worker:'worker.js'}}));
   fs.writeFileSync(path.join(extension,'worker.js'),`

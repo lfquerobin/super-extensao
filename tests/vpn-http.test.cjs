@@ -140,12 +140,12 @@ function adapterFixture(){
  const area={get(key,done){done({[key]:data[key]});},set(value,done){Object.assign(data,value);done();}};
  const translate=()=>({t:(parts,...args)=>parts.reduce((s,p,i)=>s+p+(args[i]||''),'')});
  const mocks={
-  '../../../../vpn/engine/http':{HttpTransport,HttpError},'./account/sessionStore':{sessionStore:{capture:()=>epoch}},'./account/readSession':{readSession:async()=>({...state})},
+  '../engine/http':{HttpTransport,HttpError},'./account/sessionStore':{sessionStore:{capture:()=>epoch}},'./account/readSession':{readSession:async()=>({...state})},
   './account/refreshToken':{refreshToken:async()=>{state={...state,accessToken:'private-new'};return {...state};}},'./account/getAuthHeaders':{getAuthHeaders:(uid,token)=>({'x-pm-uid':uid,Authorization:'Bearer '+token})},
   './account/user/getRegisteredLocale':{getRegisteredLocale:async()=> 'pt-BR'},'./tools/locale':{getLocale:()=> 'en'},'./tools/getBrowserSubType':{getBrowserSubType:async()=> 'chromium'},
   './config':{baseAPIURL:'https://api.test/api/',getFullAppVersion:()=> 'test-app',routes:[],incompatibleSoftware:['blocker'],apiDomainsExclusion:['api.test']},'./tools/translate':{c:translate},
  };
- const run=(file,localMocks,globals={})=>{const exports={},filename=path.resolve(__dirname,'../vendor/proton-source/source/js',file+'.ts');vm.runInNewContext(ts.transpileModule(fs.readFileSync(filename,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports,Promise,URL,Headers,Response,...globals,require:id=>{if(!localMocks[id])return require('./helpers/load-ts.cjs')(path.resolve(path.dirname(filename),id+'.ts'),globals);return localMocks[id];}},{filename});return exports;};
+ const run=(file,localMocks,globals={})=>{const exports={},filename=path.resolve(__dirname,'../vpn/runtime',file+'.ts');vm.runInNewContext(ts.transpileModule(fs.readFileSync(filename,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports,Promise,URL,Headers,Response,...globals,require:id=>{if(!localMocks[id])return require('./helpers/load-ts.cjs')(path.resolve(path.dirname(filename),id+'.ts'),globals);return localMocks[id];}},{filename});return exports;};
  let request=async()=>json({Code:1000,ok:true});
  const client=run('httpClient',mocks,{chrome:{runtime:{},storage:{local:area,session:area,onChanged:{addListener:fn=>{onStorage=fn;}}}},fetch:async(url,init)=>{calls.push({url,init});return request();}});
  const api=run('api',{'./httpClient':client,'./config':mocks['./config'],'./tools/matchDomainList':{matchDomainList:()=>false},'./tools/broadcastMessage':{broadcastMessage:(...args)=>events.push(args)},'./tools/update':{getUpdateError:async()=>update,setUpdateError:value=>{update=value;}}});
@@ -190,7 +190,7 @@ test('account adapters respect a consumed transport auth retry and refresh an un
    '../../intervals':{getIdleThreshold:()=>1e9,getUserBlockingUpdateTTL:()=>0,getUserTTL:()=>100,getPmUserTTL:()=>100},
    '../../messaging/MessageType':{BackgroundData:{USER:'user'}},
   };
-  const filename=path.resolve(__dirname,'../vendor/proton-source/source/js/account/user',name+'.ts');
+  const filename=path.resolve(__dirname,'../vpn/runtime/account/user',name+'.ts');
   const exports=require('./helpers/load-ts.cjs')(filename,{},mocks);
   if(consumed){await assert.rejects(exports[name](true));assert.equal(refreshes,0);assert.equal(calls,1);}
   else{assert.equal((await exports[name](true)).ID,'user');assert.equal(refreshes,1);assert.equal(calls,2);}

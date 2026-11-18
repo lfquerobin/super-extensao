@@ -9,7 +9,7 @@ for(const file of ['vpn-blocked.html','vpn-blocked.css','ui-theme.css','ui-compo
  const target=path.join(extension,file);fs.mkdirSync(path.dirname(target),{recursive:true});fs.copyFileSync(path.join(root,file),target);
 }
 const modules={
- guard:'vpn/engine/network-guard.ts',guardRouting:'vpn/engine/guard-routing.ts',native:'vendor/proton-source/source/js/vpn/networkGuard.ts',routing:'vpn/engine/routing.js',
+ guard:'vpn/engine/network-guard.ts',guardRouting:'vpn/engine/guard-routing.ts',native:'vpn/runtime/vpn/networkGuard.ts',routing:'vpn/engine/routing.js',
 };
 const factories=Object.entries(modules).map(([name,file])=>`${JSON.stringify(name)}:function(module,exports,require){${file.endsWith('.ts')?ts.transpileModule(fs.readFileSync(path.join(root,file),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText:fs.readFileSync(path.join(root,file),'utf8')}\n}`).join(',');
 fs.writeFileSync(path.join(extension,'manifest.json'),JSON.stringify({manifest_version:3,name:'Super VPN isolated privacy audit',version:'1.0',permissions:['proxy','declarativeNetRequest','storage'],host_permissions:['<all_urls>'],background:{service_worker:'worker.js'},web_accessible_resources:[{resources:['vpn-blocked.html'],matches:['<all_urls>']}]}));

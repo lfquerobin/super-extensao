@@ -2,7 +2,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { createRequire } = require("node:module");
 const root = path.resolve(__dirname, "..");
-const engine = path.join(root, "vendor/proton-source");
+const engine = path.join(root, "vpn");
 const dependency = createRequire(path.join(engine, "package.json"));
 const webpack = dependency("webpack");
 const config = {
@@ -22,7 +22,7 @@ const config = {
   resolve: {
     extensions: [".js", ".ts"],
     modules: ["node_modules", path.join(engine, "node_modules")],
-    alias: { "@vpn-engine": path.join(engine, "source/js") },
+    alias: { "@vpn-engine": path.join(engine, "runtime") },
   },
   resolveLoader: {
     modules: [path.join(engine, "node_modules"), "node_modules"],

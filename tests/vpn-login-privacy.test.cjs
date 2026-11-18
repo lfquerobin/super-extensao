@@ -88,7 +88,7 @@ function nativeLoginFixture(){
  '../api':{fetchJson:async url=>{requests.push(url);return {UID:'uid',AccessToken:'private-access',RefreshToken:'private-refresh'};}},
  '../config':{getFullAppVersion:()=> 'extension-v1'},
  };
- const {loginFlow}=load('vendor/proton-source/source/js/account/loginFlow.ts',mocks,{chrome});
+ const {loginFlow}=load('vpn/runtime/account/loginFlow.ts',mocks,{chrome});
  return {flow:loginFlow,chrome,values,requests,saved};
 }
 test('real login adapter retains service URL contracts, strong nonce and encoded selector without persisting secrets',async()=>{
@@ -107,14 +107,14 @@ test('real fork facade commits through the owned flow and returns only the publi
  '../account/user/getUser':{getFreshUser:async()=>{refresh++;}},'../log/log':{error:()=>{}},
  '../tools/translate':{c:()=>({t:parts=>parts.join('')})},'../tools/getErrorMessage':{getErrorAsString:e=>e.message},
  };
- const {forkSession}=load('vendor/proton-source/source/js/messaging/forkSession.ts',mocks);
+ const {forkSession}=load('vpn/runtime/messaging/forkSession.ts',mocks);
  const message={extension:'ours',token:'correlation',payload:{state,selector:'selector',persistent:true,keyPassword:'private-password'}};
  const response=await forkSession(message);assert.equal(response.type,'success');assert.equal(response.token,'correlation');assert.equal(refresh,1);assert.equal(f.saved.length,1);assert.ok(!JSON.stringify(response).includes('private'));assert.equal((await forkSession(message)).type,'error');assert.equal(f.saved.length,1);assert.equal(refresh,1);
 });
 test('request-fork facade delegates pending state to worker and openForkTab awaits native opening failures',async()=>{
  let call;const mocks={'../../tools/sendMessageToBackground':{sendMessageToBackground:async(type,data)=>{call={type,data};return 'https://account.proton.me/authorize';}}};
- const {requestFork}=load('vendor/proton-source/source/js/account/fork/requestFork.ts',mocks);assert.equal(await requestFork({host:'https://account.proton.me'}),'https://account.proton.me/authorize');assert.equal(call.type,'beginLogin');
- const {openForkTab}=load('vendor/proton-source/source/js/account/openForkTab.ts',{
+ const {requestFork}=load('vpn/runtime/account/fork/requestFork.ts',mocks);assert.equal(await requestFork({host:'https://account.proton.me'}),'https://account.proton.me/authorize');assert.equal(call.type,'beginLogin');
+ const {openForkTab}=load('vpn/runtime/account/openForkTab.ts',{
  './fork/requestFork':{requestFork:async()=> 'url'},'../config':{baseDomainURL:'https://account.proton.me'},
  '../tools/exponentialBackoff':{isSuspended:async()=>false,suspend:()=>{}},
  '../tools/openTab':{openTab:async()=>{throw Error('tab failed');}},
@@ -123,8 +123,8 @@ test('request-fork facade delegates pending state to worker and openForkTab awai
 });
 test('page WebRTC facade delegates writes to the worker while native worker facade uses the own controller',async()=>{
  const calls=[],mocks={'./state':{WebRTCState},'./privacyController':{privacyController:{apply:async value=>{calls.push(['native',value]);return true;}}},'../tools/sendMessageToBackground':{sendMessageToBackground:async(type,value)=>{calls.push([type,value]);return true;}}};
- const page=load('vendor/proton-source/source/js/webrtc/setWebRTCState.ts',mocks,{document:{}});await page.setWebRTCState(WebRTCState.CLEAR);
- const worker=load('vendor/proton-source/source/js/webrtc/setWebRTCState.ts',mocks);await worker.setWebRTCState(WebRTCState.DISABLED);assert.deepEqual(calls,[['setWebRTC','clear'],['native','disable_non_proxied_udp']]);
+ const page=load('vpn/runtime/webrtc/setWebRTCState.ts',mocks,{document:{}});await page.setWebRTCState(WebRTCState.CLEAR);
+ const worker=load('vpn/runtime/webrtc/setWebRTCState.ts',mocks);await worker.setWebRTCState(WebRTCState.DISABLED);assert.deepEqual(calls,[['setWebRTC','clear'],['native','disable_non_proxied_udp']]);
 });
 test('worker privacy route follows current connection and preference, rejecting late UI results after disconnect',async()=>{
  const calls=[];let state='on',enabled=true,current=true,configGate;
@@ -137,7 +137,7 @@ test('worker privacy route follows current connection and preference, rejecting 
  './MessageType':{BackgroundAction:{BEGIN_LOGIN:'beginLogin',SET_WEBRTC:'setWebRTC'},BackgroundData:{},StateChange:{},PermissionGrant:{},SettingChange:{}},
  };
  // Unused protocol dependencies are IO stubs; only the real new routes execute.
- const file=path.resolve(__dirname,'../vendor/proton-source/source/js/messaging/messaging.ts'),exports={};
+ const file=path.resolve(__dirname,'../vpn/runtime/messaging/messaging.ts'),exports={};
  vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports,Promise,require:id=>mocks[id]||{}},{filename:file});
  await exports.routeMessage({type:'beginLogin',data:{host:'https://account.proton.me'}});assert.equal(calls[0][0],'begin');
  await exports.routeMessage({type:'setWebRTC',data:'clear'});assert.equal(calls.at(-1)[1],WebRTCState.DISABLED);enabled=false;await exports.routeMessage({type:'setWebRTC',data:'disable_non_proxied_udp'});assert.equal(calls.at(-1)[1],WebRTCState.DISABLED);

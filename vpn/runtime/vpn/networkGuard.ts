@@ -1,0 +1,240 @@
+import { storedSplitTunneling } from "./storedSplitTunneling";
+import { directTrafficRules } from "../../engine/guard-routing";
+import { NetworkGuard } from "../../engine/network-guard";
+const blockId = 880001,
+	allowId = 880002,
+	transportId = 880003,
+	pageId = 880004,
+	returnPageId = 880005;
+const transportRule: chrome.declarativeNetRequest.Rule = {
+	id: transportId,
+	priority: 11000,
+	action: { type: "block" },
+	condition: { resourceTypes: ["webtransport"] },
+};
+const api = () => {
+	const value = chrome.declarativeNetRequest;
+	if (!value) throw new Error("VpnTrafficGuardUnavailable");
+	return value;
+};
+// Never rely on an empty exclusion list: Chromium's default resource mask
+// omits main_frame, so an apparently installed allowance can lose to redirect.
+const resourceTypes: NonNullable<
+	chrome.declarativeNetRequest.RuleCondition["resourceTypes"]
+> = [
+	"main_frame",
+	"sub_frame",
+	"stylesheet",
+	"script",
+	"image",
+	"font",
+	"object",
+	"xmlhttprequest",
+	"ping",
+	"csp_report",
+	"media",
+	"websocket",
+	"webtransport",
+	"webbundle",
+	"other",
+];
+const condition: chrome.declarativeNetRequest.RuleCondition = {
+	regexFilter: "^(https?|wss?)://",
+	excludedInitiatorDomains: [chrome.runtime.id],
+	excludedRequestDomains: ["account.proton.me", "account.protonvpn.com"],
+	resourceTypes,
+};
+const rule = (
+	id: number,
+	priority: number,
+	type: "allow" | "block",
+): chrome.declarativeNetRequest.Rule => ({
+	id,
+	priority,
+	action: { type },
+	condition:
+		type === "allow"
+			? { ...condition, excludedInitiatorDomains: [] }
+			: condition,
+});
+const same = (
+	item: chrome.declarativeNetRequest.Rule,
+	id: number,
+	priority: number,
+	type: string,
+) => {
+	const c = item.condition;
+	return (
+		item.id === id &&
+		item.priority === priority &&
+		item.action.type === type &&
+		c.regexFilter === condition.regexFilter &&
+		JSON.stringify([...(c.excludedInitiatorDomains || [])].sort()) ===
+			JSON.stringify(
+				type === "allow" ? [] : condition.excludedInitiatorDomains,
+			) &&
+		JSON.stringify([...(c.excludedRequestDomains || [])].sort()) ===
+			JSON.stringify([...(condition.excludedRequestDomains || [])].sort()) &&
+		Array.isArray(c.resourceTypes) &&
+		JSON.stringify([...c.resourceTypes].sort()) ===
+			JSON.stringify([...resourceTypes].sort()) &&
+		!c.excludedResourceTypes &&
+		Object.keys(c).every((key) =>
+			[
+				"regexFilter",
+				"excludedInitiatorDomains",
+				"excludedRequestDomains",
+				"resourceTypes",
+				"isUrlFilterCaseSensitive",
+			].includes(key),
+		)
+	);
+};
+const pageRule: chrome.declarativeNetRequest.Rule = {
+	id: pageId,
+	priority: 10002,
+	action: {
+		type: "redirect",
+		redirect: { extensionPath: "/vpn-blocked.html" },
+	},
+	condition: {
+		regexFilter: "^https?://",
+		excludedRequestDomains: condition.excludedRequestDomains,
+		resourceTypes: ["main_frame"],
+		excludedRequestMethods: ["get"],
+	},
+};
+// Only ordinary GET navigations carry a return address. Never retain a form body.
+const returnPageRule: chrome.declarativeNetRequest.Rule = {
+	id: returnPageId,
+	priority: 10002,
+	action: {
+		type: "redirect",
+		redirect: {
+			regexSubstitution: `chrome-extension://${chrome.runtime.id}/vpn-blocked.html#return=\\0`,
+		},
+	},
+	condition: {
+		regexFilter: "^https?://.*",
+		excludedRequestDomains: condition.excludedRequestDomains,
+		resourceTypes: ["main_frame"],
+		requestMethods: ["get"],
+	},
+};
+const samePage = (
+	item: chrome.declarativeNetRequest.Rule,
+	expected = pageRule,
+) => {
+	const c = item.condition;
+	return (
+		item.id === expected.id &&
+		item.priority === 10002 &&
+		item.action.type === "redirect" &&
+		Object.keys(item.action).length === 2 &&
+		JSON.stringify(item.action.redirect) ===
+			JSON.stringify(expected.action.redirect) &&
+		c.regexFilter === expected.condition.regexFilter &&
+		c.resourceTypes?.join(",") === "main_frame" &&
+		JSON.stringify(c.requestMethods) ===
+			JSON.stringify(expected.condition.requestMethods) &&
+		JSON.stringify(c.excludedRequestMethods) ===
+			JSON.stringify(expected.condition.excludedRequestMethods) &&
+		!c.excludedInitiatorDomains &&
+		JSON.stringify([...(c.excludedRequestDomains || [])].sort()) ===
+			JSON.stringify([...(condition.excludedRequestDomains || [])].sort()) &&
+		Object.keys(c).every((key) =>
+			[
+				"regexFilter",
+				"excludedInitiatorDomains",
+				"excludedRequestDomains",
+				"resourceTypes",
+				"requestMethods",
+				"excludedRequestMethods",
+				"isUrlFilterCaseSensitive",
+			].includes(key),
+		)
+	);
+};
+const directIds = Array.from({length: 3001}, (_, index) => 881000 + index);
+let directRules: chrome.declarativeNetRequest.Rule[] = [];
+// Browser dictionary serialization can reorder keys and resource type arrays.
+const canonical = (value: unknown): string => {
+	if (Array.isArray(value)) return "[" + value.map(canonical).sort().join(",") + "]";
+	if (value && typeof value === "object") return "{" + Object.entries(value)
+		.sort(([a], [b]) => a.localeCompare(b))
+		.map(([key, item]) => JSON.stringify(key) + ":" + canonical(item)).join(",") + "}";
+	return JSON.stringify(value);
+};
+let lastState = { armed: false, blocked: false };
+export const networkBlocked = () => lastState.blocked;
+const read = async () => {
+	try {
+		const [dynamic, session] = await Promise.all([
+			api().getDynamicRules(),
+			api().getSessionRules(),
+		]);
+		const extras = dynamic.filter(item => directIds.includes(item.id));
+		const armed =
+			canonical(extras) === canonical(directRules) &&
+			dynamic.some((item) => same(item, blockId, 10000, "block")) &&
+			dynamic.some((item) => samePage(item)) &&
+			dynamic.some((item) => samePage(item, returnPageRule)) &&
+			dynamic.some(
+				(item) =>
+					item.id === transportId &&
+					item.priority === 11000 &&
+					item.action.type === "block" &&
+					Object.keys(item.condition).length === 1 &&
+					item.condition.resourceTypes?.join(",") === "webtransport",
+			);
+		const allowed = session.some((item) => same(item, allowId, 10010, "allow"));
+		lastState = { armed, blocked: armed && !allowed };
+		return lastState;
+	} catch {
+		throw new Error("VpnTrafficGuardFailed");
+	}
+};
+export const networkGuard = new NetworkGuard({
+	async installBlock() {
+		try {
+			// Install the full blocker before reading policy; failures stay closed.
+			directRules = [];
+			await api().updateDynamicRules({
+				removeRuleIds: [blockId, transportId, pageId, returnPageId, ...directIds],
+				addRules: [rule(blockId, 10000, "block"), transportRule, pageRule, returnPageRule],
+			});
+			const expected = directTrafficRules(await storedSplitTunneling.get(), [rule(blockId, 10000, "block"), pageRule, returnPageRule]);
+			if (expected.length) await api().updateDynamicRules({removeRuleIds: directIds, addRules: expected});
+			directRules = expected;
+		} catch {
+			throw new Error("VpnTrafficGuardFailed");
+		}
+	},
+	async removeBlock() {
+		directRules = [];
+		await api().updateDynamicRules({
+			removeRuleIds: [blockId, transportId, pageId, returnPageId, ...directIds],
+		});
+	},
+	async allow() {
+		await api().updateSessionRules({
+			removeRuleIds: [allowId],
+			addRules: [rule(allowId, 10010, "allow")],
+		});
+	},
+	async revoke() {
+		await api().updateSessionRules({ removeRuleIds: [allowId] });
+	},
+	status: read,
+});
+
+/** Upgrade legacy durable rules before any restoration; never retain an old allowance. */
+export async function bootstrapNetworkGuard(): Promise<void> {
+	const dynamic = await api().getDynamicRules();
+	if (
+		dynamic.some((item) =>
+			[blockId, transportId, pageId, returnPageId].includes(item.id),
+		)
+	)
+		await networkGuard.block();
+}

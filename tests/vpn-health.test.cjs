@@ -10,12 +10,12 @@ function load(relative, mocks = {}) {
   vm.runInNewContext(code,{exports,Promise,Date,encodeURIComponent,require:id=>mocks[id]||{}},{filename});return exports;
 }
 const {serverHealth}=load('vpn/engine/health.ts');
-const calculate=load('vendor/proton-source/source/js/vpn/calculateLogicalScoreAndUpStatus.ts',{'./calculateScore':{calculateScore:()=>1}});
-const merge=load('vendor/proton-source/source/js/vpn/mergeLoadsIntoLogicals.ts',{'./calculateLogicalScoreAndUpStatus':calculate});
+const calculate=load('vpn/runtime/vpn/calculateLogicalScoreAndUpStatus.ts',{'./calculateScore':{calculateScore:()=>1}});
+const merge=load('vpn/runtime/vpn/mergeLoadsIntoLogicals.ts',{'./calculateLogicalScoreAndUpStatus':calculate});
 function fixture({cached,reply={LogicalServers:[]},loads=[],v2=true,loadError}={}) {
   const requests=[],statusRequests=[];
-  const api=load('vendor/proton-source/source/js/vpn/getLogicals.ts',{
-    '../../../../../vpn/engine/health':{serverHealth},
+  const api=load('vpn/runtime/vpn/getLogicals.ts',{
+    '../../engine/health':{serverHealth},
     '../tools/storage':{Storage:{LOCAL:'local'},storage:{item:()=>({})}},
     './logicalServers':{logicalServers:{get:async()=>cached}},
     './useLogicalsV2':{useLogicalsV2:async()=>v2},

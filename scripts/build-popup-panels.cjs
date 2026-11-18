@@ -3,7 +3,7 @@ const path = require('node:path');
 const { createRequire } = require('node:module');
 
 const root = path.resolve(__dirname, '..');
-const requireBuildDependency = createRequire(path.join(root, 'vendor/proton-source/package.json'));
+const requireBuildDependency = createRequire(path.join(root, 'vpn/package.json'));
 const postcss = requireBuildDependency('postcss');
 const selectors = requireBuildDependency('postcss-selector-parser');
 const cssnano = requireBuildDependency('cssnano');

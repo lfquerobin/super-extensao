@@ -157,7 +157,7 @@ test('session save/remove ordering and failed writes do not poison future work',
 });
 
 function vendorLoad(file, mocks = {}, globals = {}) {
-  const filename=path.resolve(__dirname,'../vendor/proton-source/source/js',file+'.ts'),exports={};
+  const filename=path.resolve(__dirname,'../vpn/runtime',file+'.ts'),exports={};
   const code=ts.transpileModule(fs.readFileSync(filename,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
   vm.runInNewContext(code,{exports,Promise,fetch,setTimeout,clearTimeout,setInterval:()=>{},...globals,require:id=>mocks[id]||{}},{filename});return exports;
 }
@@ -166,15 +166,15 @@ function stateFixture() {
   const c={Username:'u',Password:'private',Expire:3600};
   const noop=()=>{};
   const state=vendorLoad('state',{
-    '../../../../vpn/engine/state':load('state'),
-    '../../../../vpn/engine/diagnostics':load('diagnostics'),
+    '../engine/state':load('state'),
+    '../engine/diagnostics':load('diagnostics'),
     './vpn/ConnectionState':{asConnectionStateSwitch:x=>x},
     './log/log':{bind:()=>noop},
     './intervals':{getActivityCheckInterval:()=>10000,getLogicalCheckUpRefreshInterval:()=>60000},
     './tools/triggerPromise':{triggerPromise:p=>{if(p?.catch)p.catch(e=>errors.push(e));}},
     './vpn/networkGuard':{networkGuard:{block:async()=>{},open:async valid=>valid(),disarm:async()=>{},status:async()=>({armed:false,blocked:false})}},
-    '../../../../vpn/engine/tunnel-probe':{verifyTunnel:async()=>true},
-    '../../../../vpn/engine/routing':{usesVpn:()=>true},
+    '../engine/tunnel-probe':{verifyTunnel:async()=>true},
+    '../engine/routing':{usesVpn:()=>true},
     './notifications/privacyWarning':{emitPrivacyWarning:noop},
     './tools/sentry':{handleError:e=>errors.push(e)},
     './tools/proxy':{getFixedServerConfig:()=>({rules:{}}),invalidateProxyOperations:noop,hasProxy:async()=>events.some(([kind])=>kind==='apply'),clearProxy:async()=>true,proxyToServer:async(server,split,guard)=>{if(guard())events.push(['apply',server.name]);return guard();}},
@@ -284,7 +284,7 @@ test('startup proxy authentication cancels only an endpoint owned by this extens
       '../state':{getCurrentStateIfDefined:()=>undefined,isProxyKnownHost:()=>false,privacyFault:()=>faults++},
       '../tools/proxyAuth':{isPending:()=>false},'../tools/milliSeconds':{milliSeconds:{fromSeconds:x=>x*1000}},'../config':{requestMaxAge:20},
       '../account/credentials/getConnectionCredentials':{getCredentials:()=>{credentials++;return Promise.resolve({});}},
-      '../../../../../vpn/engine/proxy-auth':{ownsAuthEndpoint},'../../../../../vpn/engine/chromium':{chromiumProxy},
+      '../../engine/proxy-auth':{ownsAuthEndpoint},'../../engine/chromium':{chromiumProxy},
     },{chrome:{runtime:{},proxy:{settings:{get:(_,done)=>done(details)}}}});
     const response = request => new Promise(resolve=>authHandler(request,resolve));
     assert.equal((await response(challenge)).cancel,true);

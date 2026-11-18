@@ -1,4 +1,4 @@
-import type {StoredWebsiteFilterList} from "../../vendor/proton-source/source/js/vpn/WebsiteFilter";
+import type {StoredWebsiteFilterList} from "../runtime/vpn/WebsiteFilter";
 
 // Keep exact hosts exact: DNR requestDomains would also match their subdomains.
 export function directTrafficRules(

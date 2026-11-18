@@ -151,7 +151,7 @@ test('storage adapter preserves the legacy key and fails explicitly on native AP
  const runtime={};
  const area=(name,values)=>({get(k,done){events.push([name,'get',k]);done({[k]:values[k]});},set(value,done){Object.assign(values,value);events.push([name,'set',Object.keys(value)]);done();},remove(k,done){delete values[k];events.push([name,'remove',k]);done();}});
  const chrome={runtime,storage:{local:area('local',local),session:area('session',session)}},exports={};
- const file=path.resolve(__dirname,'../vendor/proton-source/source/js/account/credentials/storedCredentials.ts');
+ const file=path.resolve(__dirname,'../vpn/runtime/account/credentials/storedCredentials.ts');
  Object.assign(exports,require('./helpers/load-ts.cjs')(file,{chrome}));
  const port=exports.storedCredentials;assert.equal((await port.load()).sessionUid,'A');
  await port.set({sessionUid:'A',time:1200000,credentials:token('new')});assert.equal(local[key].credentials.Username,'new');
@@ -165,7 +165,7 @@ function serviceFixture(request) {
  let uid='A',epoch=0,cache,listener,clear;const events=[],state={proxyEnabled:true,setCredentials:value=>events.push(['credentials',value.Username])};
  const api={isNetworkError:e=>e?.name==='NetworkError',isInvalidTokenError:e=>e?.Code===401&&e?.httpStatus===401,isUnauthorizedError:e=>e?.httpStatus===401,needsLogout:e=>e?.Code===2028,isForbiddenError:e=>e?.httpStatus===403,isRetriableError:e=>e?.Code===429};
  const mocks={
-  '../../../../../../vpn/engine/credentials':{CredentialManager},
+  '../../../engine/credentials':{CredentialManager},
   './storedCredentials':{storedCredentials:{load:async()=>cache||{},set:async value=>{cache=clone(value);},remove:async()=>{cache=undefined;}}},
   './credentialInvalidation':{attachCredentialInvalidation:fn=>{clear=fn;}},
   '../sessionStore':{sessionStore:{capture:()=>epoch}},'../readSession':{readSession:async()=>({uid})},
@@ -176,7 +176,7 @@ function serviceFixture(request) {
   '../../vpn/initAuthInterceptor':{initAuthInterceptor:()=>events.push(['interceptor'])},'../../tools/getErrorMessage':{getErrorAsString:()=> 'service error'},
   '../../tools/sentry':{handleError:()=>events.push(['error'])},'../../tools/triggerPromise':{triggerPromise:value=>Promise.resolve(value).catch(()=>{})},
  };
- const filename=path.resolve(__dirname,'../vendor/proton-source/source/js/account/credentials/credentialStore.ts'),exports={};
+ const filename=path.resolve(__dirname,'../vpn/runtime/account/credentials/credentialStore.ts'),exports={};
  const code=ts.transpileModule(fs.readFileSync(filename,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
  vm.runInNewContext(code,{exports,Promise,chrome:{storage:{onChanged:{addListener:fn=>{listener=fn;}}},webRequest:{handlerBehaviorChanged:async()=>{}}},require:id=>{if(!mocks[id])throw Error('Unexpected import '+id);return mocks[id];}},{filename});
  return {manager:exports.credentialManager,events,get cache(){return cache;},switchAccount(value){const old=uid;uid=value;listener({'superVpn:session':{oldValue:{uid:old},newValue:{uid}}},'local');},clear:()=>clear(),advanceEpoch:()=>{epoch++;}};

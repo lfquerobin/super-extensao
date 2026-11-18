@@ -83,9 +83,9 @@ test('the core loads without browser/storage/network APIs and does not mutate in
   assert.equal(Object.isFrozen(context.SuperVpnRouting), true);
 });
 test('production Babel/minification keeps generated PAC self-contained', async () => {
-  const babel = await import('../vendor/proton-source/node_modules/@babel/core/lib/index.js');
-  const { minify } = require('../vendor/proton-source/node_modules/terser');
-  const transformed = await babel.transformAsync(source, { configFile: path.join(root, 'vendor/proton-source/.babelrc'), filename: path.join(root, 'vpn/engine/routing.js') });
+  const babel = await import('../vpn/node_modules/@babel/core/lib/index.js');
+  const { minify } = require('../vpn/node_modules/terser');
+  const transformed = await babel.transformAsync(source, { configFile: path.join(root, 'vpn/.babelrc'), filename: path.join(root, 'vpn/engine/routing.js') });
   const compressed = await minify(transformed.code, { compress: true, mangle: true });
   const context = vm.createContext({ URL }); vm.runInContext(compressed.code, context);
   const config = context.SuperVpnRouting.createFixedConfig('node.protonvpn.net', 4443, { mode: 'include', filteredDomains: ['only.test'] }, options);
@@ -93,11 +93,11 @@ test('production Babel/minification keeps generated PAC self-contained', async (
   assert.equal(pac(config, context.SuperVpnRouting)('https://other.test'), 'DIRECT');
 });
 test('the worker compatibility boundary delegates compilation to the own core', () => {
-  const filename = path.join(root, 'vendor/proton-source/source/js/tools/proxy.ts');
+  const filename = path.join(root, 'vpn/runtime/tools/proxy.ts');
   const code = ts.transpileModule(fs.readFileSync(filename, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText;
   const calls = [], exports = {};
   const mocks = {
-    '../../../../../vpn/engine/routing': {
+    '../../engine/routing': {
       createFixedConfig(...args) { calls.push('fixed'); return routing.createFixedConfig(...args); },
       createPacScript(...args) { calls.push('pac'); return routing.createPacScript(...args); },
     },

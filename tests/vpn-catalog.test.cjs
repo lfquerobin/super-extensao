@@ -118,7 +118,7 @@ function adapterFixture(v2=true) {
    return builder?builder(response,data):data;
   }},
  };
- const api=load('vendor/proton-source/source/js/vpn/serverCatalog.ts',mocks);
+ const api=load('vpn/runtime/vpn/serverCatalog.ts',mocks);
  return {client:api.serverCatalog,calls,store,mocks,saved:()=>saved,setFail:e=>{fail=e;},gate:()=>{gate=defer();return gate;},switchAccount:()=>{const old=uid;uid='B';listeners.forEach(fn=>fn({'superVpn:session':{oldValue:{uid:old},newValue:{uid}}},'local'));},changeTier:()=>{const old=vpnData();tier=2;listeners.forEach(fn=>fn({'superVpn:user':{oldValue:{user:{VPN:old}},newValue:{user:{VPN:vpnData()}}}},'local'));}};
 }
 test('real v2 adapters preserve conditional date headers, encode include IDs and persist scoped status metadata',async()=>{
@@ -140,9 +140,9 @@ function stateAdapter(choice) {
  class Machine {constructor(p){Object.assign(ports,p);this.lifecycle=fakeLifecycle;}async connect(data){connected=data;events.push('connect');}}
  const feature={create:async()=>({getConfig:async()=>({value:true})})};
  const mocks={
-  '../../../../vpn/engine/state':{ConnectionMachine:Machine},
-  '../../../../vpn/engine/diagnostics':load('vpn/engine/diagnostics.ts'),
-  '../../../../vpn/engine/selection':selection,
+  '../engine/state':{ConnectionMachine:Machine},
+  '../engine/diagnostics':load('vpn/engine/diagnostics.ts'),
+  '../engine/selection':selection,
   './log/log':{bind:()=>()=>{}},
   './vpn/lastChoice':{getLastChoice:async()=>choice},
   './vpn/getLogicals':{getSortedLogicals:async()=>[logical('other',{Score:0}),logical('chosen',{AutoConnectable:false})],isLogicalUp:()=>true,shouldStayOnLogical:async()=>false},
@@ -164,7 +164,7 @@ function stateAdapter(choice) {
   './vpn/Feature':{Feature:{SECURE_CORE:1}},
   './config':{proxyPort:443},
  };
- const file=path.resolve(__dirname,'../vendor/proton-source/source/js/state.ts'),exports={};
+ const file=path.resolve(__dirname,'../vpn/runtime/state.ts'),exports={};
  vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports,Promise,require:id=>mocks[id]||{}},{filename:file});
  return {api:exports,ports,events,connected:()=>connected};
 }

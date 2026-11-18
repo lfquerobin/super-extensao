@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 function vpnNotices() {
-  const provider = path.join(root, 'vendor/proton-source');
+  const provider = path.join(root, 'vpn');
   const packages = JSON.parse(fs.readFileSync(path.join(provider, 'package-lock.json'), 'utf8')).packages;
   const sections = ['Third-party notices for the VPN module. Generated from its locked production dependency tree.\nIncludes production packages even when tree-shaken out of the delivered bundles.\nThe Proton source license is preserved separately in vpn/LICENSE.'];
   for (const [relative, record] of Object.entries(packages).sort(([a], [b]) => a.localeCompare(b, 'en'))) {

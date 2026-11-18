@@ -32,7 +32,7 @@ for (const file of [
 const sources = {
   guard: "vpn/engine/network-guard.ts",
   guardRouting: "vpn/engine/guard-routing.ts",
-  native: "vendor/proton-source/source/js/vpn/networkGuard.ts",
+  native: "vpn/runtime/vpn/networkGuard.ts",
 };
 const factories = Object.entries(sources)
   .map(

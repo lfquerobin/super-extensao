@@ -1,4 +1,4 @@
-# Interface própria da VPN — referência 1.7.40
+# Interface própria da VPN — referência 1.7.56
 
 ## Módulo opcional
 
@@ -16,7 +16,7 @@ As funções de tela em `vpn/source/app.js` compõem botões, campos, cartões, 
 
 O adaptador não consulta a rede e não modifica `bridge.ts`, autorização de plano, controlador de proxy ou regras de tunelamento. [Contratos e compilação](ui-components.md).
 
-A aba VPN usa `vpn/source`, sem montar o HTML, JavaScript ou CSS do popup original. A compilação das regras/PAC já usa o núcleo próprio de `vpn/engine`; autenticação, servidores, autorização de plano, aplicação do proxy e estado continuam no adaptador Proton. O worker Proton permanece ativo, com uma ponte para o indicador próprio do host. A primeira substituição e os contratos restantes estão em [vpn-engine.md](vpn-engine.md).
+A aba VPN usa `vpn/source`. O worker Chromium da Super Extensão inicia as proteções, a comunicação e o indicador. O núcleo em `vpn/engine` controla regras/PAC, autenticação e estado, com o apoio dos adaptadores de protocolo em `vpn/runtime`. Os servidores e a autorização do plano são fornecidos pelo Proton. [Arquitetura do motor](vpn-engine.md).
 
 ## Telas
 
@@ -42,7 +42,7 @@ npm test
 
 Para reconstruir também o motor, use `npm run build:vpn`. Esse comando preserva `vpn/source`, recompila o worker e os recursos originais, recompila a interface própria e atualiza os estilos compartilhados. `npm run build:sync` continua reconstruindo somente a interface da sincronização e os estilos dos painéis.
 
-A entrada integrada é `vpn/interface.js`; `vpn/interface.html` oferece a mesma interface em página independente. A licença GPL-3.0 e o código-fonte Proton continuam em `vpn/LICENSE`, `vendor/proton-source` e nos avisos de integração.
+A entrada integrada é `vpn/interface.js`; `vpn/interface.html` oferece a mesma interface em página independente. A licença GPL-3.0 e o código-fonte Proton continuam em `vpn/LICENSE`, `vpn/runtime` e nos avisos de integração.
 
 ## Validação
 
