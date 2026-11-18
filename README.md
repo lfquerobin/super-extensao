@@ -138,6 +138,10 @@ Preferências usam `tabliss/config` em `storage.sync`; imagens e cache usam Inde
 
 ### Limpeza, Autoplay e Abas
 
+Desde a **1.7.57**, a limpeza registra o resultado por tipo de dado e mantém até 20 relatórios locais por sete dias. Uma execução interrompida preserva os tipos confirmados e marca a chamada sem resposta como não confirmada. O comprovante da sessão automática é salvo junto do resultado e fica separado do histórico exibido.
+
+**Limpar agora** mostra o escopo antes da execução. Se o plano mudar, abra a prévia novamente. Os modelos para Gmail e GitHub acrescentam endereços somente à lista de exclusão escolhida. O resultado de login depende da confirmação feita pelo usuário.
+
 Por padrão, apenas o histórico é selecionado para limpeza. A limpeza é tentada ao fechar a última janela; se interrompida, há recuperação na próxima abertura. O resultado só é registrado após as APIs terminarem com sucesso. **Limpar agora** funciona mesmo com a automação pausada.
 
 Na **1.7.41**, as abas **Cookies**, **Cache** e **Armazenamento local** oferecem **Excluir da limpeza** (preservar a lista) e **Incluir na limpeza** (limpar somente a lista). No modo de exclusão, **Limpar lista de exclusão** remove todos os sites dessa lista após confirmação, sem limpar dados dos sites naquele momento. Cada tipo mantém duas listas independentes, salvas automaticamente; as exceções antigas continuam no modo de preservação. Uma inclusão vazia não apaga dados daquele tipo. Em Favoritos, escolha o tipo e o modo de destino antes de importar, sem alterar os favoritos. Cookies abrangem o domínio registrável inteiro; cache e localStorage usam o endereço informado em HTTP/HTTPS, com entradas separadas para outros subdomínios e portas. Os históricos e formulários continuam globais. [Funcionamento e validação](docs/limpeza-por-site.md). **Última limpeza** e **Limpar agora** aparecem somente em **Geral**. Arquivos baixados, senhas salvas e histórico da Conta Google não são apagados.

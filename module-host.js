@@ -36,7 +36,7 @@
   }
   async function clearAlarms(id) {
     for (const alarm of await api.alarms.getAll()) {
-      if (id === 'sync' ? alarm.name.startsWith('super-sync:') : id === 'vpn' ? alarm.name.startsWith('superVpn:') : alarm.name === 'pause-resume')
+      if (id === 'sync' ? alarm.name.startsWith('super-sync:') : id === 'vpn' ? alarm.name.startsWith('superVpn:') : ['pause-resume', 'cleanup-report-expiration'].includes(alarm.name))
         await api.alarms.clear(alarm.name);
     }
   }
@@ -118,7 +118,7 @@
       return {...values};
     } catch (error) {
       for (const alarm of alarms) {
-        if (alarm.name === 'pause-resume' || /^(superVpn:|super-sync:)/.test(alarm.name)) {
+        if (['pause-resume', 'cleanup-report-expiration'].includes(alarm.name) || /^(superVpn:|super-sync:)/.test(alarm.name)) {
           const details = {...(alarm.periodInMinutes ? {periodInMinutes:alarm.periodInMinutes} : {}),
             ...(alarm.scheduledTime ? {when:alarm.scheduledTime} : {delayInMinutes:1})};
           await api.alarms.create(alarm.name,details).catch(() => {});

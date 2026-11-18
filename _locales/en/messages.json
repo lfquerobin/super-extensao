@@ -1014,5 +1014,95 @@
   },
   "uiCleanupListChanged": {
     "message": "The list or mode changed during confirmation. Review the list and try again."
+  },
+  "uiCleanupHistory": {
+    "message": "Cleanup history"
+  },
+  "uiCleanupCompleted": {
+    "message": "Completed"
+  },
+  "uiCleanupPartial": {
+    "message": "Partially completed"
+  },
+  "uiCleanupFailed": {
+    "message": "Failed"
+  },
+  "uiCleanupBlocked": {
+    "message": "Blocked by invalid rules"
+  },
+  "uiCleanupUnknown": {
+    "message": "Unconfirmed"
+  },
+  "uiCleanupRunning": {
+    "message": "In progress"
+  },
+  "uiCleanupPending": {
+    "message": "Not started"
+  },
+  "uiCleanupSkipped": {
+    "message": "No targets"
+  },
+  "uiCleanupPreviewTitle": {
+    "message": "Review cleanup"
+  },
+  "uiCleanupPreviewInclude": {
+    "message": "Clear only {origins}"
+  },
+  "uiCleanupPreviewExclude": {
+    "message": "Keep {origins}"
+  },
+  "uiCleanupPreviewAll": {
+    "message": "All sites"
+  },
+  "uiCleanupSettingsChanged": {
+    "message": "Settings changed. Open the preview again."
+  },
+  "uiCleanupSeeReport": {
+    "message": "Cleanup encountered errors. Check the results by type."
+  },
+  "uiCleanupReportChanged": {
+    "message": "The report changed. Review the latest cleanup."
+  },
+  "uiCleanupProtectionTemplates": {
+    "message": "Protection templates"
+  },
+  "uiCleanupProtectionHint": {
+    "message": "Templates add addresses to this data type’s list. Session behavior depends on the site."
+  },
+  "uiCleanupProtectionNeedsExclude": {
+    "message": "Select exclusion mode to add a protection template."
+  },
+  "uiCleanupProtectionAdded": {
+    "message": "Addresses added to the exclusion list."
+  },
+  "uiCleanupProtectGmail": {
+    "message": "Protect Gmail"
+  },
+  "uiCleanupProtectGithub": {
+    "message": "Protect GitHub"
+  },
+  "uiCleanupReportExclude": {
+    "message": "Exclusions applied"
+  },
+  "uiCleanupReportInclude": {
+    "message": "Limited to selected origins"
+  },
+  "uiCleanupLoginKept": {
+    "message": "User confirmed they stayed signed in"
+  },
+  "uiCleanupLoginLost": {
+    "message": "User reported being signed out"
+  },
+  "uiCleanupLoginUnchecked": {
+    "message": "Sign-in not checked"
+  },
+  "uiCleanupOpenService": {
+    "message": "Open site"
+  },
+  "uiCleanupLoginMarkKept": {
+    "message": "I stayed signed in"
+  },
+  "uiCleanupLoginMarkLost": {
+    "message": "I was signed out"
   }
 }

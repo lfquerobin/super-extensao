@@ -231,3 +231,35 @@ test('falha ao limpar exclusões mantém os sites e permite nova tentativa',asyn
     assert.deepEqual(f.local.excludedSites,[]);assert.equal(f.d.getElementById('error').hidden,true);assert.deepEqual(f.errors,[]);
   }finally{f.close();}
 });
+
+test('Limpar agora mostra a prévia e só envia o plano depois da confirmação', async () => {
+  const f = await fixture({clearCookies: true});
+  try {
+    f.d.getElementById('clearNow').click();
+    await tick();
+    const dialog = f.d.querySelector('dialog[open]');
+    assert.match(dialog.textContent, /Revisar limpeza/);
+    assert.match(dialog.textContent, /https:\/\/cookie\.example/);
+    assert.equal(f.requests.length, 0);
+    dialog.querySelector('[data-confirm="accept"]').click();
+    await tick();
+    const request = f.requests.find(item => item.action === 'clearNow');
+    assert.match(request.expectedPlan, /cookie\.example/);
+    assert.deepEqual(f.errors, []);
+  } finally { f.close(); }
+});
+
+test('modelo adiciona somente endereços ao tipo escolhido em modo de exclusão', async () => {
+  const f = await fixture({cacheCleanupMode: 'include'});
+  try {
+    f.d.getElementById('tab-exceptions').click();
+    f.d.querySelector('[data-protect-type="cookies"][data-protect-service="gmail"]').click();
+    await tick();
+    assert.deepEqual(f.local.excludedSites, ['cookie.example', 'google.com']);
+    f.d.getElementById('tab-cache').click();
+    f.d.querySelector('[data-protect-type="cache"][data-protect-service="github"]').click();
+    await tick();
+    assert.equal(f.local.excludedCacheSites, undefined);
+    assert.match(f.d.getElementById('error').textContent, /modo de exclusão/);
+  } finally { f.close(); }
+});

@@ -15,6 +15,7 @@ const DEFAULT_SETTINGS = {
   excludedLocalStorageSites: [],
   theme: SuperPreferences.theme.defaultValue,
   pendingSession: null,
+  completedCleanupSession: null,
   pendingClearNotification: null,
   lastClearTime: null,
   lastClearTypeKeys: [],
@@ -75,14 +76,53 @@ function normalizeManualSettings(snapshot) {
   };
 }
 
-async function removeSelectedData(settings, plan = ClearRules.removalPlan(settings)) {
-  for (const operation of plan) {
-    if (operation.method === "removeCookies") {
-      await chrome.browsingData.removeCookies(operation.options);
-    } else {
-      await chrome.browsingData.remove(operation.options, operation.data);
-    }
+const CLEANUP_REPORT_LIMIT = 20;
+const CLEANUP_REPORT_AGE = 7 * 24 * 60 * 60 * 1000;
+const CLEANUP_REPORT_ALARM = "cleanup-report-expiration";
+
+function pruneCleanupReports(value) {
+  const cutoff = Date.now() - CLEANUP_REPORT_AGE;
+  return (Array.isArray(value) ? value : [])
+    .filter(report => typeof report?.id === "string" && report.startedAt > cutoff)
+    .slice(-CLEANUP_REPORT_LIMIT);
+}
+
+async function scheduleCleanupRetention(reports) {
+  try {
+    if (!reports.length) await chrome.alarms.clear(CLEANUP_REPORT_ALARM);
+    else await chrome.alarms.create(CLEANUP_REPORT_ALARM, {
+      when: Math.min(...reports.map(report => report.startedAt)) + CLEANUP_REPORT_AGE
+    });
+  } catch { /* Cleanup and worker startup also prune expired entries. */ }
+}
+
+async function finishCleanupReport(report, reports, update = {}) {
+  const history = pruneCleanupReports([...reports, report]);
+  await chrome.storage.local.set({cleanupReports: history, activeCleanupReport: null, ...update});
+  await scheduleCleanupRetention(history);
+}
+
+async function reconcileCleanupReports() {
+  const {cleanupReports, activeCleanupReport} = await chrome.storage.local.get({
+    cleanupReports: [], activeCleanupReport: null
+  });
+  const history = pruneCleanupReports(cleanupReports);
+  if (activeCleanupReport?.status === "running" && Array.isArray(activeCleanupReport.items)) {
+    const report = {...activeCleanupReport, status: "unknown", finishedAt: Date.now(),
+      items: activeCleanupReport.items.map(item =>
+        item.status === "running" ? {...item, status: "unknown"} : item)};
+    await finishCleanupReport(report, history);
+    return pruneCleanupReports([...history, report]);
   }
+  if (!Array.isArray(cleanupReports) || history.length !== cleanupReports.length)
+    await chrome.storage.local.set({cleanupReports: history});
+  await scheduleCleanupRetention(history);
+  return history;
+}
+
+async function removeCleanupStep(step) {
+  if (step.type === "cookies") await chrome.browsingData.removeCookies(step.options);
+  else await chrome.browsingData.remove(step.options, {[step.type]: true});
 }
 
 function makeUniqueId(prefix) {
@@ -124,23 +164,37 @@ async function markSessionPending() {
   return pendingSession;
 }
 
-function requestClear(trigger, options = {}) {
-  const operation = clearQueue
-    .catch(() => undefined)
-    .then(() => performClear(trigger, options));
-  clearQueue = operation.catch(() => undefined);
+function queueCleanup(task) {
+  const operation = clearQueue.then(task);
+  clearQueue = operation.catch(() => {});
   return operation;
 }
+
+function requestClear(trigger, options = {}) {
+  return queueCleanup(async () => {
+    try { return await performClear(trigger, options); }
+    catch (error) {
+      await reconcileCleanupReports().catch(() => {});
+      throw error;
+    }
+  });
+}
+
+void SuperModuleHost.ready.then(() => {
+  if (SuperModuleHost.isEnabled("cleanup")) return queueCleanup(reconcileCleanupReports);
+}).catch(error => console.warn("Cleanup reports unavailable", error));
 
 // ====== メイン削除処理 ======
 async function performClear(
   trigger,
-  { ignoreAutomationState = false, settingsSnapshot = null } = {}
+  { ignoreAutomationState = false, settingsSnapshot = null, expectedPlan, sessionId } = {}
 ) {
   await SuperModuleHost.ready;
   if (!SuperModuleHost.isEnabled('cleanup')) return {cleared:false};
   const storedSettings = await chrome.storage.local.get(DEFAULT_SETTINGS);
-  const manualSettings = normalizeManualSettings(settingsSnapshot);
+  if (sessionId && storedSettings.completedCleanupSession?.id === sessionId)
+    return {cleared: true, startedAt: storedSettings.completedCleanupSession.startedAt};
+  const manualSettings = expectedPlan === undefined ? normalizeManualSettings(settingsSnapshot) : null;
   const settings = manualSettings
     ? { ...storedSettings, ...manualSettings }
     : storedSettings;
@@ -169,27 +223,69 @@ async function performClear(
   }
 
   const dataToRemove = buildDataToRemove(settings);
-  const hasTarget = Object.values(dataToRemove).some(v => v);
-  if (!hasTarget) return { cleared: false, startedAt };
+  const targets = Object.keys(dataToRemove).filter(type => dataToRemove[type]);
+  if (!targets.length && expectedPlan === undefined) return {cleared: false, startedAt};
 
-  let plan;
+  const reports = await reconcileCleanupReports();
+  const report = {
+    id: makeUniqueId("cleanup"), trigger, startedAt, status: "running",
+    items: targets.map(type => ({type, status: "skipped"}))
+  };
+  let steps;
   try {
-    plan = ClearRules.removalPlan(settings);
-    if (!plan.length) return {cleared:false,startedAt};
-    // Cookies run last through their dedicated API.
-    await removeSelectedData(settings, plan);
+    steps = ClearRules.cleanupSteps(settings);
   } catch (error) {
-    await chrome.storage.local.set({ lastClearErrorAt: new Date().toISOString() });
+    report.status = "blocked";
+    report.finishedAt = Date.now();
+    report.items = targets.map(type => ({type, status: "blocked"}));
+    await finishCleanupReport(report, reports, {lastClearErrorAt: new Date().toISOString()});
     throw error;
   }
+  if (expectedPlan !== undefined && ClearRules.cleanupPlanToken(steps) !== expectedPlan)
+    throw Error("CleanupSettingsChanged");
+  if (!steps.length) return {cleared: false, startedAt};
 
-  // Record the completion time only after every removal API has succeeded.
-  const now = new Date().toISOString();
-  // 削除記録
-  const appliedTypes = new Set(plan.flatMap(operation => operation.method === 'removeCookies' ? ['cookies'] : Object.keys(operation.data)));
-  const clearedTypeKeys = Object.entries(dataToRemove)
-    .filter(([key, v]) => v && appliedTypes.has(key))
-    .map(([key]) => key);
+  const items = new Map(report.items.map(item => [item.type, item]));
+  for (const step of steps) items.get(step.type).status = "pending";
+  await chrome.storage.local.set({activeCleanupReport: report});
+  if (expectedPlan !== undefined) {
+    const latest = await chrome.storage.local.get(DEFAULT_SETTINGS);
+    let latestPlan;
+    try { latestPlan = ClearRules.cleanupPlanToken(ClearRules.cleanupSteps(latest)); }
+    catch { /* Invalid rules also require a fresh confirmation. */ }
+    if (latestPlan !== expectedPlan) {
+      await chrome.storage.local.set({activeCleanupReport: null});
+      throw Error("CleanupSettingsChanged");
+    }
+  }
+  for (const step of steps) {
+    const item = items.get(step.type);
+    item.status = "running";
+    if (step.options.excludeOrigins) item.scope = "exclude";
+    else if (step.options.origins) item.scope = "include";
+    await chrome.storage.local.set({activeCleanupReport: report});
+    try {
+      await removeCleanupStep(step);
+      item.status = "completed";
+    } catch {
+      item.status = "failed";
+    }
+    await chrome.storage.local.set({activeCleanupReport: report});
+  }
+
+  report.finishedAt = Date.now();
+  const now = new Date(report.finishedAt).toISOString();
+  const clearedTypeKeys = report.items.filter(item => item.status === "completed").map(item => item.type);
+  if (clearedTypeKeys.length !== steps.length) {
+    report.status = clearedTypeKeys.length ? "partial" : "failed";
+    await finishCleanupReport(report, reports, {lastClearErrorAt: now});
+    throw Error("CleanupFailed");
+  }
+  report.status = "completed";
+  const excludedCookies = steps.find(step => step.type === "cookies")?.options.excludeOrigins || [];
+  report.protectedServices = Object.entries(ClearRules.PROTECTION_TEMPLATES)
+    .filter(([, template]) => excludedCookies.includes("https://" + template.cookie))
+    .map(([id]) => id);
   const clearedTypes = clearedTypeKeys.map((key) => getTypeLabels()[key]);
 
   const notificationReceipt = {
@@ -199,7 +295,8 @@ async function performClear(
     clearedTypeKeys
   };
 
-  await chrome.storage.local.set({
+  await finishCleanupReport(report, reports, {
+    ...(sessionId ? {completedCleanupSession: {id: sessionId, startedAt}} : {}),
     lastClearTime: now,
     lastClearTypeKeys: clearedTypeKeys,
     lastClearTypes: clearedTypes,
@@ -225,7 +322,7 @@ async function clearPendingSession(trigger, pendingSession) {
     return pendingSessionClears.get(pendingSession.id);
   }
 
-  const operation = requestClear(trigger).then(async (result) => {
+  const operation = requestClear(trigger, {sessionId: pendingSession.id}).then(async (result) => {
     if (!result.cleared) return result;
 
     const currentSettings = await chrome.storage.local.get({
@@ -496,7 +593,7 @@ SuperModuleHost.listen("cleanup", chrome.runtime.onInstalled, async () => {
 
 // ====== ポップアップからの操作 ======
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  if (!['pause','resume','clearNow'].includes(msg?.action)) return;
+  if (!['pause','resume','clearNow','recordCleanupLogin'].includes(msg?.action)) return;
   void SuperModuleHost.ready.then(() => {
     if (!SuperModuleHost.isEnabled('cleanup')) {sendResponse({ok:false,error:'ModuleDisabled'});return;}
     handleCleanupMessage(msg,sender,sendResponse);
@@ -516,6 +613,19 @@ function handleCleanupMessage(msg, sender, sendResponse) {
       .catch((error) => sendResponse({ ok: false, error: String(error) }));
     return true;
   }
+  if (msg.action === "recordCleanupLogin") {
+    queueCleanup(async () => {
+      const {cleanupReports, activeCleanupReport} = await chrome.storage.local.get({cleanupReports: [], activeCleanupReport: null});
+      const history = pruneCleanupReports(cleanupReports);
+      const latest = history.at(-1);
+      if (activeCleanupReport || latest?.id !== msg.reportId || latest.status !== "completed" ||
+          !latest.protectedServices?.includes(msg.service) || !["kept", "signedOut"].includes(msg.outcome))
+        throw Error("CleanupReportChanged");
+      const report = {...latest, loginChecks: {...latest.loginChecks, [msg.service]: msg.outcome}};
+      await chrome.storage.local.set({cleanupReports: [...history.slice(0, -1), report]});
+    }).then(() => sendResponse({ok: true}), error => sendResponse({ok: false, error: error.message}));
+    return true;
+  }
   if (msg.action === "clearNow") {
     let settingsSnapshot;
     try { settingsSnapshot = normalizeManualSettings(msg.settings); }
@@ -527,9 +637,9 @@ function handleCleanupMessage(msg, sender, sendResponse) {
       sendResponse({ ok: false, error: "Missing confirmed settings" });
       return false;
     }
-    requestClear("manual", { ignoreAutomationState: true, settingsSnapshot })
+    requestClear("manual", { ignoreAutomationState: true, settingsSnapshot, expectedPlan: msg.expectedPlan })
       .then((result) => sendResponse({ ok: true, cleared: result.cleared }))
-      .catch((error) => sendResponse({ ok: false, error: String(error) }));
+      .catch((error) => sendResponse({ ok: false, error: error.message || String(error) }));
     return true;
   }
 }
@@ -553,6 +663,7 @@ async function handleResume() {
 }
 
 SuperModuleHost.listen("cleanup", chrome.alarms.onAlarm, async (alarm) => {
+  if (alarm.name === CLEANUP_REPORT_ALARM) await queueCleanup(reconcileCleanupReports);
   if (alarm.name === "pause-resume") {
     await chrome.storage.local.set({ paused: false, pauseUntil: null });
     chrome.action.setBadgeText({ text: "" });

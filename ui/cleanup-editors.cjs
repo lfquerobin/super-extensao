@@ -16,6 +16,11 @@ function cleanupEditor(type) {
       </select>
     </label><p id="${id('listModeHelp')}" class="note" role="status"></p>
     ${editor}
+    <div class="ui-actions cleanup-service-options" aria-label="Modelos de proteção" data-i18n-aria-label="uiCleanupProtectionTemplates">
+      <button type="button" class="ui-button ui-button-compact" data-protect-service="gmail" data-protect-type="${type}" data-i18n="uiCleanupProtectGmail">Proteger Gmail</button>
+      <button type="button" class="ui-button ui-button-compact" data-protect-service="github" data-protect-type="${type}" data-i18n="uiCleanupProtectGithub">Proteger GitHub</button>
+    </div>
+    <p class="note" data-i18n="uiCleanupProtectionHint">Modelos adicionam endereços à lista deste tipo. A sessão depende do site.</p>
     <div class="ui-actions"><button type="button" class="ui-button ui-button-danger" id="${id('clearExclusions')}" data-i18n="uiCleanupClearList">Limpar lista de exclusão</button></div>
   </fieldset><button type="button" class="ui-button" id="${id('filterRetry')}" data-i18n="uiCleanupRetry" hidden>Tentar novamente</button>`;
 }

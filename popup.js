@@ -87,8 +87,86 @@ function refreshPresets() {
     button.setAttribute("aria-pressed", String(active));
   });
 }
+const CLEANUP_STATUS = {
+  completed: "uiCleanupCompleted", partial: "uiCleanupPartial", failed: "uiCleanupFailed",
+  blocked: "uiCleanupBlocked", unknown: "uiCleanupUnknown", running: "uiCleanupRunning",
+  pending: "uiCleanupPending", skipped: "uiCleanupSkipped"
+};
+const cleanupStatus = state => SuperI18n.t(CLEANUP_STATUS[state] || CLEANUP_STATUS.unknown);
+const cleanupTrigger = trigger => SuperI18n.text(({manual: "Manual", exit: "Ao fechar", startup: "Recuperação na abertura"})[trigger] || "Automática");
+const cleanupTime = report => new Date(report.finishedAt || report.startedAt).toLocaleString(SuperI18n.locale);
+
+function renderCleanupItems(container, report) {
+  container.replaceChildren(...report.items.map(item => {
+    const row = document.createElement("li");
+    const scope = item.scope === "exclude" ? "uiCleanupReportExclude" : item.scope === "include" ? "uiCleanupReportInclude" : null;
+    row.textContent = `${SuperI18n.text(LABELS[item.type] || item.type)} · ${cleanupStatus(item.status)}`;
+    if (scope && item.status === "completed") row.append(" · ", SuperI18n.t(scope));
+    return row;
+  }));
+}
+
+function renderLoginChecks(report) {
+  const host = $("cleanupLoginChecks");
+  host.replaceChildren();
+  host.hidden = !report?.protectedServices?.length;
+  for (const id of report?.protectedServices || []) {
+    const service = ClearRules.PROTECTION_TEMPLATES[id];
+    if (!service) continue;
+    const summary = document.createElement("p");
+    const outcome = report.loginChecks?.[id];
+    summary.textContent = `${service.name} · ${SuperI18n.t(outcome === "kept" ? "uiCleanupLoginKept" : outcome === "signedOut" ? "uiCleanupLoginLost" : "uiCleanupLoginUnchecked")}`;
+    const actions = document.createElement("div");
+    actions.className = "ui-actions";
+    const addButton = (key, run) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "ui-button ui-button-compact";
+      button.textContent = SuperI18n.t(key);
+      button.addEventListener("click", handle(run));
+      actions.append(button);
+    };
+    addButton("uiCleanupOpenService", () => chrome.tabs.create({url: service.url}));
+    for (const [value, key] of [["kept", "uiCleanupLoginMarkKept"], ["signedOut", "uiCleanupLoginMarkLost"]]) {
+      addButton(key, async () => {
+        await message({action: "recordCleanupLogin", reportId: report.id, service: id, outcome: value});
+        await refreshReport();
+      });
+    }
+    host.append(summary, actions);
+  }
+}
+
+let reportRevision = 0;
 async function refreshReport() {
-  const data = await chrome.storage.local.get(["lastClearTime", "lastClearReason", "lastClearTypeKeys", "lastClearTypes", "lastClearErrorAt"]);
+  const revision = ++reportRevision;
+  const data = await chrome.storage.local.get(["lastClearTime", "lastClearReason", "lastClearTypeKeys", "lastClearTypes", "lastClearErrorAt", "activeCleanupReport", "cleanupReports"]);
+  if (revision !== reportRevision) return;
+  const reports = (Array.isArray(data.cleanupReports) ? data.cleanupReports : [])
+    .filter(report => report?.startedAt > Date.now() - 7 * 86400000 && Array.isArray(report.items));
+  const latest = data.activeCleanupReport || reports.at(-1);
+  const older = data.activeCleanupReport ? reports : reports.slice(0, -1);
+  $("cleanupHistory").hidden = !older.length;
+  $("cleanupHistoryItems").replaceChildren(...older.reverse().map(report => {
+    const entry = document.createElement("details");
+    const title = document.createElement("summary");
+    const list = document.createElement("ul");
+    title.textContent = `${cleanupTime(report)} · ${cleanupStatus(report.status)} · ${cleanupTrigger(report.trigger)}`;
+    list.className = "cleanup-results";
+    renderCleanupItems(list, report);
+    entry.append(title, list);
+    return entry;
+  }));
+  $("reportItems").hidden = !latest?.items.length;
+  renderLoginChecks(latest);
+  if (latest) {
+    const presentation = {completed: "success", partial: "warning", failed: "error", blocked: "error", unknown: "warning", running: "loading"};
+    SuperAsyncState.applyStatePresentation($("reportState"), presentation[latest.status]);
+    $("reportTitle").textContent = cleanupStatus(latest.status);
+    $("reportDetail").textContent = `${cleanupTime(latest)} · ${cleanupTrigger(latest.trigger)}`;
+    renderCleanupItems($("reportItems"), latest);
+    return;
+  }
   if (data.lastClearErrorAt && (!data.lastClearTime || Date.parse(data.lastClearErrorAt) > Date.parse(data.lastClearTime))) {
     SuperAsyncState.applyStatePresentation($("reportState"), "error");
     $("reportTitle").textContent = SuperI18n.text("A última tentativa não foi concluída");
@@ -113,7 +191,10 @@ async function refreshPause() {
 }
 async function message(payload) {
   const response = await chrome.runtime.sendMessage(payload);
-  if (!response?.ok) throw new Error(response?.error || SuperI18n.text("O serviço de limpeza não respondeu."));
+  if (!response?.ok) {
+    const translated = {CleanupSettingsChanged: "uiCleanupSettingsChanged", CleanupFailed: "uiCleanupSeeReport", CleanupReportChanged: "uiCleanupReportChanged"}[response?.error];
+    throw Error(translated ? SuperI18n.t(translated) : response?.error || SuperI18n.text("O serviço de limpeza não respondeu."));
+  }
   return response;
 }
 async function refreshList(type) {
@@ -167,10 +248,12 @@ async function refreshList(type) {
   }
 
 }
-async function addDomains(values, type = "cookies", mode = currentModes[type]) {
-  const {key} = filterTarget(type,mode);
+async function addDomains(values, type = "cookies", mode = currentModes[type], requireActiveMode = false) {
+  const {key, modeKey} = filterTarget(type,mode);
   return serializeMutation(async () => {
-    const data = await chrome.storage.local.get({[key]:[]});
+    const data = await chrome.storage.local.get({[key]:[], [modeKey]:"exclude"});
+    if (requireActiveMode && ClearRules.normalizeMode(data[modeKey]) !== mode)
+      throw Error(SuperI18n.t("uiCleanupProtectionNeedsExclude"));
     const before = ClearRules.normalizeList(data[key]);
     const after = ClearRules.normalizeList([...before, ...values]);
     await chrome.storage.local.set({[key]:after});
@@ -322,19 +405,38 @@ async function init() {
   $('importMode').addEventListener('change',handle(event => changeListMode(importType(),event.target.value)));
   $("importTarget").addEventListener("change", handle(refreshPreview));
   window.addEventListener("unload", () => {bookmarkImporter.dispose(); domainEditors.forEach(dispose => dispose());}, {once: true});
+  document.querySelectorAll("[data-protect-service]").forEach(button => {
+    button.addEventListener("click", handle(async () => {
+      const {protectService, protectType} = button.dataset;
+      const template = ClearRules.PROTECTION_TEMPLATES[protectService];
+      const domains = protectType === "cookies" ? [template.cookie] : template.pages;
+      await addDomains(domains, protectType, "exclude", true);
+      await refreshList(protectType);
+      notifyMessage("uiCleanupProtectionAdded");
+    }));
+  });
   $("clearNow").addEventListener("click", handle(async () => {
     await mutationQueue;
     const snapshot = await chrome.storage.local.get(DEFAULTS);
     if (!Object.keys(LABELS).some(type => snapshot[{history:"clearHistory", cache:"clearCache", cookies:"clearCookies", downloads:"clearDownloads", formData:"clearFormData", localStorage:"clearLocalStorage"}[type]])) {
       notify(SuperI18n.text("Escolha pelo menos um tipo de dado na aba Limpeza.")); return;
     }
-    const plan = ClearRules.removalPlan(snapshot);
-    if (!plan.length) {notifyMessage('uiCleanupNoTargets',undefined,'warning');return;}
-    if (plan.some(operation => operation.method === 'removeCookies') && !await SuperConfirmation.confirmAction(document, SuperI18n.t('uiCleanupConfirm'))) return;
+    const steps = ClearRules.cleanupSteps(snapshot);
+    if (!steps.length) {notifyMessage("uiCleanupNoTargets", undefined, "warning"); return;}
+    const description = steps.map(({type, options}) => {
+      const scope = options.origins ? SuperI18n.t("uiCleanupPreviewInclude", {origins: options.origins.join(", ")})
+        : options.excludeOrigins ? SuperI18n.t("uiCleanupPreviewExclude", {origins: options.excludeOrigins.join(", ")})
+        : SuperI18n.t("uiCleanupPreviewAll");
+      return `${SuperI18n.text(LABELS[type])} · ${scope}`;
+    });
+    if (steps.some(step => step.type === "cookies")) description.push(SuperI18n.t("uiCleanupConfirm"));
+    if (!await SuperConfirmation.confirmAction(document, description.join("\n\n"), {
+      title: SuperI18n.t("uiCleanupPreviewTitle"), confirmLabel: SuperI18n.t("uiClearnow139b3")
+    })) return;
     $("clearNow").disabled = true;
     notify(SuperI18n.text("Limpando…"), "loading");
     try {
-      const response = await message({action:"clearNow", settings:snapshot});
+      const response = await message({action:"clearNow", settings:snapshot, expectedPlan:ClearRules.cleanupPlanToken(steps)});
       if (!response.cleared) throw new Error(SuperI18n.text("A limpeza não foi executada."));
       notify(SuperI18n.text("Limpeza concluída."));
     } finally { $("clearNow").disabled = false; await refreshReport(); }
@@ -344,7 +446,7 @@ async function init() {
     for (const type of Object.keys(EXCEPTION_LISTS)) if (Object.values(ClearRules.SITE_FILTERS[type]).some(key => changes[key])) {
       refreshList(type).catch(showError); refreshPreview().catch(showError);
     }
-    if (changes.lastClearTime || changes.lastClearErrorAt) refreshReport().catch(showError);
+    if (changes.lastClearTime || changes.lastClearErrorAt || changes.activeCleanupReport || changes.cleanupReports) refreshReport().catch(showError);
     if (changes.paused || changes.pauseUntil) refreshPause().catch(showError);
   });
   await refreshReport(); await refreshPause(); await refreshList();

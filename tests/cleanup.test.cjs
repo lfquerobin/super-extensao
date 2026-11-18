@@ -220,3 +220,65 @@ test('popup antigo que omite o modo não amplia uma inclusão já armazenada',as
   assert.equal(response.cleared,true);
   assert.deepEqual(plain(w.calls[0].options),{since:0,origins:['http://target.example','https://target.example']});
 });
+
+test('relatório registra sucesso e falha por tipo sem guardar endereços ou mensagens da API', async () => {
+  const w = worker({clearCookies: true, excludedSites: ['private.example'], failCookies: true});
+  await assert.rejects(vm.runInContext('requestClear("exit")', w.context), /CleanupFailed/);
+  const [report] = w.state.cleanupReports;
+  assert.equal(report.status, 'partial');
+  assert.deepEqual(plain(report.items), [
+    {type: 'history', status: 'completed'},
+    {type: 'cookies', status: 'failed', scope: 'exclude'}
+  ]);
+  assert.equal(w.state.activeCleanupReport, null);
+  assert.doesNotMatch(JSON.stringify(report), /private\.example|simulated API|simulated cookie/);
+});
+
+test('worker recupera relatório interrompido e descarta relatórios antigos sem repetir limpeza só para gerar um resultado', async () => {
+  const w = worker({
+    cleanupReports: [{id: 'expired', startedAt: Date.now() - 8 * 86400000}],
+    activeCleanupReport: {id: 'interrupted', status: 'running', startedAt: Date.now(),
+      items: [{type: 'history', status: 'completed'}, {type: 'cache', status: 'running'}, {type: 'cookies', status: 'pending'}]}
+  });
+  await vm.runInContext('queueCleanup(reconcileCleanupReports)', w.context);
+  const [report] = w.state.cleanupReports;
+  assert.equal(w.state.cleanupReports.length, 1);
+  assert.equal(report.status, 'unknown');
+  assert.deepEqual(Array.from(report.items, item => item.status), ['completed', 'unknown', 'pending']);
+  assert.equal(w.calls.length, 0);
+});
+
+test('comprovante anterior independe do relatório mais recente e impede repetir uma sessão concluída', async () => {
+  const w = worker({clearCookies: true, pendingSession: {id: 'old', markedAt: 1}});
+  await vm.runInContext('requestClear("exit", {sessionId: "old"})', w.context);
+  assert.equal(w.state.completedCleanupSession.id, 'old');
+  await vm.runInContext('requestClear("manual")', w.context);
+  assert.equal(w.state.cleanupReports.at(-1).trigger, 'manual');
+  w.calls.length = 0;
+  await vm.runInContext('handleStartup()', w.context);
+  assert.equal(w.calls.length, 0);
+  assert.notEqual(w.state.pendingSession.id, 'old');
+});
+
+test('prévia desatualizada exige outra confirmação antes de qualquer chamada de limpeza', async () => {
+  const initial = {...defaults, clearCookies: true, excludedSites: ['old.example']};
+  const expectedPlan = R.cleanupPlanToken(R.cleanupSteps(initial));
+  const w = worker({...initial, excludedSites: ['new.example']});
+  const result = await new Promise(resolve =>
+    w.listeners.message({action: 'clearNow', settings: initial, expectedPlan}, {}, resolve));
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'CleanupSettingsChanged');
+  assert.equal(w.calls.length, 0);
+});
+
+test('verificação manual de login só é aceita para o último relatório concluído e um serviço protegido', async () => {
+  const w = worker({clearCookies: true, excludedSites: ['google.com']});
+  await vm.runInContext('requestClear("exit")', w.context);
+  const reportId = w.state.cleanupReports.at(-1).id;
+  const record = (id, service) => new Promise(resolve =>
+    w.listeners.message({action: 'recordCleanupLogin', reportId: id, service, outcome: 'kept'}, {}, resolve));
+  assert.equal((await record('old', 'gmail')).ok, false);
+  assert.equal((await record(reportId, 'github')).ok, false);
+  assert.equal((await record(reportId, 'gmail')).ok, true);
+  assert.equal(w.state.cleanupReports.at(-1).loginChecks.gmail, 'kept');
+});

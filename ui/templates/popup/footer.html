@@ -3,7 +3,11 @@
       <ui-actions id="pauseMenu" class="pause-menu" hidden=""><ui-button data-duration="30" data-i18n="ui30minutes75eae" class="ui-button-compact" type="submit">30 minutos</ui-button><ui-button data-duration="60" data-i18n="ui1houreed75" class="ui-button-compact" type="submit">1 hora</ui-button><ui-button data-duration="today" data-i18n="uiUntiltomorrow7286d" class="ui-button-compact" type="submit">Até amanhã</ui-button><ui-button data-duration="0" data-i18n="uiUntilresumedd56d7" class="ui-button-compact" type="submit">Até retomar</ui-button></ui-actions>
       <ui-notice id="pauseRow" class="message pause ui-notice-warning" hidden="" as="div"><span id="pauseStatus"></span><ui-button id="resume" data-i18n="uiResumedaaa7" class="ui-button-compact" type="submit">Retomar</ui-button></ui-notice>
       <div id="cleanupActions">
-      <ui-card class="report" aria-labelledby="reportTitle" as="section"><div class="eyebrow" data-i18n="uiLASTCLEANUP21453">ÚLTIMA LIMPEZA</div><div id="reportState" class="ui-async-state ui-notice" role="status"><h2 id="reportTitle" data-i18n="uiLoadingbca48">Carregando…</h2><p id="reportDetail"></p></div></ui-card>
+      <ui-card class="report" aria-labelledby="reportTitle" as="section"><div class="eyebrow" data-i18n="uiLASTCLEANUP21453">ÚLTIMA LIMPEZA</div><div id="reportState" class="ui-async-state ui-notice" role="status"><h2 id="reportTitle" data-i18n="uiLoadingbca48">Carregando…</h2><p id="reportDetail"></p></div>
+        <ul id="reportItems" class="cleanup-results" hidden></ul>
+        <div id="cleanupLoginChecks" hidden></div>
+        <details id="cleanupHistory" hidden><summary data-i18n="uiCleanupHistory">Histórico de limpezas</summary><div id="cleanupHistoryItems"></div></details>
+      </ui-card>
       <ui-button id="clearNow" class="full danger ui-button-primary" data-i18n="uiClearnow139b3" type="submit">Limpar agora</ui-button>
       </div>
       <p class="footer-note ui-footer-note" data-i18n="uiLocalcleanupandcontrolsOptional7d8a0">Limpeza e controles locais · Nova guia e sincronização opcionais</p>
