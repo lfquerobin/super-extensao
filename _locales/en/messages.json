@@ -703,9 +703,6 @@
    "uiThecleanupservicedidnotab798": {
       "message": "The cleanup service did not respond."
    },
-   "uiExceptionremoved098bd": {
-      "message": "Domain removed from the list."
-   },
    "uiBookmarkaccesswasnotgrantedc3dab": {
       "message": "Bookmark access was not granted. You can still add domains manually."
    },
@@ -848,10 +845,10 @@
       "message": " (already listed)"
    },
    "uiImportedOne": {
-      "message": "{count} domain imported into cookie exceptions."
+      "message": "{count} domain imported into the selected list."
    },
    "uiImportedMany": {
-      "message": "{count} domains imported into cookie exceptions."
+      "message": "{count} domains imported into the selected list."
    },
    "uiPausedUntil": {
       "message": "Paused until {time}"
@@ -892,7 +889,7 @@
    "uiCleanupImportTarget": {
       "message": "Destination list"
    },
-   "uiDomainAddedToExceptions": {
+   "uiCleanupDomainAdded": {
       "message": "Domain added to the list."
    },
    "uiLocalStorageShort": {
@@ -1000,6 +997,9 @@
   "uiCleanupRetry": {
     "message": "Try again"
   },
+  "uiCleanupDomainRemoved": {
+    "message": "Domain removed from the list."
+  },
   "uiCleanupListReady": {
     "message": "List loaded."
   },
@@ -1016,7 +1016,7 @@
     "message": "The list or mode changed during confirmation. Review the list and try again."
   },
   "uiCleanupHistory": {
-    "message": "Cleanup history"
+    "message": "Previous cleanups"
   },
   "uiCleanupCompleted": {
     "message": "Completed"
@@ -1060,49 +1060,10 @@
   "uiCleanupSeeReport": {
     "message": "Cleanup encountered errors. Check the results by type."
   },
-  "uiCleanupReportChanged": {
-    "message": "The report changed. Review the latest cleanup."
-  },
-  "uiCleanupProtectionTemplates": {
-    "message": "Protection templates"
-  },
-  "uiCleanupProtectionHint": {
-    "message": "Templates add addresses to this data type’s list. Session behavior depends on the site."
-  },
-  "uiCleanupProtectionNeedsExclude": {
-    "message": "Select exclusion mode to add a protection template."
-  },
-  "uiCleanupProtectionAdded": {
-    "message": "Addresses added to the exclusion list."
-  },
-  "uiCleanupProtectGmail": {
-    "message": "Protect Gmail"
-  },
-  "uiCleanupProtectGithub": {
-    "message": "Protect GitHub"
-  },
   "uiCleanupReportExclude": {
     "message": "Exclusions applied"
   },
   "uiCleanupReportInclude": {
     "message": "Limited to selected origins"
-  },
-  "uiCleanupLoginKept": {
-    "message": "User confirmed they stayed signed in"
-  },
-  "uiCleanupLoginLost": {
-    "message": "User reported being signed out"
-  },
-  "uiCleanupLoginUnchecked": {
-    "message": "Sign-in not checked"
-  },
-  "uiCleanupOpenService": {
-    "message": "Open site"
-  },
-  "uiCleanupLoginMarkKept": {
-    "message": "I stayed signed in"
-  },
-  "uiCleanupLoginMarkLost": {
-    "message": "I was signed out"
   }
 }

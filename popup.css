@@ -159,5 +159,4 @@ body:not([data-active-tab="cleanup"]) > main > #cleanupFooter { display: none !i
 .cleanup-results li { margin-block: var(--space-1); }
 #cleanupHistory summary { cursor: pointer; padding-block: var(--space-1); }
 #cleanupHistoryItems { margin-inline-start: var(--space-2); }
-#cleanupLoginChecks .ui-actions, .cleanup-service-options { margin-block: var(--space-2); }
 .ui-confirmation { max-block-size: calc(100dvh - 24px); overflow: auto; }

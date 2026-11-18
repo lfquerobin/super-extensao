@@ -80,11 +80,18 @@ const CLEANUP_REPORT_LIMIT = 20;
 const CLEANUP_REPORT_AGE = 7 * 24 * 60 * 60 * 1000;
 const CLEANUP_REPORT_ALARM = "cleanup-report-expiration";
 
+function removeLegacyReportFields(report) {
+  if (!Object.hasOwn(report, "protectedServices") && !Object.hasOwn(report, "loginChecks")) return report;
+  const {protectedServices, loginChecks, ...result} = report;
+  return result;
+}
+
 function pruneCleanupReports(value) {
   const cutoff = Date.now() - CLEANUP_REPORT_AGE;
   return (Array.isArray(value) ? value : [])
     .filter(report => typeof report?.id === "string" && report.startedAt > cutoff)
-    .slice(-CLEANUP_REPORT_LIMIT);
+    .slice(-CLEANUP_REPORT_LIMIT)
+    .map(removeLegacyReportFields);
 }
 
 async function scheduleCleanupRetention(reports) {
@@ -114,7 +121,7 @@ async function reconcileCleanupReports() {
     await finishCleanupReport(report, history);
     return pruneCleanupReports([...history, report]);
   }
-  if (!Array.isArray(cleanupReports) || history.length !== cleanupReports.length)
+  if (!Array.isArray(cleanupReports) || history.length !== cleanupReports.length || history.some((report, index) => report !== cleanupReports[index]))
     await chrome.storage.local.set({cleanupReports: history});
   await scheduleCleanupRetention(history);
   return history;
@@ -282,10 +289,6 @@ async function performClear(
     throw Error("CleanupFailed");
   }
   report.status = "completed";
-  const excludedCookies = steps.find(step => step.type === "cookies")?.options.excludeOrigins || [];
-  report.protectedServices = Object.entries(ClearRules.PROTECTION_TEMPLATES)
-    .filter(([, template]) => excludedCookies.includes("https://" + template.cookie))
-    .map(([id]) => id);
   const clearedTypes = clearedTypeKeys.map((key) => getTypeLabels()[key]);
 
   const notificationReceipt = {
@@ -593,7 +596,7 @@ SuperModuleHost.listen("cleanup", chrome.runtime.onInstalled, async () => {
 
 // ====== ポップアップからの操作 ======
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  if (!['pause','resume','clearNow','recordCleanupLogin'].includes(msg?.action)) return;
+  if (!['pause','resume','clearNow'].includes(msg?.action)) return;
   void SuperModuleHost.ready.then(() => {
     if (!SuperModuleHost.isEnabled('cleanup')) {sendResponse({ok:false,error:'ModuleDisabled'});return;}
     handleCleanupMessage(msg,sender,sendResponse);
@@ -611,19 +614,6 @@ function handleCleanupMessage(msg, sender, sendResponse) {
     handleResume()
       .then(() => sendResponse({ ok: true }))
       .catch((error) => sendResponse({ ok: false, error: String(error) }));
-    return true;
-  }
-  if (msg.action === "recordCleanupLogin") {
-    queueCleanup(async () => {
-      const {cleanupReports, activeCleanupReport} = await chrome.storage.local.get({cleanupReports: [], activeCleanupReport: null});
-      const history = pruneCleanupReports(cleanupReports);
-      const latest = history.at(-1);
-      if (activeCleanupReport || latest?.id !== msg.reportId || latest.status !== "completed" ||
-          !latest.protectedServices?.includes(msg.service) || !["kept", "signedOut"].includes(msg.outcome))
-        throw Error("CleanupReportChanged");
-      const report = {...latest, loginChecks: {...latest.loginChecks, [msg.service]: msg.outcome}};
-      await chrome.storage.local.set({cleanupReports: [...history.slice(0, -1), report]});
-    }).then(() => sendResponse({ok: true}), error => sendResponse({ok: false, error: error.message}));
     return true;
   }
   if (msg.action === "clearNow") {

@@ -703,9 +703,6 @@
    "uiThecleanupservicedidnotab798": {
       "message": "O serviço de limpeza não respondeu."
    },
-   "uiExceptionremoved098bd": {
-      "message": "Domínio removido da lista."
-   },
    "uiBookmarkaccesswasnotgrantedc3dab": {
       "message": "Acesso aos favoritos não concedido. Você ainda pode adicionar domínios manualmente."
    },
@@ -848,10 +845,10 @@
       "message": " (já na lista)"
    },
    "uiImportedOne": {
-      "message": "{count} domínio importado para as exceções de cookies."
+      "message": "{count} domínio importado para a lista selecionada."
    },
    "uiImportedMany": {
-      "message": "{count} domínios importados para as exceções de cookies."
+      "message": "{count} domínios importados para a lista selecionada."
    },
    "uiPausedUntil": {
       "message": "Pausada até {time}"
@@ -892,7 +889,7 @@
    "uiCleanupImportTarget": {
       "message": "Lista de destino"
    },
-   "uiDomainAddedToExceptions": {
+   "uiCleanupDomainAdded": {
       "message": "Domínio adicionado à lista."
    },
    "uiLocalStorageShort": {
@@ -1000,6 +997,9 @@
   "uiCleanupRetry": {
     "message": "Tentar novamente"
   },
+  "uiCleanupDomainRemoved": {
+    "message": "Domínio removido da lista."
+  },
   "uiCleanupListReady": {
     "message": "Lista carregada."
   },
@@ -1016,7 +1016,7 @@
     "message": "A lista ou o modo mudou durante a confirmação. Revise a lista e tente novamente."
   },
   "uiCleanupHistory": {
-    "message": "Histórico de limpezas"
+    "message": "Limpezas anteriores"
   },
   "uiCleanupCompleted": {
     "message": "Concluída"
@@ -1060,49 +1060,10 @@
   "uiCleanupSeeReport": {
     "message": "A limpeza teve falhas. Confira o resultado por tipo."
   },
-  "uiCleanupReportChanged": {
-    "message": "O relatório mudou. Confira a limpeza mais recente."
-  },
-  "uiCleanupProtectionTemplates": {
-    "message": "Modelos de proteção"
-  },
-  "uiCleanupProtectionHint": {
-    "message": "Modelos adicionam endereços à lista deste tipo. A sessão depende do site."
-  },
-  "uiCleanupProtectionNeedsExclude": {
-    "message": "Selecione o modo de exclusão para adicionar um modelo de proteção."
-  },
-  "uiCleanupProtectionAdded": {
-    "message": "Endereços adicionados à lista de exclusão."
-  },
-  "uiCleanupProtectGmail": {
-    "message": "Proteger Gmail"
-  },
-  "uiCleanupProtectGithub": {
-    "message": "Proteger GitHub"
-  },
   "uiCleanupReportExclude": {
     "message": "Exceções aplicadas"
   },
   "uiCleanupReportInclude": {
     "message": "Limitada às origens selecionadas"
-  },
-  "uiCleanupLoginKept": {
-    "message": "Usuário confirmou que continuou logado"
-  },
-  "uiCleanupLoginLost": {
-    "message": "Usuário informou que saiu da conta"
-  },
-  "uiCleanupLoginUnchecked": {
-    "message": "Login ainda não conferido"
-  },
-  "uiCleanupOpenService": {
-    "message": "Abrir site"
-  },
-  "uiCleanupLoginMarkKept": {
-    "message": "Continuei logado"
-  },
-  "uiCleanupLoginMarkLost": {
-    "message": "Saí da conta"
   }
 }

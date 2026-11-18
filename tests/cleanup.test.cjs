@@ -271,14 +271,14 @@ test('prévia desatualizada exige outra confirmação antes de qualquer chamada 
   assert.equal(w.calls.length, 0);
 });
 
-test('verificação manual de login só é aceita para o último relatório concluído e um serviço protegido', async () => {
-  const w = worker({clearCookies: true, excludedSites: ['google.com']});
-  await vm.runInContext('requestClear("exit")', w.context);
-  const reportId = w.state.cleanupReports.at(-1).id;
-  const record = (id, service) => new Promise(resolve =>
-    w.listeners.message({action: 'recordCleanupLogin', reportId: id, service, outcome: 'kept'}, {}, resolve));
-  assert.equal((await record('old', 'gmail')).ok, false);
-  assert.equal((await record(reportId, 'github')).ok, false);
-  assert.equal((await record(reportId, 'gmail')).ok, true);
-  assert.equal(w.state.cleanupReports.at(-1).loginChecks.gmail, 'kept');
+test('migração remove dados da verificação de login e preserva o relatório e as exclusões', async () => {
+  const report = {id: 'old', trigger: 'exit', startedAt: Date.now(), status: 'completed',
+    items: [{type: 'cookies', status: 'completed', scope: 'exclude'}]};
+  const receipt = {id: 'session', clearedAt: Date.now()};
+  const w = worker({cleanupReports: [{...report, protectedServices: ['gmail'], loginChecks: {gmail: 'kept'}}],
+    excludedSites: ['google.com'], completedCleanupSession: receipt});
+  await vm.runInContext('queueCleanup(reconcileCleanupReports)', w.context);
+  assert.deepEqual(JSON.parse(JSON.stringify(w.state.cleanupReports)), [report]);
+  assert.deepEqual(w.state.excludedSites, ['google.com']);
+  assert.deepEqual(w.state.completedCleanupSession, receipt);
 });

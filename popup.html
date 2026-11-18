@@ -81,11 +81,6 @@
       <div class="ui-domain-heading"><span id="listCount" data-domain-count>0 domínios</span><button type="button" id="goImport" class="ui-button ui-domain-import" data-i18n="uiImportfrombookmarksa9c2c">Importar de favoritos →</button></div>
       <ul id="domainList" data-domain-list class="domain-list"></ul><p id="emptyList" class="ui-empty" data-domain-empty data-i18n="uiNodomainsinthislist5b710">Nenhum domínio nesta lista.</p>
     </form>
-    <div class="ui-actions cleanup-service-options" aria-label="Modelos de proteção" data-i18n-aria-label="uiCleanupProtectionTemplates">
-      <button type="button" class="ui-button ui-button-compact" data-protect-service="gmail" data-protect-type="cookies" data-i18n="uiCleanupProtectGmail">Proteger Gmail</button>
-      <button type="button" class="ui-button ui-button-compact" data-protect-service="github" data-protect-type="cookies" data-i18n="uiCleanupProtectGithub">Proteger GitHub</button>
-    </div>
-    <p class="note" data-i18n="uiCleanupProtectionHint">Modelos adicionam endereços à lista deste tipo. A sessão depende do site.</p>
     <div class="ui-actions"><button type="button" class="ui-button ui-button-danger" id="clearExclusions" data-i18n="uiCleanupClearList">Limpar lista de exclusão</button></div>
   </fieldset><button type="button" class="ui-button" id="filterRetry" data-i18n="uiCleanupRetry" hidden>Tentar novamente</button>
       <p class="ui-note note" data-i18n="uiAddinganexceptiondoesnot95152">Adicionar sites ou mudar o modo não ativa a exclusão de cookies. Essa opção é controlada em Geral.</p>
@@ -108,11 +103,6 @@
       <div class="ui-domain-heading"><span id="cacheListCount" data-domain-count>0 domínios</span><button type="button" id="cacheGoImport" class="ui-button ui-domain-import" data-i18n="uiImportfrombookmarksa9c2c">Importar de favoritos →</button></div>
       <ul id="cacheDomainList" data-domain-list class="domain-list"></ul><p id="cacheEmptyList" class="ui-empty" data-domain-empty data-i18n="uiNodomainsinthislist5b710">Nenhum domínio nesta lista.</p>
     </form>
-    <div class="ui-actions cleanup-service-options" aria-label="Modelos de proteção" data-i18n-aria-label="uiCleanupProtectionTemplates">
-      <button type="button" class="ui-button ui-button-compact" data-protect-service="gmail" data-protect-type="cache" data-i18n="uiCleanupProtectGmail">Proteger Gmail</button>
-      <button type="button" class="ui-button ui-button-compact" data-protect-service="github" data-protect-type="cache" data-i18n="uiCleanupProtectGithub">Proteger GitHub</button>
-    </div>
-    <p class="note" data-i18n="uiCleanupProtectionHint">Modelos adicionam endereços à lista deste tipo. A sessão depende do site.</p>
     <div class="ui-actions"><button type="button" class="ui-button ui-button-danger" id="cacheClearExclusions" data-i18n="uiCleanupClearList">Limpar lista de exclusão</button></div>
   </fieldset><button type="button" class="ui-button" id="cacheFilterRetry" data-i18n="uiCleanupRetry" hidden>Tentar novamente</button>
   <p class="ui-note note" data-i18n="uiCleanupExceptionDoesNotEnable">Adicionar sites ou mudar o modo não ativa a exclusão desse tipo de dado. Essa opção é controlada em Geral.</p>
@@ -135,11 +125,6 @@
       <div class="ui-domain-heading"><span id="localStorageListCount" data-domain-count>0 domínios</span><button type="button" id="localStorageGoImport" class="ui-button ui-domain-import" data-i18n="uiImportfrombookmarksa9c2c">Importar de favoritos →</button></div>
       <ul id="localStorageDomainList" data-domain-list class="domain-list"></ul><p id="localStorageEmptyList" class="ui-empty" data-domain-empty data-i18n="uiNodomainsinthislist5b710">Nenhum domínio nesta lista.</p>
     </form>
-    <div class="ui-actions cleanup-service-options" aria-label="Modelos de proteção" data-i18n-aria-label="uiCleanupProtectionTemplates">
-      <button type="button" class="ui-button ui-button-compact" data-protect-service="gmail" data-protect-type="localStorage" data-i18n="uiCleanupProtectGmail">Proteger Gmail</button>
-      <button type="button" class="ui-button ui-button-compact" data-protect-service="github" data-protect-type="localStorage" data-i18n="uiCleanupProtectGithub">Proteger GitHub</button>
-    </div>
-    <p class="note" data-i18n="uiCleanupProtectionHint">Modelos adicionam endereços à lista deste tipo. A sessão depende do site.</p>
     <div class="ui-actions"><button type="button" class="ui-button ui-button-danger" id="localStorageClearExclusions" data-i18n="uiCleanupClearList">Limpar lista de exclusão</button></div>
   </fieldset><button type="button" class="ui-button" id="localStorageFilterRetry" data-i18n="uiCleanupRetry" hidden>Tentar novamente</button>
   <p class="ui-note note" data-i18n="uiCleanupExceptionDoesNotEnable">Adicionar sites ou mudar o modo não ativa a exclusão desse tipo de dado. Essa opção é controlada em Geral.</p>
@@ -194,8 +179,7 @@
       <div id="cleanupActions">
       <section class="ui-card report" aria-labelledby="reportTitle"><div class="eyebrow" data-i18n="uiLASTCLEANUP21453">ÚLTIMA LIMPEZA</div><div id="reportState" class="ui-async-state ui-notice" role="status"><h2 id="reportTitle" data-i18n="uiLoadingbca48">Carregando…</h2><p id="reportDetail"></p></div>
         <ul id="reportItems" class="cleanup-results" hidden></ul>
-        <div id="cleanupLoginChecks" hidden></div>
-        <details id="cleanupHistory" hidden><summary data-i18n="uiCleanupHistory">Histórico de limpezas</summary><div id="cleanupHistoryItems"></div></details>
+        <details id="cleanupHistory" hidden><summary data-i18n="uiCleanupHistory">Limpezas anteriores</summary><div id="cleanupHistoryItems"></div></details>
       </section>
       <button id="clearNow" class="ui-button full danger ui-button-primary" data-i18n="uiClearnow139b3" type="submit">Limpar agora</button>
       </div>

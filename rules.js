@@ -18,10 +18,6 @@
     if (!Array.isArray(values)) throw new Error("Lista de exceções inválida; limpeza cancelada.");
     return [...new Set(values.map(normalizeDomain))].sort();
   }
-  const PROTECTION_TEMPLATES = Object.freeze({
-    gmail: Object.freeze({name: "Gmail", cookie: "google.com", pages: Object.freeze(["accounts.google.com", "mail.google.com", "www.google.com"]), url: "https://mail.google.com/"}),
-    github: Object.freeze({name: "GitHub", cookie: "github.com", pages: Object.freeze(["github.com", "gist.github.com"]), url: "https://github.com/"})
-  });
   const SITE_FILTERS = Object.freeze({
     cookies: {excludeKey:'excludedSites',includeKey:'includedSites',modeKey:'cookieCleanupMode'},
     cache: {excludeKey:'excludedCacheSites',includeKey:'includedCacheSites',modeKey:'cacheCleanupMode'},
@@ -107,7 +103,7 @@
     tree.forEach(node => visit(node, []));
     return folders;
   }
-  const rules = {SITE_FILTERS, PROTECTION_TEMPLATES, filterDefaults, normalizeMode, normalizeDomain, normalizeList, removalOptions, removalPlan, cleanupSteps, cleanupPlanToken, bookmarkDomains, bookmarkFolders};
+  const rules = {SITE_FILTERS, filterDefaults, normalizeMode, normalizeDomain, normalizeList, removalOptions, removalPlan, cleanupSteps, cleanupPlanToken, bookmarkDomains, bookmarkFolders};
   if (typeof module !== "undefined" && module.exports) module.exports = rules;
   else root.ClearRules = rules;
 })(globalThis);

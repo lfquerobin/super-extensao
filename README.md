@@ -138,9 +138,9 @@ Preferências usam `tabliss/config` em `storage.sync`; imagens e cache usam Inde
 
 ### Limpeza, Autoplay e Abas
 
-Desde a **1.7.57**, a limpeza registra o resultado por tipo de dado e mantém até 20 relatórios locais por sete dias. Uma execução interrompida preserva os tipos confirmados e marca a chamada sem resposta como não confirmada. O comprovante da sessão automática é salvo junto do resultado e fica separado do histórico exibido.
+Desde a **1.7.57**, a limpeza registra o resultado por tipo de dado e mantém até 20 relatórios locais por sete dias. Uma execução interrompida preserva os tipos confirmados e marca a chamada sem resposta como não confirmada. O comprovante da sessão automática é salvo junto do resultado e fica separado do histórico exibido. A aba **Geral** mostra a última limpeza por tipo de dado. Abra **Limpezas anteriores** para consultar os demais relatórios.
 
-**Limpar agora** mostra o escopo antes da execução. Se o plano mudar, abra a prévia novamente. Os modelos para Gmail e GitHub acrescentam endereços somente à lista de exclusão escolhida. O resultado de login depende da confirmação feita pelo usuário.
+**Limpar agora** mostra o escopo antes da execução. Se o plano mudar, abra a prévia novamente.
 
 Por padrão, apenas o histórico é selecionado para limpeza. A limpeza é tentada ao fechar a última janela; se interrompida, há recuperação na próxima abertura. O resultado só é registrado após as APIs terminarem com sucesso. **Limpar agora** funciona mesmo com a automação pausada.
 

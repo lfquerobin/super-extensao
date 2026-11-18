@@ -12,18 +12,27 @@ let bookmarkImporter;
 const domainEditors = [];
 let mutationQueue = Promise.resolve();
 
-function showError(error) {
-  $("error").textContent = SuperI18n.text(error?.message || String(error));
-  $("error").hidden = false;
-  SuperAsyncState.applyStatePresentation($("error"), "error");
-  lastNotice = undefined;
-  $("popupStatus").textContent = "";
-}
 let lastNotice;
-function renderNotice(){if(lastNotice)SuperAsyncState.renderAsyncState($("popupStatus"), {kind:lastNotice.kind || "success", text:lastNotice.key?SuperI18n.t(lastNotice.key,lastNotice.values):SuperI18n.text(lastNotice.literal), ...(lastNotice.kind === "loading" ? {progress:null} : {})});}
-function notify(message, kind = "success") {lastNotice={literal:message, kind};renderNotice();$("error").hidden=true;}
-function notifyMessage(key,values,kind="success"){lastNotice={key,values,kind};renderNotice();$("error").hidden=true;}
-function handle(action) { return (...args) => Promise.resolve().then(() => action(...args)).catch(showError); }
+function showError(error, tab) {
+  lastNotice = {literal: error?.message || String(error), kind: "error", tab};
+  renderNotice();
+}
+function renderNotice() {
+  const notice = lastNotice?.tab && lastNotice.tab !== document.body.dataset.activeTab ? undefined : lastNotice;
+  const message = notice?.key ? SuperI18n.t(notice.key, notice.values) : notice ? SuperI18n.text(notice.literal) : "";
+  const error = $("error");
+  error.hidden = notice?.kind !== "error";
+  error.textContent = error.hidden ? "" : message;
+  if (!error.hidden) SuperAsyncState.applyStatePresentation(error, "error");
+  SuperAsyncState.renderAsyncState($("popupStatus"), notice && error.hidden ? {
+    kind: notice.kind, text: message, ...(notice.kind === "loading" ? {progress:null} : {})
+  } : {});
+}
+function notify(message, kind = "success", tab) { lastNotice = {literal:message, kind, tab}; renderNotice(); }
+function notifyMessage(key, values, kind = "success", tab) { lastNotice = {key, values, kind, tab}; renderNotice(); }
+function handle(action, tab) {
+  return (...args) => Promise.resolve().then(() => action(...args)).catch(error => showError(error, tab));
+}
 function serializeMutation(action) {
   const result = mutationQueue.catch(() => {}).then(action);
   mutationQueue = result.catch(() => {});
@@ -68,6 +77,7 @@ function activateTab(tab, persist = true) {
   $("cleanupSubmenu").hidden = !isCleanup;
   $("cleanupActions").hidden = tab !== "cleanup";
   $("cleanupFooter").hidden = tab !== "cleanup";
+  if (tab !== "cleanup") $("cleanupHistory").open = false;
   $("syncSubmenu").hidden = tab !== "sync";
   $("vpnSubmenu").hidden = tab !== "vpn";
   $("section-cleanup").classList.toggle("active", isCleanup);
@@ -77,6 +87,7 @@ function activateTab(tab, persist = true) {
     $("tab-" + name).classList.toggle("active", name === tab);
     $("tab-" + name).setAttribute("aria-pressed", String(name === tab));
   }
+  renderNotice();
   if (persist) chrome.storage.local.set({popupView:{tab, lastCleanupTab}}).catch(showError);
   document.dispatchEvent(new CustomEvent("super-extension:panel-selected", {detail:tab}));
 }
@@ -106,37 +117,6 @@ function renderCleanupItems(container, report) {
   }));
 }
 
-function renderLoginChecks(report) {
-  const host = $("cleanupLoginChecks");
-  host.replaceChildren();
-  host.hidden = !report?.protectedServices?.length;
-  for (const id of report?.protectedServices || []) {
-    const service = ClearRules.PROTECTION_TEMPLATES[id];
-    if (!service) continue;
-    const summary = document.createElement("p");
-    const outcome = report.loginChecks?.[id];
-    summary.textContent = `${service.name} · ${SuperI18n.t(outcome === "kept" ? "uiCleanupLoginKept" : outcome === "signedOut" ? "uiCleanupLoginLost" : "uiCleanupLoginUnchecked")}`;
-    const actions = document.createElement("div");
-    actions.className = "ui-actions";
-    const addButton = (key, run) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "ui-button ui-button-compact";
-      button.textContent = SuperI18n.t(key);
-      button.addEventListener("click", handle(run));
-      actions.append(button);
-    };
-    addButton("uiCleanupOpenService", () => chrome.tabs.create({url: service.url}));
-    for (const [value, key] of [["kept", "uiCleanupLoginMarkKept"], ["signedOut", "uiCleanupLoginMarkLost"]]) {
-      addButton(key, async () => {
-        await message({action: "recordCleanupLogin", reportId: report.id, service: id, outcome: value});
-        await refreshReport();
-      });
-    }
-    host.append(summary, actions);
-  }
-}
-
 let reportRevision = 0;
 async function refreshReport() {
   const revision = ++reportRevision;
@@ -147,6 +127,7 @@ async function refreshReport() {
   const latest = data.activeCleanupReport || reports.at(-1);
   const older = data.activeCleanupReport ? reports : reports.slice(0, -1);
   $("cleanupHistory").hidden = !older.length;
+  if (!older.length) $("cleanupHistory").open = false;
   $("cleanupHistoryItems").replaceChildren(...older.reverse().map(report => {
     const entry = document.createElement("details");
     const title = document.createElement("summary");
@@ -158,7 +139,6 @@ async function refreshReport() {
     return entry;
   }));
   $("reportItems").hidden = !latest?.items.length;
-  renderLoginChecks(latest);
   if (latest) {
     const presentation = {completed: "success", partial: "warning", failed: "error", blocked: "error", unknown: "warning", running: "loading"};
     SuperAsyncState.applyStatePresentation($("reportState"), presentation[latest.status]);
@@ -192,7 +172,7 @@ async function refreshPause() {
 async function message(payload) {
   const response = await chrome.runtime.sendMessage(payload);
   if (!response?.ok) {
-    const translated = {CleanupSettingsChanged: "uiCleanupSettingsChanged", CleanupFailed: "uiCleanupSeeReport", CleanupReportChanged: "uiCleanupReportChanged"}[response?.error];
+    const translated = {CleanupSettingsChanged: "uiCleanupSettingsChanged", CleanupFailed: "uiCleanupSeeReport"}[response?.error];
     throw Error(translated ? SuperI18n.t(translated) : response?.error || SuperI18n.text("O serviço de limpeza não respondeu."));
   }
   return response;
@@ -225,8 +205,8 @@ async function refreshList(type) {
         await chrome.storage.local.set({[key]:ClearRules.normalizeList(latest[key]).filter(site => site !== domain)});
       });
       await refreshList(type); await refreshPreview();
-      notify(SuperI18n.text("Exceção removida."));
-    }),
+      notifyMessage("uiCleanupDomainRemoved", undefined, "success", EXCEPTION_LISTS[type].tab);
+    }, EXCEPTION_LISTS[type].tab),
   });
   listElement(type,"listCount").textContent = SuperI18n.t(sites.length===1?"uiDomainsOne":"uiDomainsMany",{count:sites.length});
   listElement(type,"emptyList").hidden = sites.length > 0;
@@ -248,12 +228,10 @@ async function refreshList(type) {
   }
 
 }
-async function addDomains(values, type = "cookies", mode = currentModes[type], requireActiveMode = false) {
-  const {key, modeKey} = filterTarget(type,mode);
+async function addDomains(values, type = "cookies", mode = currentModes[type]) {
+  const {key} = filterTarget(type,mode);
   return serializeMutation(async () => {
-    const data = await chrome.storage.local.get({[key]:[], [modeKey]:"exclude"});
-    if (requireActiveMode && ClearRules.normalizeMode(data[modeKey]) !== mode)
-      throw Error(SuperI18n.t("uiCleanupProtectionNeedsExclude"));
+    const data = await chrome.storage.local.get({[key]:[]});
     const before = ClearRules.normalizeList(data[key]);
     const after = ClearRules.normalizeList([...before, ...values]);
     await chrome.storage.local.set({[key]:after});
@@ -279,14 +257,14 @@ async function clearExclusions(type) {
       await chrome.storage.local.set({[filter.excludeKey]:[]});
       return true;
     });
-    notifyMessage(cleared ? 'uiCleanupListCleared' : 'uiCleanupListChanged',undefined,cleared ? 'success' : 'warning');
+    notifyMessage(cleared ? 'uiCleanupListCleared' : 'uiCleanupListChanged',undefined,cleared ? 'success' : 'warning', EXCEPTION_LISTS[type].tab);
   } finally {
     clearingLists.delete(type);
     await refreshList(type);
     await refreshPreview();
   }
 }
-async function changeListMode(type, mode) {
+async function changeListMode(type, mode, tab) {
   if (pendingModes.has(type)) return;
   mode = ClearRules.normalizeMode(mode);
   const previous = currentModes[type];
@@ -298,7 +276,7 @@ async function changeListMode(type, mode) {
   bookmarkImporter?.render();
   try {
     await serializeMutation(() => chrome.storage.local.set({[ClearRules.SITE_FILTERS[type].modeKey]:mode}));
-    notifyMessage('uiCleanupModeSaved');
+    notifyMessage('uiCleanupModeSaved', undefined, 'success', tab);
   } catch (error) {
     currentModes[type] = previous;
     throw error;
@@ -316,7 +294,6 @@ async function refreshLanguage(){
   $("language").value=SuperI18n.locale;
   SuperI18n.apply();renderNotice();
   bookmarkImporter?.render();
-  if(!$("error").hidden)$("error").textContent=SuperI18n.text($("error").textContent);
   await Promise.all([refreshReport(),refreshPause(),refreshList(),refreshPreview()]);
 }
 async function init() {
@@ -368,23 +345,27 @@ async function init() {
   })));
   $("resume").addEventListener("click", handle(async () => { await message({action:"resume"}); await refreshPause(); }));
   for (const type of Object.keys(EXCEPTION_LISTS)) {
-    listElement(type,'clearExclusions').addEventListener('click',handle(() => clearExclusions(type)));
-    listElement(type,'filterRetry').addEventListener('click',handle(async () => {await refreshList(type);await refreshPreview();notifyMessage('uiCleanupListReady');}));
-    listElement(type,'listMode').addEventListener('change',handle(event => changeListMode(type,event.target.value)));
+    const {tab} = EXCEPTION_LISTS[type];
+    listElement(type,'clearExclusions').addEventListener('click',handle(() => clearExclusions(type), tab));
+    listElement(type,'filterRetry').addEventListener('click',handle(async () => {
+      await refreshList(type); await refreshPreview();
+      notifyMessage('uiCleanupListReady', undefined, 'success', tab);
+    }, tab));
+    listElement(type,'listMode').addEventListener('change',handle(event => changeListMode(type, event.target.value, tab), tab));
     domainEditors.push(SuperDomainEditor.bindDomainEditor(listElement(type,"domainForm"), {
       normalize: ClearRules.normalizeDomain,
-      onError: showError,
+      onError: error => showError(error, tab),
       async onAdd(domain) {
         const count = await addDomains([domain], type);
         await refreshList(type); await refreshPreview();
-        notify(SuperI18n.text(count ? "Domínio adicionado às exceções." : "Esse domínio já está na lista."));
+        notifyMessage(count ? "uiCleanupDomainAdded" : "uiThisdomainisalreadyin3da47", undefined, "success", tab);
       },
     }));
     listElement(type,"goImport").addEventListener("click", handle(async () => {
       $("importTarget").value = type;
       activateTab("bookmarks");
       await refreshPreview();
-    }));
+    }, "bookmarks"));
   }
   bookmarkImporter = SuperBookmarkImporter.createBookmarkImporter({
     browser: chrome, locale: () => SuperI18n.locale, normalize: ClearRules.normalizeDomain,
@@ -398,23 +379,13 @@ async function init() {
       const {type,mode} = scopeTarget(scope);
       const count = await addDomains(domains, type,mode);
       await refreshList();
-      notifyMessage(count === 1 ? "uiImportedOne" : "uiImportedMany", {count});
+      notifyMessage(count === 1 ? "uiImportedOne" : "uiImportedMany", {count}, "success", "bookmarks");
     },
   });
   bookmarkImporter.attach(document.querySelector("#panel-bookmarks [data-bookmark-importer]"));
-  $('importMode').addEventListener('change',handle(event => changeListMode(importType(),event.target.value)));
-  $("importTarget").addEventListener("change", handle(refreshPreview));
+  $('importMode').addEventListener('change',handle(event => changeListMode(importType(), event.target.value, "bookmarks"), "bookmarks"));
+  $("importTarget").addEventListener("change", handle(refreshPreview, "bookmarks"));
   window.addEventListener("unload", () => {bookmarkImporter.dispose(); domainEditors.forEach(dispose => dispose());}, {once: true});
-  document.querySelectorAll("[data-protect-service]").forEach(button => {
-    button.addEventListener("click", handle(async () => {
-      const {protectService, protectType} = button.dataset;
-      const template = ClearRules.PROTECTION_TEMPLATES[protectService];
-      const domains = protectType === "cookies" ? [template.cookie] : template.pages;
-      await addDomains(domains, protectType, "exclude", true);
-      await refreshList(protectType);
-      notifyMessage("uiCleanupProtectionAdded");
-    }));
-  });
   $("clearNow").addEventListener("click", handle(async () => {
     await mutationQueue;
     const snapshot = await chrome.storage.local.get(DEFAULTS);
@@ -444,7 +415,9 @@ async function init() {
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== "local") return;
     for (const type of Object.keys(EXCEPTION_LISTS)) if (Object.values(ClearRules.SITE_FILTERS[type]).some(key => changes[key])) {
-      refreshList(type).catch(showError); refreshPreview().catch(showError);
+      const selectedImport = importType() === type;
+      const tab = selectedImport && document.body.dataset.activeTab === "bookmarks" ? "bookmarks" : EXCEPTION_LISTS[type].tab;
+      (selectedImport ? refreshPreview() : refreshList(type)).catch(error => showError(error, tab));
     }
     if (changes.lastClearTime || changes.lastClearErrorAt || changes.activeCleanupReport || changes.cleanupReports) refreshReport().catch(showError);
     if (changes.paused || changes.pauseUntil) refreshPause().catch(showError);

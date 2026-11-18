@@ -51,6 +51,10 @@ test('importação de favoritos pré-seleciona o destino da aba e calcula duplic
     f.d.getElementById('loadFolders').click();await tick();assert.match(f.d.getElementById('previewCount').textContent,/2/);
     f.d.getElementById('importBookmarks').click();await tick();
     assert.deepEqual(f.local.excludedCacheSites,['cookie.example','new.example']);assert.deepEqual(f.local.excludedSites,['cookie.example']);
+    assert.match(f.d.getElementById('popupStatus').textContent,/importados/i);
+    f.d.getElementById('tab-cache').click();
+    assert.equal(f.d.getElementById('popupStatus').textContent,'');
+    f.d.getElementById('tab-bookmarks').click();
     f.d.getElementById('importTarget').value='cookies';f.d.getElementById('importTarget').dispatchEvent(new f.w.Event('change'));await tick();
     assert.match(f.d.getElementById('previewCount').textContent,/1/);
     f.d.getElementById('localStorageGoImport').click();await tick();f.d.getElementById('importBookmarks').click();await tick();
@@ -125,10 +129,14 @@ test('inclusão vazia mostra aviso e não envia limpeza manual quando não há a
 test('falha ao trocar o modo mantém as listas e o modo efetivamente salvo',async()=>{
   let fail=true;
   const f=await fixture({}, {set:async values=>{if(fail&&'cookieCleanupMode' in values)throw Error('simulated storage failure');}});try{
+    f.d.getElementById('tab-exceptions').click();
     await select(f,'listMode','include');
     assert.equal(f.local.cookieCleanupMode,undefined);assert.equal(f.d.getElementById('listMode').value,'exclude');
     assert.deepEqual(f.local.excludedSites,['cookie.example']);assert.equal(f.d.getElementById('filterEditor').disabled,false);
     assert.equal(f.d.getElementById('error').hidden,false);
+    f.d.getElementById('tab-cleanup').click();
+    assert.equal(f.d.getElementById('error').hidden,true);
+    f.d.getElementById('tab-exceptions').click();
     fail=false;await select(f,'listMode','include');assert.equal(f.local.cookieCleanupMode,'include');
     assert.deepEqual(f.local.excludedSites,['cookie.example']);assert.deepEqual(f.errors,[]);
   }finally{f.close();}
@@ -201,6 +209,7 @@ test('limpar exclusões pede confirmação e altera somente a lista do tipo esco
 
 test('cancelar ou trocar para inclusão durante a confirmação preserva a lista de exclusão',async()=>{
   const f=await fixture({includedSites:['include.example']});try{
+    f.d.getElementById('tab-exceptions').click();
     f.d.getElementById('clearExclusions').click();await tick();
     f.d.querySelector('[data-confirm="cancel"]').click();await tick();assert.deepEqual(f.local.excludedSites,['cookie.example']);
     f.d.getElementById('clearExclusions').click();await tick();
@@ -213,6 +222,7 @@ test('cancelar ou trocar para inclusão durante a confirmação preserva a lista
 
 test('novos sites adicionados durante a confirmação não são apagados sem revisão',async()=>{
   const f=await fixture();try{
+    f.d.getElementById('tab-exceptions').click();
     f.d.getElementById('clearExclusions').click();await tick();
     await f.w.chrome.storage.local.set({excludedSites:['cookie.example','new.example']});await tick();
     f.d.querySelector('[data-confirm="accept"]').click();await tick();
@@ -224,6 +234,7 @@ test('novos sites adicionados durante a confirmação não são apagados sem rev
 test('falha ao limpar exclusões mantém os sites e permite nova tentativa',async()=>{
   let fail=true;
   const f=await fixture({}, {set:async values=>{if(fail&&values.excludedSites?.length===0)throw Error('write failed');}});try{
+    f.d.getElementById('tab-exceptions').click();
     f.d.getElementById('clearExclusions').click();await tick();f.d.querySelector('[data-confirm="accept"]').click();await tick();
     assert.deepEqual(f.local.excludedSites,['cookie.example']);assert.equal(f.d.getElementById('error').hidden,false);
     assert.equal(f.d.getElementById('clearExclusions').disabled,false);
@@ -249,17 +260,43 @@ test('Limpar agora mostra a prévia e só envia o plano depois da confirmação'
   } finally { f.close(); }
 });
 
-test('modelo adiciona somente endereços ao tipo escolhido em modo de exclusão', async () => {
-  const f = await fixture({cacheCleanupMode: 'include'});
+test('aviso de exclusões fica na aba de origem quando a gravação termina após navegar', async () => {
+  let release;
+  const pending = new Promise(resolve => { release = resolve; });
+  const f = await fixture({}, {set: async values => {
+    if (values.excludedCacheSites) await pending;
+  }});
   try {
-    f.d.getElementById('tab-exceptions').click();
-    f.d.querySelector('[data-protect-type="cookies"][data-protect-service="gmail"]').click();
-    await tick();
-    assert.deepEqual(f.local.excludedSites, ['cookie.example', 'google.com']);
     f.d.getElementById('tab-cache').click();
-    f.d.querySelector('[data-protect-type="cache"][data-protect-service="github"]').click();
+    await add(f, 'cache', 'keep.example');
+    f.d.getElementById('tab-cleanup').click();
+    release();
     await tick();
-    assert.equal(f.local.excludedCacheSites, undefined);
-    assert.match(f.d.getElementById('error').textContent, /modo de exclusão/);
+    assert.deepEqual(f.local.excludedCacheSites, ['keep.example']);
+    assert.equal(f.d.getElementById('popupStatus').textContent, '');
+    f.d.getElementById('tab-cache').click();
+    assert.match(f.d.getElementById('popupStatus').textContent, /Domínio adicionado à lista/);
+    f.d.getElementById('tab-exceptions').click();
+    assert.equal(f.d.getElementById('popupStatus').textContent, '');
+  } finally { release(); f.close(); }
+});
+
+test('a aba Geral mostra a limpeza mais recente e recolhe os relatórios anteriores ao voltar', async () => {
+  const startedAt = Date.now() - 3000;
+  const f = await fixture({cleanupReports: [
+    {id: 'old', startedAt, status: 'completed', trigger: 'exit', items: [{type: 'cache', status: 'completed'}]},
+    {id: 'recent', startedAt: startedAt + 1000, status: 'completed', trigger: 'manual', items: [{type: 'history', status: 'completed'}]}
+  ]});
+  try {
+    const history = f.d.getElementById('cleanupHistory');
+    assert.match(f.d.getElementById('reportItems').textContent, /histórico/i);
+    assert.equal(history.hidden, false);
+    assert.equal(history.open, false);
+    assert.match(history.textContent, /cache/i);
+    history.open = true;
+    f.d.getElementById('tab-cache').click();
+    f.d.getElementById('tab-cleanup').click();
+    assert.equal(history.open, false);
+    assert.equal(f.local.cleanupReports.length, 2);
   } finally { f.close(); }
 });
